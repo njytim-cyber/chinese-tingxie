@@ -8,7 +8,7 @@ test('has title', async ({ page }) => {
 test('can start game', async ({ page }) => {
     await page.goto('/');
     await page.getByPlaceholder('你的名字').fill('Tester');
-    await page.getByRole('button', { name: '▶ 开始' }).click();
+    await page.locator('.start-btn').click();
 
     // HUD should appear
     await expect(page.locator('.hud')).toBeVisible();
@@ -19,7 +19,7 @@ test('can start game', async ({ page }) => {
 
 test('lesson selection and gameplay', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: '▶ 开始' }).click();
+    await page.locator('.start-btn').click();
 
     // Wait for lesson selection
     await expect(page.locator('.lesson-select')).toBeVisible();

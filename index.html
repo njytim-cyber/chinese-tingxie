@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>星空听写</title>
     <meta name="description" content="练习汉字听写。通过互动描红学习词汇。">
-    <meta name="version" content="1.14.4">
+    <meta name="version" content="1.14.5">
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#38bdf8">
@@ -27,7 +27,7 @@
     <div id="start-overlay">
         <h1 class="start-title">星空听写</h1>
         <p class="start-subtitle">银河听写练习</p>
-        <p class="version-tag">v1.14.4</p>
+        <p class="version-tag">v1.14.5</p>
 
         <input type="text" id="player-name" class="name-input" placeholder="你的名字" maxlength="20">
 
@@ -45,27 +45,29 @@
     <canvas id="particle-canvas"></canvas>
 
     <div class="hud">
-        <button class="menu-btn" id="menu-btn" title="返回">❮</button>
+        <div class="hud-inner">
+            <button class="menu-btn" id="menu-btn" title="返回">❮</button>
 
-        <div class="hud-controls">
-            <!-- Buttons -->
-            <button class="game-btn btn-skip compact-btn" id="btn-skip" title="跳过">⏭</button>
-            <button class="game-btn btn-audio compact-btn" id="btn-audio" title="听读音">🔊</button>
-            <button class="game-btn btn-hint compact-btn" id="btn-hint" title="提示">💡</button>
+            <div class="hud-controls">
+                <!-- Buttons -->
+                <button class="game-btn btn-skip compact-btn" id="btn-skip" title="跳过">⏭</button>
+                <button class="game-btn btn-audio compact-btn" id="btn-audio" title="听读音">🔊</button>
+                <button class="game-btn btn-hint compact-btn" id="btn-hint" title="提示">💡</button>
 
-            <!-- Stats -->
-            <div class="score-box">
-                <span>⭐</span> <span id="score">0</span>
-            </div>
+                <!-- Stats -->
+                <div class="score-box">
+                    <span>⭐</span> <span id="score">0</span>
+                </div>
 
-            <!-- Streak Badge -->
-            <div class="streak-badge" id="streak-badge" style="display: none;">
-                🔥 x<span id="streak-count">0</span>
-            </div>
+                <!-- Streak Badge -->
+                <div class="streak-badge" id="streak-badge" style="display: none;">
+                    🔥 x<span id="streak-count">0</span>
+                </div>
 
-            <div class="daily-streak-display" id="streak-container" style="display: none;">
-                <span class="streak-fire">🔥</span>
-                <span id="daily-streak">0</span>
+                <div class="daily-streak-display" id="streak-container" style="display: none;">
+                    <span class="streak-fire">🔥</span>
+                    <span id="daily-streak">0</span>
+                </div>
             </div>
         </div>
     </div>
