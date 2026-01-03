@@ -143,6 +143,12 @@ body {
     gap: 10px;
 }
 
+.hud-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .menu-btn {
     background: var(--card-bg);
     border: 2px solid #334155;

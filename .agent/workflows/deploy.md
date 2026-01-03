@@ -22,12 +22,15 @@ Follow these steps to deploy changes safely:
    npm run build
    ```
 
-## Version Bump
+## Version Bump (CRITICAL)
 // turbo
-4. If adding features, increment version in:
-   - `package.json` (version field)
-   - `index.html` (meta version tag and version-tag element)
-   - `public/sw.js` (CACHE_NAME)
+4. You MUST increment the version number in ALL of the following files before committing:
+   - **`index.html` (First Page)**: 
+     - Update `<meta name="version" content="...">`
+     - Update visible text `<p class="version-tag">v...</p>`
+   - `package.json`: Update `"version"` field
+   - `public/sw.js`: Update `CACHE_NAME` constant
+
 
 ## Commit and Push
 5. Stage all changes:

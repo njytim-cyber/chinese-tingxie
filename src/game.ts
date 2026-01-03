@@ -297,7 +297,6 @@ export const Game: GameState = {
                         `;
         }).join('')}
                 </div>
-                <button class="game-btn" id="back-to-lessons">↩ 返回</button>
             </div>
         `;
 
@@ -312,11 +311,7 @@ export const Game: GameState = {
             });
         });
 
-        // Back button
-        const backBtn = document.getElementById('back-to-lessons');
-        if (backBtn) {
-            backBtn.addEventListener('click', () => this.showLessonSelect());
-        }
+
 
         // Hide controls
         const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
