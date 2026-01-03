@@ -509,8 +509,9 @@ export function getWordsForPractice(): PracticeWord[] {
     shuffle(dueWords);
     shuffle(newWords);
 
-    const maxNewWords = 5;
-    const result = [...dueWords, ...newWords.slice(0, maxNewWords)];
+    // Allow selecting all available new words (count is limited in selectLesson)
+    // const maxNewWords = 5; 
+    const result = [...dueWords, ...newWords];
 
     // If nothing due, return weakest words
     if (result.length === 0) {

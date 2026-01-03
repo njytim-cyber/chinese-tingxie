@@ -1417,3 +1417,23 @@ body {
         font-size: 0.85rem;
     }
 }
+.main-practice-btn {
+    background: linear-gradient(to bottom, #a78bfa, #7c3aed);
+    border: none;
+    border-bottom: 6px solid #6d28d9;
+    color: white;
+    font-family: inherit;
+    font-size: 2rem;
+    padding: 15px 50px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: transform 0.1s;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+    margin-bottom: 20px;
+}
+
+.main-practice-btn:active {
+    transform: translateY(6px);
+    border-bottom-width: 0;
+}

@@ -73,7 +73,22 @@ function init(): void {
             reviewBtn.addEventListener('click', () => {
                 const overlay = document.getElementById('start-overlay');
                 if (overlay) overlay.remove();
+
+                unlockAudio();
+                Game.init(false);
                 Game.showProgress();
+            });
+        }
+
+        const practiceBtn = document.getElementById('main-practice-btn');
+        if (practiceBtn) {
+            practiceBtn.addEventListener('click', () => {
+                const overlay = document.getElementById('start-overlay');
+                if (overlay) overlay.remove();
+
+                unlockAudio();
+                Game.init(false);
+                Game.showPracticeSelect();
             });
         }
 

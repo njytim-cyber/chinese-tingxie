@@ -33,7 +33,7 @@ interface GameState {
     sessionStartTime: number | null;
     wordsCompletedThisSession: number;
     selectedLessonsForPractice: number[];
-    init: () => void;
+    init: (showUI?: boolean) => void;
     getPlayerName: () => string;
     setPlayerName: (name: string) => void;
     displayGreeting: () => void;
@@ -86,7 +86,7 @@ export const Game: GameState = {
     /**
      * Initialize the game
      */
-    init: function () {
+    init: function (showUI?: boolean) {
         loadData();
         this.sessionStartTime = Date.now();
         this.wordsCompletedThisSession = 0;
@@ -96,8 +96,10 @@ export const Game: GameState = {
         this.updateStatsDisplay();
         this.displayGreeting();
 
-        // Show lesson selection screen
-        this.showLessonSelect();
+        // Show lesson selection screen if requested
+        if (showUI !== false) {
+            this.showLessonSelect();
+        }
 
         // Record that player practiced today
         recordPractice();
@@ -214,9 +216,8 @@ export const Game: GameState = {
                         `;
         }).join('')}
                 </div>
-                <div class="lesson-select-actions">
-                    <button class="game-btn btn-hint" id="view-progress-btn">📊 查看进度</button>
-                    <button class="game-btn btn-audio" id="practice-mode-btn">📝 复习模式</button>
+                <div class="lesson-select-actions" style="display: none;">
+                    <!-- Buttons moved to main screen -->
                 </div>
             </div>
         `;
