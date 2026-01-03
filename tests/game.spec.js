@@ -7,6 +7,10 @@ test('has title', async ({ page }) => {
 
 test('can start game', async ({ page }) => {
     await page.goto('/');
+
+    // HUD should be hidden on start screen
+    await expect(page.locator('.hud')).toBeHidden();
+
     await page.getByPlaceholder('你的名字').fill('Tester');
     await page.locator('.start-btn').click();
 
