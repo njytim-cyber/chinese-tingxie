@@ -265,14 +265,14 @@ body {
 
 /* The Box for Writing */
 .char-slot {
-    width: 190px;
-    height: 190px;
+    width: 240px;
+    height: 240px;
     background: var(--card-bg);
     border: 3px solid #334155;
     border-radius: 16px;
     position: relative;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-    transition: all 0.3s ease;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .char-slot.active {
@@ -418,8 +418,8 @@ body {
 /* Mobile tweaks */
 @media (max-width: 600px) {
     .char-slot {
-        width: 160px;
-        height: 160px;
+        width: 200px;
+        height: 200px;
     }
 
     h1 {

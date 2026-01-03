@@ -144,9 +144,9 @@ export const Game = {
             container.appendChild(div);
 
             const writer = HanziWriter.create(`char-${index}`, char, {
-                width: 180,
-                height: 180,
-                padding: 8,
+                width: 230,
+                height: 230,
+                padding: 5,
                 showOutline: false,
                 strokeColor: '#38bdf8',
                 radicalColor: '#f472b6',
