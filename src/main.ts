@@ -94,7 +94,7 @@ function init(): void {
 
         // Set up game control buttons
         const menuBtn = document.getElementById('menu-btn');
-        if (menuBtn) menuBtn.addEventListener('click', () => Game.showMenu());
+        if (menuBtn) menuBtn.addEventListener('click', () => Game.handleBackNavigation());
 
         const audioBtn = document.getElementById('btn-audio');
         if (audioBtn) audioBtn.addEventListener('click', () => Game.playCurrentAudio());

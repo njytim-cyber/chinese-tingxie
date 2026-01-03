@@ -42,9 +42,11 @@ interface GameState {
     showProgress: () => void;
     showPracticeSelect: () => void;
     startPractice: () => void;
+    currentView: 'lesson-select' | 'practice-select' | 'progress' | 'game';
     selectLesson: (lessonId: number, wordLimit?: number) => void;
     loadLevel: () => void;
     skipLevel: () => void;
+    handleBackNavigation: () => void;
     showPinyin: () => void;
     renderWordScore: () => void;
     handleMistake: (index: number) => void;
@@ -82,7 +84,9 @@ export const Game: GameState = {
     hintStrokeIndex: [], // Track which stroke to hint next for each character
     sessionStartTime: null,
     wordsCompletedThisSession: 0,
+
     selectedLessonsForPractice: [],
+    currentView: 'lesson-select',
 
     /**
      * Initialize the game
@@ -263,12 +267,17 @@ export const Game: GameState = {
         const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
         if (controlsArea) controlsArea.style.display = 'none';
 
-        // Hide HUD controls (audio, hint, score) in Chapter Selection
+        // Show HUD only if not in lesson select (actually, hide it here)
+        const hud = document.querySelector('.hud') as HTMLElement | null;
+        if (hud) hud.style.display = 'none';
+
         const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
         if (hudControls) hudControls.style.display = 'none';
 
         const footer = document.getElementById('footer-progress');
         if (footer) footer.style.display = 'none';
+
+        this.currentView = 'lesson-select';
     },
 
     /**
@@ -319,7 +328,15 @@ export const Game: GameState = {
 
         const lessons = getLessons();
         const masteryLabels = ['未学', '入门', '熟悉', '掌握', '精通', '完美'];
-        const masteryColors = ['#64748b', '#ef4444', '#f97316', '#eab308', '#22c5e', '#38bdf8'];
+        const masteryColors = ['#64748b', '#ef4444', '#f97316', '#eab308', '#22c55e', '#38bdf8'];
+
+        // Show HUD header (for back button) but hide controls?
+        const hud = document.querySelector('.hud') as HTMLElement | null;
+        if (hud) hud.style.display = 'flex';
+        const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
+        if (hudControls) hudControls.style.display = 'none';
+
+        this.currentView = 'progress';
 
         container.innerHTML = `
             <div class="progress-view">
@@ -370,9 +387,7 @@ export const Game: GameState = {
         const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
         if (controlsArea) controlsArea.style.display = 'none';
 
-        // Hide HUD controls (audio, hint, score) for cleaner view
-        const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
-        if (hudControls) hudControls.style.display = 'none';
+
     },
 
     /**
@@ -384,6 +399,11 @@ export const Game: GameState = {
 
         const lessons = getLessons();
         this.selectedLessonsForPractice = [];
+        this.currentView = 'practice-select';
+
+        // Show HUD for back button
+        const hud = document.querySelector('.hud') as HTMLElement | null;
+        if (hud) hud.style.display = 'flex';
 
         container.innerHTML = `
             <div class="practice-select">
@@ -404,7 +424,6 @@ export const Game: GameState = {
                 <div class="practice-actions">
                     <button class="game-btn" id="select-all-lessons">全选</button>
                     <button class="game-btn review-start-btn" id="start-practice-btn" disabled>开始复习 (0)</button>
-                    <button class="game-btn btn-hint" id="back-to-lessons-btn">返回</button>
                 </div>
             </div>
         `;
@@ -443,11 +462,7 @@ export const Game: GameState = {
             });
         }
 
-        // Back button
-        const backBtn = document.getElementById('back-to-lessons-btn');
-        if (backBtn) {
-            backBtn.addEventListener('click', () => this.showLessonSelect());
-        }
+
 
         // Hide controls
         const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
@@ -1167,6 +1182,17 @@ export const Game: GameState = {
         `;
 
         document.body.appendChild(overlay);
+    },
+
+    /**
+     * Handle top-left navigation button
+     */
+    handleBackNavigation: function () {
+        if (this.currentView === 'practice-select' || this.currentView === 'progress') {
+            this.showLessonSelect();
+        } else {
+            this.showMenu();
+        }
     },
 
     /**
