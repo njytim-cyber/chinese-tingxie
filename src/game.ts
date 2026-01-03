@@ -312,6 +312,10 @@ export const Game: GameState = {
         const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
         if (hudControls) hudControls.style.display = 'flex';
 
+        // Restore HUD background (header fix)
+        const hud = document.querySelector('.hud') as HTMLElement | null;
+        if (hud) hud.classList.remove('transparent');
+
         this.renderProgressDots();
 
         // Update lesson display in HUD
@@ -507,6 +511,10 @@ export const Game: GameState = {
         // Ensure HUD controls are visible
         const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
         if (hudControls) hudControls.style.display = 'flex';
+
+        // Restore HUD background
+        const hud = document.querySelector('.hud') as HTMLElement | null;
+        if (hud) hud.classList.remove('transparent');
 
         this.renderProgressDots();
         this.loadLevel();
@@ -761,14 +769,15 @@ export const Game: GameState = {
         let quality: number;
         if (this.hintUsed) {
             quality = 2; // Failed - used hint
-        } else if (this.mistakesMade === 0) {
-            quality = 5; // Perfect
-        } else if (this.mistakesMade <= 2) {
-            quality = 4; // Good
-        } else if (this.mistakesMade <= 5) {
-            quality = 3; // Pass
         } else {
-            quality = 2; // Fail
+            // Did not use hint - always allow a pass or better
+            if (this.mistakesMade === 0) {
+                quality = 5; // Perfect
+            } else if (this.mistakesMade <= 2) {
+                quality = 4; // Good
+            } else {
+                quality = 3; // Pass (even with mistakes, if no hint used)
+            }
         }
 
         // Update SRS
