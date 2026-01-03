@@ -368,19 +368,19 @@ export const Game = {
             <div class="level-up-content">
                 <div class="level-up-icon">🎉</div>
                 <div class="level-up-text">升级!</div>
-                <div class="level-up-level">Level ${level}</div>
+                <div class="level-up-level">第 ${level} 级</div>
             </div>
         `;
         document.body.appendChild(overlay);
 
-        // Particles burst
-        for (let i = 0; i < 5; i++) {
+        // Big confetti burst!
+        for (let i = 0; i < 15; i++) {
             setTimeout(() => {
                 spawnParticles(
-                    window.innerWidth / 2 + (Math.random() - 0.5) * 200,
-                    window.innerHeight / 2 + (Math.random() - 0.5) * 200
+                    window.innerWidth / 2 + (Math.random() - 0.5) * 400,
+                    window.innerHeight / 2 + (Math.random() - 0.5) * 300
                 );
-            }, i * 100);
+            }, i * 80);
         }
 
         setTimeout(() => overlay.remove(), 2500);
