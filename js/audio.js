@@ -49,36 +49,45 @@ export function initVoices() {
  * Sound Effects using Web Audio API
  */
 export const SoundFX = {
-    playTone: (freq, type, duration) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
+    playTone: (freq, type, duration, volume = 0.15) => {
+        try {
+            // Resume audio context if suspended (required on some devices)
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {
+            console.warn('Audio playback failed:', e);
+        }
     },
 
-    correctStroke: () => SoundFX.playTone(800, 'sine', 0.1),
+    correctStroke: () => SoundFX.playTone(800, 'sine', 0.08, 0.1),
 
+    // Wrong sound removed - was annoying to users
     wrong: () => {
-        SoundFX.playTone(150, 'sawtooth', 0.3);
-        SoundFX.playTone(100, 'sawtooth', 0.3);
+        // Silent - no sound on wrong strokes
     },
 
     success: () => {
-        setTimeout(() => SoundFX.playTone(523.25, 'sine', 0.2), 0);
-        setTimeout(() => SoundFX.playTone(659.25, 'sine', 0.2), 100);
-        setTimeout(() => SoundFX.playTone(783.99, 'sine', 0.4), 200);
+        setTimeout(() => SoundFX.playTone(523.25, 'sine', 0.2, 0.15), 0);
+        setTimeout(() => SoundFX.playTone(659.25, 'sine', 0.2, 0.15), 100);
+        setTimeout(() => SoundFX.playTone(783.99, 'sine', 0.4, 0.15), 200);
     },
 
     levelUp: () => {
-        setTimeout(() => SoundFX.playTone(400, 'square', 0.1), 0);
-        setTimeout(() => SoundFX.playTone(600, 'square', 0.1), 100);
-        setTimeout(() => SoundFX.playTone(1000, 'square', 0.4), 200);
+        setTimeout(() => SoundFX.playTone(400, 'square', 0.1, 0.12), 0);
+        setTimeout(() => SoundFX.playTone(600, 'square', 0.1, 0.12), 100);
+        setTimeout(() => SoundFX.playTone(1000, 'square', 0.4, 0.12), 200);
     }
 };
 
