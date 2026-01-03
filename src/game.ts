@@ -232,6 +232,10 @@ export const Game: GameState = {
         // Hide controls during lesson select
         const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
         if (controlsArea) controlsArea.style.display = 'none';
+
+        // Ensure HUD controls are visible (if returning from progress view)
+        const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
+        if (hudControls) hudControls.style.display = 'flex';
     },
 
     /**
@@ -248,6 +252,10 @@ export const Game: GameState = {
         // Show controls
         const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
         if (controlsArea) controlsArea.style.display = 'flex';
+
+        // Ensure HUD controls are visible
+        const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
+        if (hudControls) hudControls.style.display = 'flex';
 
         // Update lesson display in HUD
         const lesson = getCurrentLesson();
@@ -313,9 +321,13 @@ export const Game: GameState = {
 
 
 
-        // Hide controls
+        // Hide controls area (bottom)
         const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
         if (controlsArea) controlsArea.style.display = 'none';
+
+        // Hide HUD controls (audio, hint, score) for cleaner view
+        const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
+        if (hudControls) hudControls.style.display = 'none';
     },
 
     /**
