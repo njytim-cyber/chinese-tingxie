@@ -42,7 +42,7 @@ interface GameState {
     showProgress: () => void;
     showPracticeSelect: () => void;
     startPractice: () => void;
-    selectLesson: (lessonId: number) => void;
+    selectLesson: (lessonId: number, wordLimit?: number) => void;
     loadLevel: () => void;
     showPinyin: () => void;
     renderWordScore: () => void;
@@ -181,6 +181,17 @@ export const Game: GameState = {
         container.innerHTML = `
             <div class="lesson-select">
                 <h2 class="lesson-select-title">选择课程</h2>
+                
+                <div class="session-length-toggle">
+                    <span class="toggle-label">每次练习:</span>
+                    <div class="toggle-options">
+                        <button class="toggle-btn active" data-count="5">5词</button>
+                        <button class="toggle-btn" data-count="10">10词</button>
+                        <button class="toggle-btn" data-count="15">15词</button>
+                        <button class="toggle-btn" data-count="0">全部</button>
+                    </div>
+                </div>
+
                 <div class="lesson-grid">
                     ${lessons.map(lesson => {
             const progress = getLessonProgress(lesson.id);
@@ -212,10 +223,25 @@ export const Game: GameState = {
 
         // Add click handlers
         const self = this;
+        let selectedLimit = 5; // Default
+
+        // Toggle Buttons Logic
+        container.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all
+                container.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                // Add to clicked
+                btn.classList.add('active');
+                // Update limit
+                selectedLimit = parseInt((btn as HTMLElement).dataset.count || '0');
+            });
+        });
+
+        // Lesson Card Click
         container.querySelectorAll('.lesson-card').forEach(card => {
             card.addEventListener('click', () => {
                 const lessonId = parseInt((card as HTMLElement).dataset.lessonId || '1');
-                self.selectLesson(lessonId);
+                self.selectLesson(lessonId, selectedLimit);
             });
         });
 
@@ -246,9 +272,19 @@ export const Game: GameState = {
     /**
      * Select a lesson and start practicing
      */
-    selectLesson: function (lessonId: number) {
+    selectLesson: function (lessonId: number, wordLimit: number = 0) {
         setCurrentLesson(lessonId);
-        this.practiceWords = getWordsForPractice();
+        let words = getWordsForPractice();
+
+        // Apply limit if specified
+        if (wordLimit > 0 && words.length > wordLimit) {
+            // Shuffle slightly to ensure variety if picking a subset? 
+            // Actually, getWordsForPractice prioritizes due cards. We should keep that order.
+            // Just slice the first N words effectively reviewing the most urgent ones.
+            words = words.slice(0, wordLimit);
+        }
+
+        this.practiceWords = words;
         this.currentWordIndex = 0;
         this.sessionStartTime = Date.now();
         this.wordsCompletedThisSession = 0;
