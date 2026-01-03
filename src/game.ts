@@ -56,6 +56,7 @@ interface GameState {
     nextLevel: () => void;
     playCurrentAudio: () => void;
     useHint: () => void;
+    scrollToActiveChar: (element: HTMLElement) => void;
     updateHud: () => void;
     showFeedback: (text: string, color: string) => void;
     getRandomPraise: (quality?: number, streak?: number) => string;
@@ -511,6 +512,11 @@ export const Game: GameState = {
             });
 
             self.writers.push(writer);
+
+            // Add scroll listener
+            div.addEventListener('pointerdown', () => {
+                self.scrollToActiveChar(div);
+            });
         });
 
         // Add score display
@@ -521,7 +527,26 @@ export const Game: GameState = {
         if (xpBar) xpBar.style.width = `${progress}%`;
 
         // Play audio after animations settle
-        setTimeout(() => this.playCurrentAudio(), 800);
+        setTimeout(() => {
+            this.playCurrentAudio();
+            // Scroll to the first active character if on mobile
+            const activeChar = document.querySelector('.char-slot.active') as HTMLElement;
+            if (activeChar) this.scrollToActiveChar(activeChar);
+        }, 800);
+    },
+
+    /**
+     * Scroll the element into the center of the viewport
+     */
+    scrollToActiveChar: function (element: HTMLElement) {
+        // Only scroll if on mobile/small screen
+        if (window.innerWidth > 600) return;
+
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'center'
+        });
     },
 
     /**

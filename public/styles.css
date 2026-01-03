@@ -274,6 +274,7 @@ body {
     position: relative;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
     transition: border-color 0.2s, box-shadow 0.2s;
+    touch-action: none;
 }
 
 .char-slot.active {
@@ -296,7 +297,20 @@ body {
     display: flex;
     gap: 20px;
     margin-bottom: 30px;
+    margin-bottom: 30px;
     z-index: 5;
+    justify-content: center;
+}
+
+.compact-btn {
+    padding: 8px 12px;
+    font-size: 1.2rem;
+    min-width: 44px;
+}
+
+.hud-center {
+    display: flex;
+    gap: 10px;
 }
 
 .game-btn {
