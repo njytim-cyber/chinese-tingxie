@@ -1471,4 +1471,16 @@ body {
     font-size: 1.5rem;
     cursor: pointer;
     padding: 5px 10px;
+}.hud.transparent {
+    background: transparent;
+    border-bottom: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    pointer-events: none;
+}
+
+.hud.transparent .menu-btn,
+.hud.transparent .hud-controls {
+    pointer-events: auto;
 }

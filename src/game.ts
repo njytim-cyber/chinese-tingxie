@@ -267,9 +267,12 @@ export const Game: GameState = {
         const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
         if (controlsArea) controlsArea.style.display = 'none';
 
-        // Show HUD only if not in lesson select (actually, hide it here)
+        // Show HUD for Back button, but hide controls
         const hud = document.querySelector('.hud') as HTMLElement | null;
-        if (hud) hud.style.display = 'none';
+        if (hud) {
+            hud.style.display = 'flex';
+            hud.classList.add('transparent'); // Button only
+        }
 
         const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
         if (hudControls) hudControls.style.display = 'none';
@@ -332,7 +335,10 @@ export const Game: GameState = {
 
         // Show HUD header (for back button) but hide controls?
         const hud = document.querySelector('.hud') as HTMLElement | null;
-        if (hud) hud.style.display = 'flex';
+        if (hud) {
+            hud.style.display = 'flex';
+            hud.classList.add('transparent');
+        }
         const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
         if (hudControls) hudControls.style.display = 'none';
 
@@ -403,7 +409,10 @@ export const Game: GameState = {
 
         // Show HUD for back button
         const hud = document.querySelector('.hud') as HTMLElement | null;
-        if (hud) hud.style.display = 'flex';
+        if (hud) {
+            hud.style.display = 'flex';
+            hud.classList.add('transparent');
+        }
 
         container.innerHTML = `
             <div class="practice-select">
@@ -1190,6 +1199,9 @@ export const Game: GameState = {
     handleBackNavigation: function () {
         if (this.currentView === 'practice-select' || this.currentView === 'progress') {
             this.showLessonSelect();
+        } else if (this.currentView === 'lesson-select') {
+            // Go back to Start Screen (simplest is reload)
+            location.reload();
         } else {
             this.showMenu();
         }
