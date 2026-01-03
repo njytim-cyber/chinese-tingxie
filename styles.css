@@ -245,6 +245,29 @@ body {
     padding: 10px;
 }
 
+/* Character Box Wrapper */
+.char-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Pinyin label below box */
+.char-pinyin-label {
+    font-size: 1.4rem;
+    color: var(--gold);
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+    min-height: 1.6rem;
+}
+
+.char-pinyin-label.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 /* The Box for Writing */
 .char-slot {
     width: 240px;

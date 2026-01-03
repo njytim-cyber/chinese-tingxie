@@ -461,13 +461,25 @@ export const Game: GameState = {
 
         // Generate HanziWriters
         const chars = this.currentWord.term.split('');
+        const pinyinSegments = this.currentWord.pinyin.split(' ');
         const self = this;
+
         chars.forEach((char, index) => {
+            const charBox = document.createElement('div');
+            charBox.className = 'char-box';
+
             const div = document.createElement('div');
             div.id = `char-${index}`;
             div.className = 'char-slot';
             if (index === 0) div.classList.add('active');
-            container.appendChild(div);
+
+            const pinyinLabel = document.createElement('div');
+            pinyinLabel.className = 'char-pinyin-label';
+            pinyinLabel.textContent = pinyinSegments[index] || '';
+
+            charBox.appendChild(div);
+            charBox.appendChild(pinyinLabel);
+            container.appendChild(charBox);
 
             const writer = HanziWriter.create(`char-${index}`, char, {
                 width: 230,
@@ -491,7 +503,6 @@ export const Game: GameState = {
                     self.hintStrokeIndex[index] = strokeData.strokeNum + 1;
                 },
                 onMistake: () => {
-                    SoundFX.wrong();
                     self.handleMistake(index);
                 },
                 onComplete: () => {
@@ -522,6 +533,11 @@ export const Game: GameState = {
             pinyinEl.textContent = this.currentWord.pinyin;
             pinyinEl.classList.add('visible');
         }
+
+        // Show per-character pinyin labels
+        document.querySelectorAll('.char-pinyin-label').forEach(label => {
+            label.classList.add('visible');
+        });
     },
 
     /**
