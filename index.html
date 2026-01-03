@@ -4,11 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>星空听写 Galaxy Ting Xie</title>
-    <meta name="description"
-        content="Practice Chinese character writing with audio-guided dictation. Learn Mandarin vocabulary through interactive tracing.">
+    <title>星空听写</title>
+    <meta name="description" content="练习汉字听写。通过互动描红学习词汇。">
     <meta name="version" content="1.1.0">
-    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -29,22 +27,16 @@
             <p>🔊 听词语 → ✍️ 写汉字 → ⭐ 升级！</p>
         </div>
 
-        <div class="start-links">
-            <a href="features.html" class="start-link">📋 新功能</a>
-        </div>
 
-        <div class="debug-info" id="audio-status">
-            Checking voices...
-        </div>
     </div>
 
     <canvas id="particle-canvas"></canvas>
 
     <div class="hud">
-        <button class="menu-btn" onclick="game.showMenu()" title="返回菜单">☰</button>
-        <div id="player-greeting" class="player-greeting"></div>
+        <button class="menu-btn" id="menu-btn" title="返回">❮</button>
+        <h1 class="game-title" style="font-size: 1.5rem; margin: 0;">星空听写</h1>
         <div class="hud-center">
-            <div class="daily-streak-display">
+            <div class="daily-streak-display" id="streak-container" style="display: none;">
                 <span class="streak-fire">🔥</span>
                 <span id="daily-streak">0</span>
             </div>
@@ -53,7 +45,7 @@
             <div class="score-box">
                 <span>⭐</span> <span id="score">0</span>
             </div>
-            <div class="streak-badge" id="streak-badge">
+            <div class="streak-badge" id="streak-badge" style="display: none;">
                 🔥 x<span id="streak-count">0</span>
             </div>
         </div>
@@ -61,38 +53,36 @@
 
     <div class="game-stage">
         <div class="game-header">
-            <h1 class="game-title">星空听写</h1>
-            <div class="level-info">第 <span id="level-num">1</span> 级</div>
-            <div id="word-info" class="word-info"></div>
+            <!-- Title moved to HUD -->
         </div>
 
         <div id="feedback-overlay"></div>
 
-        <div id="pinyin-display" class="pinyin-display"></div>
-
         <div class="character-container" id="writing-area">
             <!-- Hanzi Writers go here -->
         </div>
+
+        <div id="pinyin-display" class="pinyin-display"></div>
 
         <div class="progress-container">
             <div class="progress-fill" id="xp-bar"></div>
         </div>
 
         <div class="controls-area">
-            <button class="game-btn btn-audio" onclick="game.playCurrentAudio()">
+            <button class="game-btn btn-audio" id="btn-audio">
                 🔊 听
             </button>
-            <button class="game-btn btn-hint" onclick="game.useHint()">
+            <button class="game-btn btn-hint" id="btn-hint">
                 💡 提示
             </button>
-            <button class="game-btn" id="next-btn" onclick="game.nextLevel()"
+            <button class="game-btn" id="next-btn"
                 style="display:none; background: var(--success); border-color: #15803d;">
                 🚀 继续
             </button>
         </div>
     </div>
 
-    <script type="module" src="js/main.js"></script>
+    <script type="module" src="/src/main.ts"></script>
 </body>
 
 </html>

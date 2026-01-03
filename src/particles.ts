@@ -2,14 +2,15 @@
  * Particle System for Visual Effects
  */
 
-const canvas = document.getElementById('particle-canvas');
-const ctx = canvas.getContext('2d');
-let particles = [];
+let canvas: HTMLCanvasElement | null = null;
+let ctx: CanvasRenderingContext2D | null = null;
+let particles: Particle[] = [];
 
 /**
  * Resize canvas to match window
  */
-function resizeCanvas() {
+function resizeCanvas(): void {
+    if (!canvas) return;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
@@ -18,7 +19,15 @@ function resizeCanvas() {
  * Particle class
  */
 class Particle {
-    constructor(x, y, color) {
+    x: number;
+    y: number;
+    color: string;
+    size: number;
+    speedX: number;
+    speedY: number;
+    life: number;
+
+    constructor(x: number, y: number, color: string) {
         this.x = x;
         this.y = y;
         this.color = color;
@@ -28,7 +37,7 @@ class Particle {
         this.life = 100;
     }
 
-    update() {
+    update(): void {
         this.x += this.speedX;
         this.y += this.speedY;
         this.speedY += 0.1;
@@ -36,7 +45,8 @@ class Particle {
         this.size *= 0.95;
     }
 
-    draw() {
+    draw(): void {
+        if (!ctx) return;
         ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -46,10 +56,10 @@ class Particle {
 
 /**
  * Spawn particles at a location
- * @param {number} x - X coordinate
- * @param {number} y - Y coordinate
+ * @param x - X coordinate
+ * @param y - Y coordinate
  */
-export function spawnParticles(x, y) {
+export function spawnParticles(x: number, y: number): void {
     const colors = ['#f472b6', '#38bdf8', '#fbbf24', '#4ade80', '#ffffff'];
     for (let i = 0; i < 30; i++) {
         particles.push(new Particle(x, y, colors[Math.floor(Math.random() * colors.length)]));
@@ -59,7 +69,11 @@ export function spawnParticles(x, y) {
 /**
  * Animation loop for particles
  */
-function animateParticles() {
+function animateParticles(): void {
+    if (!ctx || !canvas) {
+        requestAnimationFrame(animateParticles);
+        return;
+    }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (let i = 0; i < particles.length; i++) {
         particles[i].update();
@@ -75,7 +89,11 @@ function animateParticles() {
 /**
  * Initialize particle system
  */
-export function initParticles() {
+export function initParticles(): void {
+    canvas = document.getElementById('particle-canvas') as HTMLCanvasElement | null;
+    if (canvas) {
+        ctx = canvas.getContext('2d');
+    }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
     animateParticles();

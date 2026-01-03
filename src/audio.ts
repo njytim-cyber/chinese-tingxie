@@ -2,18 +2,25 @@
  * Audio System - Sound Effects and Speech Synthesis
  */
 
+// Extend Window interface for webkit prefix
+declare global {
+    interface Window {
+        webkitAudioContext: typeof AudioContext;
+    }
+}
+
 export const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-export let selectedVoice = null;
+export let selectedVoice: SpeechSynthesisVoice | null = null;
 
 /**
  * Load available Chinese voices
  */
-export function loadVoices() {
+export function loadVoices(): void {
     const voices = window.speechSynthesis.getVoices();
     const statusEl = document.getElementById('audio-status');
 
     if (voices.length === 0) {
-        if (statusEl) statusEl.innerHTML = "Loading voices... (Please wait)";
+        if (statusEl) statusEl.innerHTML = "正在加载语音...";
         return;
     }
 
@@ -22,14 +29,14 @@ export function loadVoices() {
     const zhTW = voices.find(v => v.lang.includes('zh-TW'));
     const zhAny = voices.find(v => v.lang.includes('zh'));
 
-    selectedVoice = zhCN || zhTW || zhAny;
+    selectedVoice = zhCN || zhTW || zhAny || null;
 
     if (statusEl) {
         if (selectedVoice) {
-            statusEl.innerHTML = `✅ Voice Ready: ${selectedVoice.name} (${selectedVoice.lang})`;
+            statusEl.innerHTML = `✅ 语音就绪: ${selectedVoice.name}`;
             statusEl.style.color = '#4ade80';
         } else {
-            statusEl.innerHTML = "⚠️ No Chinese voice found. Audio may be silent.<br>Please install a Chinese Language Pack in OS Settings.";
+            statusEl.innerHTML = "⚠️ 未找到中文语音。请检查系统设置。";
             statusEl.style.color = '#fbbf24';
         }
     }
@@ -38,7 +45,7 @@ export function loadVoices() {
 /**
  * Initialize voice loading
  */
-export function initVoices() {
+export function initVoices(): void {
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
         window.speechSynthesis.onvoiceschanged = loadVoices;
     }
@@ -49,7 +56,7 @@ export function initVoices() {
  * Sound Effects using Web Audio API
  */
 export const SoundFX = {
-    playTone: (freq, type, duration, volume = 0.15) => {
+    playTone: (freq: number, type: OscillatorType, duration: number, volume = 0.15): void => {
         try {
             // Resume audio context if suspended (required on some devices)
             if (audioCtx.state === 'suspended') {
@@ -71,20 +78,20 @@ export const SoundFX = {
         }
     },
 
-    correctStroke: () => SoundFX.playTone(800, 'sine', 0.08, 0.1),
+    correctStroke: (): void => { SoundFX.playTone(800, 'sine', 0.08, 0.1); },
 
     // Wrong sound removed - was annoying to users
-    wrong: () => {
+    wrong: (): void => {
         // Silent - no sound on wrong strokes
     },
 
-    success: () => {
+    success: (): void => {
         setTimeout(() => SoundFX.playTone(523.25, 'sine', 0.2, 0.15), 0);
         setTimeout(() => SoundFX.playTone(659.25, 'sine', 0.2, 0.15), 100);
         setTimeout(() => SoundFX.playTone(783.99, 'sine', 0.4, 0.15), 200);
     },
 
-    levelUp: () => {
+    levelUp: (): void => {
         setTimeout(() => SoundFX.playTone(400, 'square', 0.1, 0.12), 0);
         setTimeout(() => SoundFX.playTone(600, 'square', 0.1, 0.12), 100);
         setTimeout(() => SoundFX.playTone(1000, 'square', 0.4, 0.12), 200);
@@ -93,10 +100,10 @@ export const SoundFX = {
 
 /**
  * Speak a Chinese word with clear pronunciation
- * @param {string} text - Text to speak
- * @param {boolean} slow - Whether to speak slowly (for learning)
+ * @param text - Text to speak
+ * @param slow - Whether to speak slowly (for learning)
  */
-export function speakWord(text, slow = false) {
+export function speakWord(text: string, slow = false): void {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
 
@@ -117,21 +124,21 @@ export function speakWord(text, slow = false) {
 
 /**
  * Speak word slowly with character-by-character option
- * @param {string} text - Text to speak
+ * @param text - Text to speak
  */
-export function speakWordSlow(text) {
+export function speakWordSlow(text: string): void {
     speakWord(text, true);
 }
 
 /**
  * Speak each character separately for learning
- * @param {string} text - Text to speak (each character spoken separately)
+ * @param text - Text to speak (each character spoken separately)
  */
-export function speakCharacters(text) {
+export function speakCharacters(text: string): void {
     const chars = text.split('');
     let delay = 0;
 
-    chars.forEach((char, i) => {
+    chars.forEach((char) => {
         setTimeout(() => {
             speakWord(char, true);
         }, delay);
@@ -142,7 +149,7 @@ export function speakCharacters(text) {
 /**
  * Unlock audio context and speech synthesis (must be called from user gesture)
  */
-export function unlockAudio() {
+export function unlockAudio(): void {
     if (audioCtx.state === 'suspended') {
         audioCtx.resume();
     }

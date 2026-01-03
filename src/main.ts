@@ -2,21 +2,22 @@
  * Main Entry Point
  */
 
-import { initVoices, unlockAudio } from './audio.js';
-import { initParticles } from './particles.js';
-import { Game } from './game.js';
+import { initVoices, unlockAudio } from './audio';
+import { initParticles } from './particles';
+import { Game } from './game';
 
 /**
  * Start the game (called from start button)
  */
-function startGame() {
+function startGame(): void {
     // Save player name
-    const nameInput = document.getElementById('player-name');
+    const nameInput = document.getElementById('player-name') as HTMLInputElement | null;
     if (nameInput && nameInput.value.trim()) {
         Game.setPlayerName(nameInput.value);
     }
 
     const overlay = document.getElementById('start-overlay');
+    if (!overlay) return;
 
     // Unlock audio (must be in click handler)
     unlockAudio();
@@ -32,7 +33,7 @@ function startGame() {
 /**
  * Initialize application
  */
-function init() {
+function init(): void {
     // Initialize voices
     initVoices();
 
@@ -41,7 +42,7 @@ function init() {
 
     // Load saved player name into input
     const savedName = Game.getPlayerName();
-    const nameInput = document.getElementById('player-name');
+    const nameInput = document.getElementById('player-name') as HTMLInputElement | null;
     if (nameInput && savedName) {
         nameInput.value = savedName;
     }
@@ -52,11 +53,20 @@ function init() {
         startBtn.addEventListener('click', startGame);
     }
 
-    // Expose game for button handlers
-    window.game = Game;
+    // Set up game control buttons
+    const menuBtn = document.getElementById('menu-btn');
+    if (menuBtn) menuBtn.addEventListener('click', () => Game.showMenu());
+
+    const audioBtn = document.getElementById('btn-audio');
+    if (audioBtn) audioBtn.addEventListener('click', () => Game.playCurrentAudio());
+
+    const hintBtn = document.getElementById('btn-hint');
+    if (hintBtn) hintBtn.addEventListener('click', () => Game.useHint());
+
+    const nextBtn = document.getElementById('next-btn');
+    if (nextBtn) nextBtn.addEventListener('click', () => Game.nextLevel());
 }
 
-// Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
