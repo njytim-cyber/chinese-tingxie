@@ -855,3 +855,123 @@ body {
     width: 100%;
     justify-content: center;
 }
+
+/* --- Lesson Selection --- */
+.lesson-select {
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+}
+
+.lesson-select-title {
+    text-align: center;
+    color: var(--primary);
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+}
+
+.lesson-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.lesson-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: var(--card-bg);
+    border: 2px solid #334155;
+    border-radius: 16px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lesson-card:hover {
+    border-color: var(--primary);
+    background: #1e3a5f;
+    transform: translateY(-2px);
+}
+
+.lesson-card.active {
+    border-color: var(--success);
+    box-shadow: 0 0 15px rgba(74, 222, 128, 0.3);
+}
+
+.lesson-progress-ring {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+}
+
+.lesson-progress-ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.lesson-progress-ring .ring-bg {
+    fill: none;
+    stroke: #334155;
+    stroke-width: 3;
+}
+
+.lesson-progress-ring .ring-fill {
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.5s ease;
+}
+
+.lesson-number {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.lesson-info {
+    flex: 1;
+    text-align: left;
+}
+
+.lesson-title {
+    font-size: 1.1rem;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.lesson-meta {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+/* Mobile responsiveness for lesson select */
+@media (max-width: 600px) {
+    .lesson-select {
+        padding: 10px;
+    }
+
+    .lesson-select-title {
+        font-size: 1.5rem;
+    }
+
+    .lesson-card {
+        padding: 12px;
+    }
+
+    .lesson-progress-ring {
+        width: 45px;
+        height: 45px;
+    }
+
+    .lesson-title {
+        font-size: 1rem;
+    }
+}

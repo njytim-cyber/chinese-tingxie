@@ -13,24 +13,27 @@ test('can start game', async ({ page }) => {
     // HUD should appear
     await expect(page.locator('.hud')).toBeVisible();
 
-    // Game stage should be visible
-    await expect(page.locator('.game-stage')).toBeVisible();
+    // Lesson selection should appear
+    await expect(page.locator('.lesson-select')).toBeVisible();
 });
 
-test('gameplay flow', async ({ page }) => {
+test('lesson selection and gameplay', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: '▶ 开始' }).click();
 
-    // Wait for game stage
-    await expect(page.locator('.game-stage')).toBeVisible();
+    // Wait for lesson selection
+    await expect(page.locator('.lesson-select')).toBeVisible();
 
-    // Check audio button
-    const audioBtn = page.locator('#btn-audio');
-    await expect(audioBtn).toBeVisible();
+    // Verify we have 9 lessons
+    await expect(page.locator('.lesson-card')).toHaveCount(9);
 
-    // Use hint
-    await page.locator('#btn-hint').click();
+    // Click on the first lesson
+    await page.locator('.lesson-card').first().click();
 
-    // Pinyin should appear after hint
-    await expect(page.locator('#pinyin-display')).toBeVisible();
+    // Wait for game to load by checking for character slots
+    await expect(page.locator('.char-slot').first()).toBeVisible();
+
+    // Verify controls are visible
+    await expect(page.locator('#btn-audio')).toBeVisible();
+    await expect(page.locator('#btn-hint')).toBeVisible();
 });

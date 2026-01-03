@@ -6,6 +6,7 @@ import {
     loadData, getWordScore, getWordsForPractice,
     updateWordSRS, recordPractice, addXP, getStats, getLevel,
     getLevelProgress, checkAchievements, getAchievements,
+    getLessons, getCurrentLesson, setCurrentLesson, getLessonProgress,
     type PracticeWord, type Achievement
 } from './data';
 import { SoundFX, speakWord } from './audio';
@@ -35,6 +36,8 @@ interface GameState {
     setPlayerName: (name: string) => void;
     displayGreeting: () => void;
     updateStatsDisplay: () => void;
+    showLessonSelect: () => void;
+    selectLesson: (lessonId: number) => void;
     loadLevel: () => void;
     showPinyin: () => void;
     renderWordScore: () => void;
@@ -76,15 +79,16 @@ export const Game: GameState = {
      */
     init: function () {
         loadData();
-        this.practiceWords = getWordsForPractice();
         this.sessionStartTime = Date.now();
         this.wordsCompletedThisSession = 0;
         this.sessionStreak = 0;
 
         // Update UI with stats
         this.updateStatsDisplay();
-        this.loadLevel();
         this.displayGreeting();
+
+        // Show lesson selection screen
+        this.showLessonSelect();
 
         // Record that player practiced today
         recordPractice();
@@ -153,6 +157,81 @@ export const Game: GameState = {
         if (xpText) {
             xpText.textContent = `${stats.totalXP} 经验`;
         }
+    },
+
+    /**
+     * Show lesson selection screen
+     */
+    showLessonSelect: function () {
+        const container = document.getElementById('writing-area');
+        if (!container) return;
+
+        const lessons = getLessons();
+        const currentLesson = getCurrentLesson();
+
+        container.innerHTML = `
+            <div class="lesson-select">
+                <h2 class="lesson-select-title">选择课程</h2>
+                <div class="lesson-grid">
+                    ${lessons.map(lesson => {
+            const progress = getLessonProgress(lesson.id);
+            const progressPercent = Math.round(progress * 100);
+            const isActive = lesson.id === currentLesson.id;
+            return `
+                            <div class="lesson-card ${isActive ? 'active' : ''}" data-lesson-id="${lesson.id}">
+                                <div class="lesson-progress-ring">
+                                    <svg viewBox="0 0 36 36">
+                                        <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path class="ring-fill" stroke-dasharray="${progressPercent}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    </svg>
+                                    <span class="lesson-number">${lesson.id}</span>
+                                </div>
+                                <div class="lesson-info">
+                                    <div class="lesson-title">${lesson.title}</div>
+                                    <div class="lesson-meta">${lesson.phrases.length} 词语 · ${progressPercent}%</div>
+                                </div>
+                            </div>
+                        `;
+        }).join('')}
+                </div>
+            </div>
+        `;
+
+        // Add click handlers
+        const self = this;
+        container.querySelectorAll('.lesson-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const lessonId = parseInt((card as HTMLElement).dataset.lessonId || '1');
+                self.selectLesson(lessonId);
+            });
+        });
+
+        // Hide controls during lesson select
+        const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
+        if (controlsArea) controlsArea.style.display = 'none';
+    },
+
+    /**
+     * Select a lesson and start practicing
+     */
+    selectLesson: function (lessonId: number) {
+        setCurrentLesson(lessonId);
+        this.practiceWords = getWordsForPractice();
+        this.currentWordIndex = 0;
+        this.sessionStartTime = Date.now();
+        this.wordsCompletedThisSession = 0;
+        this.sessionStreak = 0;
+
+        // Show controls
+        const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
+        if (controlsArea) controlsArea.style.display = 'flex';
+
+        // Update lesson display in HUD
+        const lesson = getCurrentLesson();
+        const lessonLabel = document.getElementById('current-lesson-label');
+        if (lessonLabel) lessonLabel.textContent = lesson.title;
+
+        this.loadLevel();
     },
 
     /**
