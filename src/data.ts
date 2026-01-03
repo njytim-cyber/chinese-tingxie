@@ -529,6 +529,37 @@ export function getWordsForPractice(): PracticeWord[] {
 }
 
 /**
+ * Get unmastered words from selected lessons (score < 5)
+ */
+export function getUnmasteredWords(lessonIds: number[]): PracticeWord[] {
+    const result: PracticeWord[] = [];
+
+    lessonIds.forEach(lessonId => {
+        const lesson = LESSONS.find(l => l.id === lessonId);
+        if (!lesson) return;
+
+        lesson.phrases.forEach((phrase, index) => {
+            const state = getWordState(phrase.term);
+            // Only include words not yet mastered (score < 5)
+            if (state.score < 5) {
+                result.push({
+                    term: phrase.term,
+                    pinyin: phrase.pinyin,
+                    level: Math.ceil((index + 1) / 3),
+                    lessonId: lesson.id,
+                    ...state
+                });
+            }
+        });
+    });
+
+    // Sort by score (weakest first) then shuffle within same score
+    result.sort((a, b) => (a.score || 0) - (b.score || 0));
+
+    return result;
+}
+
+/**
  * Shuffle array in place
  */
 function shuffle<T>(arr: T[]): void {

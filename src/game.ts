@@ -3,10 +3,11 @@
  */
 
 import {
-    loadData, getWordScore, getWordsForPractice,
+    loadData, getWordScore, getWordsForPractice, getWordState,
     updateWordSRS, recordPractice, addXP, getStats, getLevel,
     getLevelProgress, checkAchievements, getAchievements,
     getLessons, getCurrentLesson, setCurrentLesson, getLessonProgress,
+    getUnmasteredWords,
     type PracticeWord, type Achievement
 } from './data';
 import { SoundFX, speakWord } from './audio';
@@ -31,12 +32,16 @@ interface GameState {
     hintStrokeIndex: number[];
     sessionStartTime: number | null;
     wordsCompletedThisSession: number;
+    selectedLessonsForPractice: number[];
     init: () => void;
     getPlayerName: () => string;
     setPlayerName: (name: string) => void;
     displayGreeting: () => void;
     updateStatsDisplay: () => void;
     showLessonSelect: () => void;
+    showProgress: () => void;
+    showPracticeSelect: () => void;
+    startPractice: () => void;
     selectLesson: (lessonId: number) => void;
     loadLevel: () => void;
     showPinyin: () => void;
@@ -73,6 +78,7 @@ export const Game: GameState = {
     hintStrokeIndex: [], // Track which stroke to hint next for each character
     sessionStartTime: null,
     wordsCompletedThisSession: 0,
+    selectedLessonsForPractice: [],
 
     /**
      * Initialize the game
@@ -194,6 +200,10 @@ export const Game: GameState = {
                         `;
         }).join('')}
                 </div>
+                <div class="lesson-select-actions">
+                    <button class="game-btn btn-hint" id="view-progress-btn">📊 查看进度</button>
+                    <button class="game-btn btn-audio" id="practice-mode-btn">📝 复习模式</button>
+                </div>
             </div>
         `;
 
@@ -205,6 +215,18 @@ export const Game: GameState = {
                 self.selectLesson(lessonId);
             });
         });
+
+        // Progress button
+        const progressBtn = document.getElementById('view-progress-btn');
+        if (progressBtn) {
+            progressBtn.addEventListener('click', () => self.showProgress());
+        }
+
+        // Practice mode button
+        const practiceBtn = document.getElementById('practice-mode-btn');
+        if (practiceBtn) {
+            practiceBtn.addEventListener('click', () => self.showPracticeSelect());
+        }
 
         // Hide controls during lesson select
         const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
@@ -230,6 +252,175 @@ export const Game: GameState = {
         const lesson = getCurrentLesson();
         const lessonLabel = document.getElementById('current-lesson-label');
         if (lessonLabel) lessonLabel.textContent = lesson.title;
+
+        this.loadLevel();
+    },
+
+    /**
+     * Show progress view with all lessons and phrases
+     */
+    showProgress: function () {
+        const container = document.getElementById('writing-area');
+        if (!container) return;
+
+        const lessons = getLessons();
+        const masteryLabels = ['未学', '入门', '熟悉', '掌握', '精通', '完美'];
+        const masteryColors = ['#64748b', '#ef4444', '#f97316', '#eab308', '#22c55e', '#38bdf8'];
+
+        container.innerHTML = `
+            <div class="progress-view">
+                <h2 class="progress-title">📊 学习进度</h2>
+                <div class="progress-lessons">
+                    ${lessons.map(lesson => {
+            const progress = getLessonProgress(lesson.id);
+            const progressPercent = Math.round(progress * 100);
+            return `
+                            <div class="progress-lesson">
+                                <div class="progress-lesson-header" data-lesson-id="${lesson.id}">
+                                    <span class="progress-lesson-title">${lesson.title}</span>
+                                    <span class="progress-lesson-percent">${progressPercent}%</span>
+                                </div>
+                                <div class="progress-phrases" id="phrases-${lesson.id}" style="display: none;">
+                                    ${lesson.phrases.map(phrase => {
+                const state = getWordState(phrase.term);
+                const score = state.score;
+                return `
+                                            <div class="progress-phrase">
+                                                <span class="phrase-term">${phrase.term}</span>
+                                                <span class="phrase-mastery" style="background: ${masteryColors[score]}">${masteryLabels[score]}</span>
+                                            </div>
+                                        `;
+            }).join('')}
+                                </div>
+                            </div>
+                        `;
+        }).join('')}
+                </div>
+                <button class="game-btn" id="back-to-lessons">↩ 返回</button>
+            </div>
+        `;
+
+        // Toggle phrase visibility on header click
+        container.querySelectorAll('.progress-lesson-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const lessonId = (header as HTMLElement).dataset.lessonId;
+                const phrasesEl = document.getElementById(`phrases-${lessonId}`);
+                if (phrasesEl) {
+                    phrasesEl.style.display = phrasesEl.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+        });
+
+        // Back button
+        const backBtn = document.getElementById('back-to-lessons');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => this.showLessonSelect());
+        }
+
+        // Hide controls
+        const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
+        if (controlsArea) controlsArea.style.display = 'none';
+    },
+
+    /**
+     * Show practice selection (choose chapters to practice)
+     */
+    showPracticeSelect: function () {
+        const container = document.getElementById('writing-area');
+        if (!container) return;
+
+        const lessons = getLessons();
+        this.selectedLessonsForPractice = [];
+
+        container.innerHTML = `
+            <div class="practice-select">
+                <h2 class="practice-select-title">📝 选择练习章节</h2>
+                <p class="practice-select-desc">选择要复习的课程（只练习未掌握的词语）</p>
+                <div class="practice-lesson-grid">
+                    ${lessons.map(lesson => {
+            const unmasteredCount = lesson.phrases.filter(p => getWordState(p.term).score < 5).length;
+            return `
+                            <label class="practice-lesson-item ${unmasteredCount === 0 ? 'all-mastered' : ''}">
+                                <input type="checkbox" value="${lesson.id}" ${unmasteredCount === 0 ? 'disabled' : ''}>
+                                <span class="practice-lesson-name">${lesson.title.split(':')[0]}</span>
+                                <span class="practice-lesson-count">${unmasteredCount > 0 ? `${unmasteredCount}词` : '✓'}</span>
+                            </label>
+                        `;
+        }).join('')}
+                </div>
+                <div class="practice-actions">
+                    <button class="game-btn" id="select-all-lessons">全选</button>
+                    <button class="game-btn btn-audio" id="start-practice-btn">开始练习</button>
+                    <button class="game-btn btn-hint" id="back-to-lessons-btn">返回</button>
+                </div>
+            </div>
+        `;
+
+        const self = this;
+
+        // Select all button
+        const selectAllBtn = document.getElementById('select-all-lessons');
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', () => {
+                container.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(cb => {
+                    (cb as HTMLInputElement).checked = true;
+                });
+            });
+        }
+
+        // Start practice button
+        const startBtn = document.getElementById('start-practice-btn');
+        if (startBtn) {
+            startBtn.addEventListener('click', () => {
+                const selected: number[] = [];
+                container.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+                    selected.push(parseInt((cb as HTMLInputElement).value));
+                });
+                if (selected.length === 0) {
+                    self.showFeedback('请至少选择一课', '#ef4444');
+                    return;
+                }
+                self.selectedLessonsForPractice = selected;
+                self.startPractice();
+            });
+        }
+
+        // Back button
+        const backBtn = document.getElementById('back-to-lessons-btn');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => this.showLessonSelect());
+        }
+
+        // Hide controls
+        const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
+        if (controlsArea) controlsArea.style.display = 'none';
+    },
+
+    /**
+     * Start practice with selected lessons
+     */
+    startPractice: function () {
+        if (this.selectedLessonsForPractice.length === 0) {
+            this.showLessonSelect();
+            return;
+        }
+
+        this.practiceWords = getUnmasteredWords(this.selectedLessonsForPractice);
+
+        if (this.practiceWords.length === 0) {
+            this.showFeedback('所有词语都已掌握！', '#22c55e');
+            setTimeout(() => this.showLessonSelect(), 1500);
+            return;
+        }
+
+        this.currentWordIndex = 0;
+        this.sessionStartTime = Date.now();
+        this.wordsCompletedThisSession = 0;
+        this.sessionStreak = 0;
+
+        // Show controls
+        const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
+        if (controlsArea) controlsArea.style.display = 'flex';
 
         this.loadLevel();
     },

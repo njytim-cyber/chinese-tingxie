@@ -975,3 +975,192 @@ body {
         font-size: 1rem;
     }
 }
+
+/* --- Lesson Select Actions --- */
+.lesson-select-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* --- Progress View --- */
+.progress-view {
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+}
+
+.progress-title {
+    text-align: center;
+    color: var(--primary);
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+}
+
+.progress-lessons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.progress-lesson {
+    background: var(--card-bg);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.progress-lesson-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.progress-lesson-header:hover {
+    background: #334155;
+}
+
+.progress-lesson-title {
+    font-size: 1rem;
+    color: white;
+}
+
+.progress-lesson-percent {
+    color: var(--primary);
+    font-weight: bold;
+}
+
+.progress-phrases {
+    padding: 0 15px 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.progress-phrase {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #0f172a;
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+
+.phrase-term {
+    color: white;
+    font-size: 0.95rem;
+}
+
+.phrase-mastery {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: white;
+}
+
+/* --- Practice Select --- */
+.practice-select {
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+    text-align: center;
+}
+
+.practice-select-title {
+    color: var(--primary);
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+}
+
+.practice-select-desc {
+    color: #94a3b8;
+    margin-bottom: 20px;
+}
+
+.practice-lesson-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.practice-lesson-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--card-bg);
+    border: 2px solid #334155;
+    border-radius: 12px;
+    padding: 15px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.practice-lesson-item:hover:not(.all-mastered) {
+    border-color: var(--primary);
+    background: #1e3a5f;
+}
+
+.practice-lesson-item.all-mastered {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.practice-lesson-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-bottom: 8px;
+    accent-color: var(--primary);
+}
+
+.practice-lesson-name {
+    font-size: 0.9rem;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.practice-lesson-count {
+    font-size: 0.8rem;
+    color: var(--gold);
+}
+
+.practice-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Mobile responsiveness for new features */
+@media (max-width: 600px) {
+    .practice-lesson-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .practice-lesson-item {
+        padding: 12px 8px;
+    }
+
+    .practice-lesson-name {
+        font-size: 0.8rem;
+    }
+
+    .progress-phrase {
+        flex: 1 1 45%;
+    }
+
+    .lesson-select-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .lesson-select-actions .game-btn {
+        width: 100%;
+    }
+}
