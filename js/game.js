@@ -413,6 +413,9 @@ export const Game = {
      * Show session complete screen
      */
     showSessionComplete: function () {
+        // Set progress bar to 100%
+        document.getElementById('xp-bar').style.width = '100%';
+
         const stats = getStats();
         const sessionTime = Math.round((Date.now() - this.sessionStartTime) / 1000);
         const minutes = Math.floor(sessionTime / 60);

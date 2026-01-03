@@ -698,51 +698,56 @@ body {
 /* --- Session Complete --- */
 .session-complete {
     text-align: center;
-    padding: 30px;
+    padding: 20px;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
 .session-complete h2 {
-    font-size: 2.5rem;
+    font-size: 2rem;
     color: var(--gold);
-    margin-bottom: 5px;
+    margin: 0 0 5px;
 }
 
 .session-subtitle {
     color: #64748b;
-    margin-bottom: 30px;
+    margin: 0 0 20px;
+    font-size: 0.9rem;
 }
 
 .session-stats {
     display: flex;
     justify-content: center;
-    gap: 30px;
-    margin-bottom: 30px;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .stat-item {
     display: flex;
     flex-direction: column;
     align-items: center;
+    min-width: 80px;
 }
 
 .stat-value {
-    font-size: 2rem;
+    font-size: 1.8rem;
     color: var(--primary);
 }
 
 .stat-label {
     color: #94a3b8;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
 }
 
 .streak-display {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     background: var(--card-bg);
-    padding: 15px 25px;
-    border-radius: 20px;
-    margin-bottom: 30px;
+    padding: 12px 20px;
+    border-radius: 16px;
+    margin-bottom: 20px;
 }
 
 .streak-display.on-fire {
@@ -750,20 +755,21 @@ body {
 }
 
 .streak-icon {
-    font-size: 2rem;
+    font-size: 1.5rem;
 }
 
 .streak-count {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: bold;
 }
 
 .streak-label {
     color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
 }
 
 .restart-btn {
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
 /* --- Achievements Overlay --- */
