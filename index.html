@@ -18,15 +18,15 @@
     <!-- START SCREEN -->
     <div id="start-overlay">
         <h1 class="start-title">星空听写</h1>
-        <p class="start-subtitle">Galaxy Ting Xie</p>
+        <p class="start-subtitle">银河听写练习</p>
         <p class="version-tag">v1.1.0</p>
 
-        <input type="text" id="player-name" class="name-input" placeholder="你的名字 (Your Name)" maxlength="20">
+        <input type="text" id="player-name" class="name-input" placeholder="你的名字" maxlength="20">
 
-        <button class="start-btn" id="start-btn">▶ 开始 (Start)</button>
+        <button class="start-btn" id="start-btn">▶ 开始</button>
 
         <div class="instructions-box">
-            <h3>📝 怎么玩 (How to Play)</h3>
+            <h3>📝 怎么玩</h3>
             <ol>
                 <li>🔊 <strong>听</strong> - 点击听按钮听词语发音</li>
                 <li>✍️ <strong>写</strong> - 用手指一笔一笔写汉字</li>
@@ -37,7 +37,7 @@
         </div>
 
         <div class="start-links">
-            <a href="features.html" class="start-link">📋 新功能 (What's New)</a>
+            <a href="features.html" class="start-link">📋 新功能</a>
         </div>
 
         <div class="debug-info" id="audio-status">
@@ -69,7 +69,7 @@
     <div class="game-stage">
         <div class="game-header">
             <h1 class="game-title">星空听写</h1>
-            <div class="level-info">Level <span id="level-num">1</span></div>
+            <div class="level-info">第 <span id="level-num">1</span> 级</div>
             <div id="word-info" class="word-info"></div>
         </div>
 
@@ -87,14 +87,14 @@
 
         <div class="controls-area">
             <button class="game-btn btn-audio" onclick="game.playCurrentAudio()">
-                🔊 听 (Listen)
+                🔊 听
             </button>
             <button class="game-btn btn-hint" onclick="game.useHint()">
-                💡 提示 (Hint)
+                💡 提示
             </button>
             <button class="game-btn" id="next-btn" onclick="game.nextLevel()"
                 style="display:none; background: var(--success); border-color: #15803d;">
-                🚀 继续 (Next)
+                🚀 继续
             </button>
         </div>
     </div>
