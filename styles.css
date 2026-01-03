@@ -265,8 +265,8 @@ body {
 
 /* The Box for Writing */
 .char-slot {
-    width: 150px;
-    height: 150px;
+    width: 190px;
+    height: 190px;
     background: var(--card-bg);
     border: 3px solid #334155;
     border-radius: 16px;
@@ -419,8 +419,8 @@ body {
 /* Mobile tweaks */
 @media (max-width: 600px) {
     .char-slot {
-        width: 130px;
-        height: 130px;
+        width: 160px;
+        height: 160px;
     }
 
     h1 {
