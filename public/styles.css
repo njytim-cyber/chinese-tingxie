@@ -134,9 +134,8 @@ body {
     justify-content: space-between;
     align-items: center;
     box-sizing: border-box;
-    background: rgba(30, 41, 59, 0.8);
+    background: rgba(30, 41, 59, 1);
     backdrop-filter: blur(5px);
-    border-bottom: 2px solid var(--primary);
     border-bottom: 2px solid var(--primary);
     position: fixed;
     top: 0;
@@ -145,6 +144,7 @@ body {
     margin: 0 auto;
     z-index: 100;
     gap: 10px;
+    touch-action: none;
 }
 
 .hud-controls {
