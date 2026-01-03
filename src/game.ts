@@ -796,7 +796,7 @@ export const Game: GameState = {
         panel.className = 'menu-panel';
 
         const title = document.createElement('h2');
-        title.innerText = '⏸ 暂停 (Paused)';
+        title.innerText = '⏸ 暂停';
         panel.appendChild(title);
 
         const buttons = document.createElement('div');
@@ -804,13 +804,13 @@ export const Game: GameState = {
 
         const resumeBtn = document.createElement('button');
         resumeBtn.className = 'game-btn';
-        resumeBtn.innerText = '▶ 继续 (Resume)';
+        resumeBtn.innerText = '▶ 继续';
         resumeBtn.onclick = () => overlay.remove();
         buttons.appendChild(resumeBtn);
 
         const achBtn = document.createElement('button');
         achBtn.className = 'game-btn btn-hint';
-        achBtn.innerText = '🏆 成就 (Achievements)';
+        achBtn.innerText = '🏆 成就';
         achBtn.onclick = () => {
             self.showAchievements();
             overlay.remove();
@@ -821,7 +821,7 @@ export const Game: GameState = {
         menuBtn.className = 'game-btn';
         menuBtn.style.background = 'linear-gradient(to bottom, #ef4444, #dc2626)';
         menuBtn.style.borderColor = '#b91c1c';
-        menuBtn.innerText = '🏠 返回主菜单 (Main Menu)';
+        menuBtn.innerText = '🏠 返回主菜单';
         menuBtn.onclick = () => location.reload();
         buttons.appendChild(menuBtn);
 
