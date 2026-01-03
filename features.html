@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新功能 - 星空听写 Galaxy Ting Xie</title>
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .features-page {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: var(--primary);
+            text-decoration: none;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .features-title {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .version-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #334155;
+        }
+
+        .version-number {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .version-date {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-item {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .feature-item.new {
+            border-left-color: var(--success);
+        }
+
+        .feature-item.improved {
+            border-left-color: var(--gold);
+        }
+
+        .feature-item.fixed {
+            border-left-color: var(--accent);
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .feature-content h3 {
+            margin: 0 0 5px;
+            font-size: 1.1rem;
+            color: white;
+        }
+
+        .feature-content p {
+            margin: 0;
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .tag-new {
+            background: var(--success);
+            color: #0f172a;
+        }
+
+        .tag-improved {
+            background: var(--gold);
+            color: #0f172a;
+        }
+
+        .tag-fixed {
+            background: var(--accent);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="features-page">
+        <a href="index.html" class="back-link">← 返回游戏 (Back to Game)</a>
+
+        <h1 class="features-title">📋 新功能 (What's New)</h1>
+        <p style="color: #94a3b8; margin-bottom: 30px;">Changelog and release notes for 星空听写</p>
+
+        <!-- Version 1.1.0 -->
+        <div class="version-header">
+            <span class="version-number">v1.1.0</span>
+            <span class="version-date">January 3, 2026</span>
+        </div>
+
+        <ul class="feature-list">
+            <li class="feature-item new">
+                <span class="feature-icon">🧠</span>
+                <div class="feature-content">
+                    <h3>Spaced Repetition System <span class="tag tag-new">NEW</span></h3>
+                    <p>Smart review scheduling using SM-2 algorithm. Words you struggle with appear more often, mastered
+                        words are reviewed less frequently.</p>
+                </div>
+            </li>
+
+            <li class="feature-item new">
+                <span class="feature-icon">🔥</span>
+                <div class="feature-content">
+                    <h3>Daily Streaks <span class="tag tag-new">NEW</span></h3>
+                    <p>Build a daily practice habit! Your streak is displayed in the HUD and tracked across sessions.
+                    </p>
+                </div>
+            </li>
+
+            <li class="feature-item new">
+                <span class="feature-icon">⭐</span>
+                <div class="feature-content">
+                    <h3>XP & Leveling <span class="tag tag-new">NEW</span></h3>
+                    <p>Earn XP for completing words. Level up as you practice! Perfect completions and streaks give
+                        bonus XP.</p>
+                </div>
+            </li>
+
+            <li class="feature-item new">
+                <span class="feature-icon">🏆</span>
+                <div class="feature-content">
+                    <h3>Achievements <span class="tag tag-new">NEW</span></h3>
+                    <p>Unlock 10 achievements as you progress: streak milestones, vocabulary mastery, XP goals, and
+                        more!</p>
+                </div>
+            </li>
+
+            <li class="feature-item new">
+                <span class="feature-icon">📝</span>
+                <div class="feature-content">
+                    <h3>Pinyin Display <span class="tag tag-new">NEW</span></h3>
+                    <p>Hanyu Pinyin is shown after completing a word or using a hint to reinforce pronunciation.</p>
+                </div>
+            </li>
+
+            <li class="feature-item improved">
+                <span class="feature-icon">🔊</span>
+                <div class="feature-content">
+                    <h3>Improved Pronunciation <span class="tag tag-improved">IMPROVED</span></h3>
+                    <p>Slower, clearer speech synthesis for better Mandarin learning. Adjusted rate and pitch settings.
+                    </p>
+                </div>
+            </li>
+
+            <li class="feature-item improved">
+                <span class="feature-icon">📦</span>
+                <div class="feature-content">
+                    <h3>Modular Codebase <span class="tag tag-improved">IMPROVED</span></h3>
+                    <p>Refactored from single HTML file to organized JavaScript modules for better maintainability.</p>
+                </div>
+            </li>
+        </ul>
+
+        <!-- Version 1.0.0 -->
+        <div class="version-header">
+            <span class="version-number">v1.0.0</span>
+            <span class="version-date">Initial Release</span>
+        </div>
+
+        <ul class="feature-list">
+            <li class="feature-item">
+                <span class="feature-icon">✍️</span>
+                <div class="feature-content">
+                    <h3>Character Writing Practice</h3>
+                    <p>Interactive stroke-by-stroke Chinese character tracing using Hanzi Writer.</p>
+                </div>
+            </li>
+
+            <li class="feature-item">
+                <span class="feature-icon">🎧</span>
+                <div class="feature-content">
+                    <h3>Audio Dictation</h3>
+                    <p>Hear words spoken in Mandarin Chinese using Web Speech API.</p>
+                </div>
+            </li>
+
+            <li class="feature-item">
+                <span class="feature-icon">💡</span>
+                <div class="feature-content">
+                    <h3>Hint System</h3>
+                    <p>Get help by revealing character outlines and animations.</p>
+                </div>
+            </li>
+
+            <li class="feature-item">
+                <span class="feature-icon">🎨</span>
+                <div class="feature-content">
+                    <h3>Galaxy Theme</h3>
+                    <p>Beautiful dark theme with particle effects and smooth animations.</p>
+                </div>
+            </li>
+        </ul>
+
+        <div style="text-align: center; margin-top: 50px; padding-top: 30px; border-top: 1px solid #334155;">
+            <a href="index.html" class="start-btn" style="font-size: 1.5rem; padding: 15px 40px;">▶ 开始练习 (Start
+                Practice)</a>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -83,10 +83,11 @@ export const SoundFX = {
 };
 
 /**
- * Speak a Chinese word
+ * Speak a Chinese word with clear pronunciation
  * @param {string} text - Text to speak
+ * @param {boolean} slow - Whether to speak slowly (for learning)
  */
-export function speakWord(text) {
+export function speakWord(text, slow = false) {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
 
@@ -97,8 +98,36 @@ export function speakWord(text) {
         u.lang = 'zh-CN';
     }
 
-    u.rate = 0.8;
+    // Slower rate for clearer pronunciation
+    u.rate = slow ? 0.6 : 0.75;
+    u.pitch = 1.0;
+    u.volume = 1.0;
+
     window.speechSynthesis.speak(u);
+}
+
+/**
+ * Speak word slowly with character-by-character option
+ * @param {string} text - Text to speak
+ */
+export function speakWordSlow(text) {
+    speakWord(text, true);
+}
+
+/**
+ * Speak each character separately for learning
+ * @param {string} text - Text to speak (each character spoken separately)
+ */
+export function speakCharacters(text) {
+    const chars = text.split('');
+    let delay = 0;
+
+    chars.forEach((char, i) => {
+        setTimeout(() => {
+            speakWord(char, true);
+        }, delay);
+        delay += 1200; // 1.2 second gap between characters
+    });
 }
 
 /**

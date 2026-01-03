@@ -1,25 +1,45 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>星空听写 Galaxy Ting Xie</title>
-    <meta name="description" content="Practice Chinese character writing with audio-guided dictation. Learn Mandarin vocabulary through interactive tracing.">
+    <meta name="description"
+        content="Practice Chinese character writing with audio-guided dictation. Learn Mandarin vocabulary through interactive tracing.">
+    <meta name="version" content="1.1.0">
     <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
     <!-- START SCREEN -->
     <div id="start-overlay">
         <h1 class="start-title">星空听写</h1>
         <p class="start-subtitle">Galaxy Ting Xie</p>
-        
+        <p class="version-tag">v1.1.0</p>
+
         <input type="text" id="player-name" class="name-input" placeholder="你的名字 (Your Name)" maxlength="20">
-        
+
         <button class="start-btn" id="start-btn">▶ 开始 (Start)</button>
-        
+
+        <div class="instructions-box">
+            <h3>📝 How to Play</h3>
+            <ol>
+                <li>🔊 <strong>Listen</strong> to the word being spoken</li>
+                <li>✍️ <strong>Draw</strong> each character stroke by stroke on the boxes</li>
+                <li>💡 Need help? Tap <strong>Hint</strong> to see the outline</li>
+                <li>⭐ Master words to earn XP and level up!</li>
+            </ol>
+            <p class="touch-hint">👆 Use your finger or stylus to trace the characters</p>
+        </div>
+
+        <div class="start-links">
+            <a href="features.html" class="start-link">📋 新功能 (What's New)</a>
+        </div>
+
         <div class="debug-info" id="audio-status">
             Checking voices...
         </div>
@@ -29,21 +49,32 @@
 
     <div class="hud">
         <div id="player-greeting" class="player-greeting"></div>
-        <div class="score-box">
-            <span>⭐</span> <span id="score">0</span>
+        <div class="hud-center">
+            <div class="daily-streak-display">
+                <span class="streak-fire">🔥</span>
+                <span id="daily-streak">0</span>
+            </div>
         </div>
-        <div class="streak-badge" id="streak-badge">
-            🔥 连胜 (Combo) x<span id="streak-count">0</span>
+        <div class="hud-right">
+            <div class="score-box">
+                <span>⭐</span> <span id="score">0</span>
+            </div>
+            <div class="streak-badge" id="streak-badge">
+                🔥 x<span id="streak-count">0</span>
+            </div>
         </div>
     </div>
 
     <div class="game-stage">
-        <div style="text-align:center; margin-top:20px;">
-            <h1 style="color: var(--primary); text-shadow: 0 0 10px rgba(56,189,248,0.5);">星空听写</h1>
-            <div style="color: #94a3b8; font-size: 0.9rem;">Level <span id="level-num">1</span></div>
+        <div class="game-header">
+            <h1 class="game-title">星空听写</h1>
+            <div class="level-info">Level <span id="level-num">1</span></div>
+            <div id="word-info" class="word-info"></div>
         </div>
 
         <div id="feedback-overlay"></div>
+
+        <div id="pinyin-display" class="pinyin-display"></div>
 
         <div class="character-container" id="writing-area">
             <!-- Hanzi Writers go here -->
@@ -60,7 +91,8 @@
             <button class="game-btn btn-hint" onclick="game.useHint()">
                 💡 提示 (Hint)
             </button>
-            <button class="game-btn" id="next-btn" onclick="game.nextLevel()" style="display:none; background: var(--success); border-color: #15803d;">
+            <button class="game-btn" id="next-btn" onclick="game.nextLevel()"
+                style="display:none; background: var(--success); border-color: #15803d;">
                 🚀 继续 (Next)
             </button>
         </div>
@@ -68,4 +100,5 @@
 
     <script type="module" src="js/main.js"></script>
 </body>
+
 </html>

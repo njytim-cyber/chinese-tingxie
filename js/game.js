@@ -1,8 +1,12 @@
 /**
- * Game Logic Module
+ * Game Logic Module with Gamification
  */
 
-import { WORDS, loadScores, updateWordScore, getWordScore, getWordsForPractice } from './data.js';
+import {
+    loadData, getWordScore, getWordsForPractice, getWordState,
+    updateWordSRS, recordPractice, addXP, getStats, getLevel,
+    getLevelProgress, checkAchievements, getAchievements
+} from './data.js';
 import { SoundFX, speakWord } from './audio.js';
 import { spawnParticles } from './particles.js';
 
@@ -11,6 +15,7 @@ const PLAYER_NAME_KEY = 'tingxie_player_name';
 export const Game = {
     score: 0,
     streak: 0,
+    sessionStreak: 0, // Streak within current session
     level: 1,
     currentWordIndex: 0,
     currentWord: null,
@@ -19,15 +24,29 @@ export const Game = {
     practiceWords: [],
     mistakesMade: 0,
     hintUsed: false,
+    sessionStartTime: null,
+    wordsCompletedThisSession: 0,
 
     /**
      * Initialize the game
      */
     init: function () {
-        loadScores();
+        loadData();
         this.practiceWords = getWordsForPractice();
+        this.sessionStartTime = Date.now();
+        this.wordsCompletedThisSession = 0;
+        this.sessionStreak = 0;
+
+        // Update UI with stats
+        this.updateStatsDisplay();
         this.loadLevel();
         this.displayGreeting();
+
+        // Record that player practiced today
+        recordPractice();
+
+        // Check for new achievements on start
+        this.showNewAchievements(checkAchievements());
     },
 
     /**
@@ -45,13 +64,47 @@ export const Game = {
     },
 
     /**
-     * Display personalized greeting
+     * Display personalized greeting with level
      */
     displayGreeting: function () {
         const name = this.getPlayerName();
+        const level = getLevel();
         const greetingEl = document.getElementById('player-greeting');
-        if (greetingEl && name) {
-            greetingEl.textContent = `👋 ${name}`;
+        if (greetingEl) {
+            const nameDisplay = name ? `👋 ${name}` : '👋';
+            greetingEl.innerHTML = `${nameDisplay} <span class="level-badge">Lv.${level}</span>`;
+        }
+    },
+
+    /**
+     * Update stats display in HUD
+     */
+    updateStatsDisplay: function () {
+        const stats = getStats();
+
+        // Update daily streak display
+        const streakEl = document.getElementById('daily-streak');
+        if (streakEl) {
+            streakEl.textContent = stats.dailyStreak;
+            if (stats.dailyStreak >= 3) {
+                streakEl.parentElement.classList.add('on-fire');
+            }
+        }
+
+        // Update XP bar
+        const xpFill = document.getElementById('xp-fill');
+        const xpText = document.getElementById('xp-text');
+        if (xpFill) {
+            xpFill.style.width = `${getLevelProgress() * 100}%`;
+        }
+        if (xpText) {
+            xpText.textContent = `${stats.totalXP} XP`;
+        }
+
+        // Update level
+        const levelEl = document.getElementById('player-level');
+        if (levelEl) {
+            levelEl.textContent = getLevel();
         }
     },
 
@@ -60,8 +113,7 @@ export const Game = {
      */
     loadLevel: function () {
         if (this.currentWordIndex >= this.practiceWords.length) {
-            this.showFeedback("🎉 全部完成! (All Done!)", "#fbbf24");
-            SoundFX.levelUp();
+            this.showSessionComplete();
             return;
         }
 
@@ -76,6 +128,9 @@ export const Game = {
         container.innerHTML = '';
         document.getElementById('next-btn').style.display = 'none';
         document.getElementById('feedback-overlay').style.opacity = '0';
+
+        // Show word info (due status)
+        this.showWordInfo();
 
         // Generate HanziWriters
         const chars = this.currentWord.term.split('');
@@ -123,6 +178,39 @@ export const Game = {
 
         // Play audio after animations settle
         setTimeout(() => this.playCurrentAudio(), 800);
+    },
+
+    /**
+     * Show word info (new/review status)
+     */
+    showWordInfo: function () {
+        const infoEl = document.getElementById('word-info');
+        if (!infoEl) return;
+
+        const state = getWordState(this.currentWord.term);
+        if (state.timesCorrect === 0) {
+            infoEl.innerHTML = '<span class="new-word">🆕 新词 (New)</span>';
+        } else {
+            infoEl.innerHTML = '<span class="review-word">🔄 复习 (Review)</span>';
+        }
+
+        // Hide pinyin initially (shown after completion or hint)
+        const pinyinEl = document.getElementById('pinyin-display');
+        if (pinyinEl) {
+            pinyinEl.textContent = '';
+            pinyinEl.classList.remove('visible');
+        }
+    },
+
+    /**
+     * Show pinyin for current word
+     */
+    showPinyin: function () {
+        const pinyinEl = document.getElementById('pinyin-display');
+        if (pinyinEl && this.currentWord) {
+            pinyinEl.textContent = this.currentWord.pinyin;
+            pinyinEl.classList.add('visible');
+        }
     },
 
     /**
@@ -192,29 +280,174 @@ export const Game = {
      */
     handleWordSuccess: function () {
         SoundFX.success();
-        this.streak++;
-        this.score += 10 + (this.streak * 2);
-        this.updateHud();
+        this.sessionStreak++;
+        this.wordsCompletedThisSession++;
 
-        // Calculate score change based on performance
-        let scoreDelta = 1; // Base: increase by 1
+        // Calculate quality for SM-2 (0-5)
+        let quality;
         if (this.hintUsed) {
-            scoreDelta = 0; // No increase if hint was used
+            quality = 2; // Failed - used hint
         } else if (this.mistakesMade === 0) {
-            scoreDelta = 2; // Perfect: increase by 2
-        } else if (this.mistakesMade > 3) {
-            scoreDelta = 0; // Too many mistakes: no increase
+            quality = 5; // Perfect
+        } else if (this.mistakesMade <= 2) {
+            quality = 4; // Good
+        } else if (this.mistakesMade <= 5) {
+            quality = 3; // Pass
+        } else {
+            quality = 2; // Fail
         }
 
-        if (scoreDelta > 0) {
-            updateWordScore(this.currentWord.term, scoreDelta);
-            this.animateScoreIncrease();
+        // Update SRS
+        updateWordSRS(this.currentWord.term, quality);
+
+        // Calculate XP earned
+        let xpEarned = 10;
+        if (quality === 5) xpEarned += 10; // Perfect bonus
+        if (this.sessionStreak >= 3) xpEarned += 5; // Streak bonus
+        if (this.sessionStreak >= 5) xpEarned += 5; // Hot streak bonus
+
+        const oldLevel = getLevel();
+        this.score += xpEarned;
+        addXP(xpEarned);
+        const newLevel = getLevel();
+
+        // Check for level up
+        if (newLevel > oldLevel) {
+            this.showLevelUp(newLevel);
         }
 
-        this.showFeedback(this.getRandomPraise(), "#4ade80");
+        this.updateHud();
+        this.updateStatsDisplay();
+        this.displayGreeting();
+
+        // Show feedback with XP
+        const praise = this.getRandomPraise();
+        this.showFeedback(`${praise} +${xpEarned} XP`, "#4ade80");
+
+        // Check achievements
+        const newAchievements = checkAchievements();
+        if (newAchievements.length > 0) {
+            setTimeout(() => this.showNewAchievements(newAchievements), 1500);
+        }
+
+        // Animate score
+        this.animateScoreIncrease();
 
         document.getElementById('next-btn').style.display = 'flex';
         spawnParticles(window.innerWidth / 2, window.innerHeight / 2);
+    },
+
+    /**
+     * Show level up animation
+     */
+    showLevelUp: function (level) {
+        SoundFX.levelUp();
+
+        const overlay = document.createElement('div');
+        overlay.className = 'level-up-overlay';
+        overlay.innerHTML = `
+            <div class="level-up-content">
+                <div class="level-up-icon">🎉</div>
+                <div class="level-up-text">升级!</div>
+                <div class="level-up-level">Level ${level}</div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        // Particles burst
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => {
+                spawnParticles(
+                    window.innerWidth / 2 + (Math.random() - 0.5) * 200,
+                    window.innerHeight / 2 + (Math.random() - 0.5) * 200
+                );
+            }, i * 100);
+        }
+
+        setTimeout(() => overlay.remove(), 2500);
+    },
+
+    /**
+     * Show new achievements
+     */
+    showNewAchievements: function (achievements) {
+        if (!achievements || achievements.length === 0) return;
+
+        achievements.forEach((ach, i) => {
+            setTimeout(() => {
+                const toast = document.createElement('div');
+                toast.className = 'achievement-toast';
+                toast.innerHTML = `
+                    <div class="achievement-icon">${ach.icon}</div>
+                    <div class="achievement-info">
+                        <div class="achievement-title">🏅 ${ach.name}</div>
+                        <div class="achievement-desc">${ach.desc}</div>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+
+                SoundFX.success();
+
+                setTimeout(() => {
+                    toast.classList.add('fade-out');
+                    setTimeout(() => toast.remove(), 500);
+                }, 3000);
+            }, i * 1500);
+        });
+    },
+
+    /**
+     * Show session complete screen
+     */
+    showSessionComplete: function () {
+        const stats = getStats();
+        const sessionTime = Math.round((Date.now() - this.sessionStartTime) / 1000);
+        const minutes = Math.floor(sessionTime / 60);
+        const seconds = sessionTime % 60;
+
+        document.getElementById('writing-area').innerHTML = `
+            <div class="session-complete">
+                <h2>🎉 练习完成!</h2>
+                <p class="session-subtitle">Session Complete</p>
+                
+                <div class="session-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">${this.wordsCompletedThisSession}</span>
+                        <span class="stat-label">词语 (Words)</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${this.score}</span>
+                        <span class="stat-label">XP 获得</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${minutes}:${seconds.toString().padStart(2, '0')}</span>
+                        <span class="stat-label">时间 (Time)</span>
+                    </div>
+                </div>
+                
+                <div class="streak-display ${stats.dailyStreak >= 3 ? 'on-fire' : ''}">
+                    <span class="streak-icon">🔥</span>
+                    <span class="streak-count">${stats.dailyStreak}</span>
+                    <span class="streak-label">天连续 (Day Streak)</span>
+                </div>
+                
+                <button class="game-btn restart-btn" onclick="location.reload()">
+                    🔄 再练一次 (Practice Again)
+                </button>
+            </div>
+        `;
+
+        document.querySelector('.controls-area').style.display = 'none';
+
+        SoundFX.levelUp();
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => {
+                spawnParticles(
+                    Math.random() * window.innerWidth,
+                    Math.random() * window.innerHeight
+                );
+            }, i * 150);
+        }
     },
 
     /**
@@ -250,22 +483,20 @@ export const Game = {
     },
 
     /**
-     * Use a hint (show character outline)
+     * Use a hint (show character outline only - does not auto-complete)
      */
     useHint: function () {
-        this.streak = 0;
+        this.sessionStreak = 0;
         this.hintUsed = true;
         this.updateHud();
         SoundFX.wrong();
 
-        // Decrease score for using hint
-        updateWordScore(this.currentWord.term, -1);
         this.renderWordScore();
+        this.showPinyin(); // Show pinyin when using hint
 
+        // Show outline only - user still needs to trace the character
         this.writers.forEach(w => {
-            w.showOutline = true;
-            w.updateColor('outlineColor', '#64748b');
-            w.animateCharacter();
+            w.showOutline();
         });
     },
 
@@ -274,10 +505,10 @@ export const Game = {
      */
     updateHud: function () {
         document.getElementById('score').innerText = this.score;
-        document.getElementById('streak-count').innerText = this.streak;
+        document.getElementById('streak-count').innerText = this.sessionStreak;
 
         const badge = document.getElementById('streak-badge');
-        if (this.streak >= 3) {
+        if (this.sessionStreak >= 3) {
             badge.classList.add('active');
         } else {
             badge.classList.remove('active');
@@ -301,7 +532,43 @@ export const Game = {
      * Get random praise message
      */
     getRandomPraise: function () {
-        const praises = ["太棒了! (Great!)", "完美! (Perfect!)", "厉害! (Awesome!)", "天才! (Genius!)"];
+        const praises = ["太棒了!", "完美!", "厉害!", "天才!", "很好!", "加油!"];
         return praises[Math.floor(Math.random() * praises.length)];
+    },
+
+    /**
+     * Show achievements panel
+     */
+    showAchievements: function () {
+        const achievements = getAchievements();
+        const overlay = document.createElement('div');
+        overlay.className = 'achievements-overlay';
+        overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+        const unlocked = achievements.filter(a => a.unlocked);
+        const locked = achievements.filter(a => !a.unlocked);
+
+        overlay.innerHTML = `
+            <div class="achievements-panel">
+                <h2>🏆 成就 (Achievements)</h2>
+                <div class="achievements-grid">
+                    ${unlocked.map(a => `
+                        <div class="achievement-item unlocked">
+                            <span class="ach-icon">${a.icon}</span>
+                            <span class="ach-name">${a.name}</span>
+                        </div>
+                    `).join('')}
+                    ${locked.map(a => `
+                        <div class="achievement-item locked">
+                            <span class="ach-icon">🔒</span>
+                            <span class="ach-name">???</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="game-btn" onclick="this.closest('.achievements-overlay').remove()">关闭 (Close)</button>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
     }
 };
