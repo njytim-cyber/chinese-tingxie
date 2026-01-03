@@ -5,7 +5,6 @@
 import { initVoices, unlockAudio } from './audio';
 import { initParticles } from './particles';
 import { Game } from './game';
-import '../styles.css';
 
 /**
  * Start the game (called from start button)

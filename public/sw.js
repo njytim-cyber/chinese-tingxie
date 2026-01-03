@@ -1,13 +1,9 @@
-const CACHE_NAME = 'tingxie-v1.3.2';
+const CACHE_NAME = 'tingxie-v1.3.3';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
     '/styles.css',
-    '/src/main.ts',
-    '/src/game.ts',
-    '/src/data.ts',
-    '/src/audio.ts',
-    '/src/particles.ts'
+    '/manifest.json'
 ];
 
 // Install event - cache static assets
