@@ -96,6 +96,12 @@ function init(): void {
     }
 }
 
+// Prevent PWA install prompt
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    console.log('PWA install prompt prevented');
+});
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
