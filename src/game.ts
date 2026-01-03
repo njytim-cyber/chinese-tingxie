@@ -858,6 +858,9 @@ export const Game: GameState = {
             </div>
         `;
 
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'session-actions';
+
         const reloadBtn = document.createElement('button');
         reloadBtn.className = 'game-btn restart-btn';
         reloadBtn.innerText = '🔄 再练一次';
@@ -867,7 +870,31 @@ export const Game: GameState = {
             this.startPractice();
         };
 
-        sessionDiv.appendChild(reloadBtn);
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'game-btn share-btn';
+        shareBtn.style.background = 'linear-gradient(to bottom, #8b5cf6, #7c3aed)';
+        shareBtn.style.borderColor = '#6d28d9';
+        shareBtn.innerHTML = '📤 分享成绩';
+        shareBtn.onclick = () => {
+            const text = `✨ 星空听写\n我刚刚练习了 ${this.wordsCompletedThisSession} 个词语！\n得分: ${this.score} | 连胜: ${stats.dailyStreak}🔥\n等级: Lv.${getLevel()}\n\n快来挑战吧！`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: '星空听写成绩',
+                    text: text,
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                navigator.clipboard.writeText(text + ' ' + window.location.href).then(() => {
+                    this.showFeedback('已复制到剪贴板！', '#38bdf8');
+                });
+            }
+        };
+
+        actionsDiv.appendChild(reloadBtn);
+        actionsDiv.appendChild(shareBtn);
+        sessionDiv.appendChild(actionsDiv);
+
         container.appendChild(sessionDiv);
 
         const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
