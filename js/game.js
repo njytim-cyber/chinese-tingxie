@@ -320,8 +320,8 @@ export const Game = {
         this.updateStatsDisplay();
         this.displayGreeting();
 
-        // Show feedback with XP
-        const praise = this.getRandomPraise();
+        // Show feedback with XP and extra encouragement
+        const praise = this.getRandomPraise(quality, this.sessionStreak);
         this.showFeedback(`${praise} +${xpEarned} XP`, "#4ade80");
 
         // Check achievements
@@ -332,9 +332,20 @@ export const Game = {
 
         // Animate score
         this.animateScoreIncrease();
+        this.showPinyin();
 
         document.getElementById('next-btn').style.display = 'flex';
-        spawnParticles(window.innerWidth / 2, window.innerHeight / 2);
+
+        // More celebration for perfect/streak
+        const particleCount = quality === 5 ? 5 : (this.sessionStreak >= 3 ? 3 : 1);
+        for (let i = 0; i < particleCount; i++) {
+            setTimeout(() => {
+                spawnParticles(
+                    window.innerWidth / 2 + (Math.random() - 0.5) * 200,
+                    window.innerHeight / 2 + (Math.random() - 0.5) * 100
+                );
+            }, i * 150);
+        }
     },
 
     /**
@@ -529,10 +540,51 @@ export const Game = {
     },
 
     /**
-     * Get random praise message
+     * Get random praise message based on performance
+     * @param {number} quality - Performance quality (2-5)
+     * @param {number} streak - Current session streak
      */
-    getRandomPraise: function () {
-        const praises = ["太棒了!", "完美!", "厉害!", "天才!", "很好!", "加油!"];
+    getRandomPraise: function (quality = 4, streak = 0) {
+        // Perfect performance
+        const perfectPraises = [
+            "完美! 🌟", "太完美了!", "满分!", "无敌!", "太厉害了!",
+            "天才啊!", "简直完美!", "一次过关!", "神了!"
+        ];
+
+        // Good performance
+        const goodPraises = [
+            "太棒了! ⭐", "很好!", "厉害!", "不错!", "做得好!",
+            "继续加油!", "进步了!", "真棒!", "了不起!"
+        ];
+
+        // Okay performance
+        const okayPraises = [
+            "加油! 💪", "继续努力!", "有进步!", "坚持住!", "再接再厉!",
+            "慢慢来!", "没关系!", "继续练习!"
+        ];
+
+        // Streak bonuses
+        const streakPraises = [
+            "🔥 连续答对!", "🔥 势不可挡!", "🔥 火力全开!",
+            "连胜中!", "停不下来!", "太猛了!"
+        ];
+
+        let praises;
+        if (quality === 5) {
+            praises = perfectPraises;
+        } else if (quality === 4) {
+            praises = goodPraises;
+        } else {
+            praises = okayPraises;
+        }
+
+        // Add streak praise for hot streaks
+        if (streak >= 5) {
+            return streakPraises[Math.floor(Math.random() * streakPraises.length)];
+        } else if (streak >= 3 && Math.random() > 0.5) {
+            return "🔥 " + praises[Math.floor(Math.random() * praises.length)];
+        }
+
         return praises[Math.floor(Math.random() * praises.length)];
     },
 
@@ -566,6 +618,34 @@ export const Game = {
                     `).join('')}
                 </div>
                 <button class="game-btn" onclick="this.closest('.achievements-overlay').remove()">关闭 (Close)</button>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+    },
+
+    /**
+     * Show menu/pause overlay
+     */
+    showMenu: function () {
+        const overlay = document.createElement('div');
+        overlay.className = 'menu-overlay';
+        overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+        overlay.innerHTML = `
+            <div class="menu-panel">
+                <h2>⏸ 暂停 (Paused)</h2>
+                <div class="menu-buttons">
+                    <button class="game-btn" onclick="this.closest('.menu-overlay').remove()">
+                        ▶ 继续 (Resume)
+                    </button>
+                    <button class="game-btn btn-hint" onclick="game.showAchievements(); this.closest('.menu-overlay').remove()">
+                        🏆 成就 (Achievements)
+                    </button>
+                    <button class="game-btn" style="background: linear-gradient(to bottom, #ef4444, #dc2626); border-color: #b91c1c;" onclick="location.reload()">
+                        🏠 返回主菜单 (Main Menu)
+                    </button>
+                </div>
             </div>
         `;
 

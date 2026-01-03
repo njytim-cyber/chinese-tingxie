@@ -26,14 +26,14 @@
         <button class="start-btn" id="start-btn">▶ 开始 (Start)</button>
 
         <div class="instructions-box">
-            <h3>📝 How to Play</h3>
+            <h3>📝 怎么玩 (How to Play)</h3>
             <ol>
-                <li>🔊 <strong>Listen</strong> to the word being spoken</li>
-                <li>✍️ <strong>Draw</strong> each character stroke by stroke on the boxes</li>
-                <li>💡 Need help? Tap <strong>Hint</strong> to see the outline</li>
-                <li>⭐ Master words to earn XP and level up!</li>
+                <li>🔊 <strong>听</strong> - 点击听按钮听词语发音</li>
+                <li>✍️ <strong>写</strong> - 用手指一笔一笔写汉字</li>
+                <li>💡 <strong>提示</strong> - 需要帮助？点击提示看字形</li>
+                <li>⭐ <strong>升级</strong> - 掌握词语赚取经验值！</li>
             </ol>
-            <p class="touch-hint">👆 Use your finger or stylus to trace the characters</p>
+            <p class="touch-hint">👆 用手指或触控笔在方框内描写</p>
         </div>
 
         <div class="start-links">
@@ -48,6 +48,7 @@
     <canvas id="particle-canvas"></canvas>
 
     <div class="hud">
+        <button class="menu-btn" onclick="game.showMenu()" title="返回菜单">☰</button>
         <div id="player-greeting" class="player-greeting"></div>
         <div class="hud-center">
             <div class="daily-streak-display">
