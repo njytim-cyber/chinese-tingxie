@@ -24,6 +24,7 @@ export const Game = {
     practiceWords: [],
     mistakesMade: 0,
     hintUsed: false,
+    hintStrokeIndex: [], // Track which stroke to hint next for each character
     sessionStartTime: null,
     wordsCompletedThisSession: 0,
 
@@ -122,6 +123,7 @@ export const Game = {
         this.completedChars = 0;
         this.mistakesMade = 0;
         this.hintUsed = false;
+        this.hintStrokeIndex = []; // Reset hint tracking for new word
 
         // UI Reset
         const container = document.getElementById('writing-area');
@@ -494,21 +496,34 @@ export const Game = {
     },
 
     /**
-     * Use a hint (show character outline only - does not auto-complete)
+     * Use a hint (highlight only the next stroke)
      */
     useHint: function () {
         this.sessionStreak = 0;
         this.hintUsed = true;
         this.updateHud();
-        SoundFX.wrong();
 
-        this.renderWordScore();
-        this.showPinyin(); // Show pinyin when using hint
+        // Find the active character slot
+        const activeSlot = document.querySelector('.char-slot.active');
+        if (!activeSlot) return;
 
-        // Show outline only - user still needs to trace the character
-        this.writers.forEach(w => {
-            w.showOutline();
-        });
+        const activeIndex = parseInt(activeSlot.id.replace('char-', ''));
+        const writer = this.writers[activeIndex];
+        if (!writer) return;
+
+        // Get current stroke index to hint
+        const strokeIndex = this.hintStrokeIndex[activeIndex] || 0;
+
+        // Highlight just this one stroke
+        writer.highlightStroke(strokeIndex);
+
+        // Increment for next hint press
+        this.hintStrokeIndex[activeIndex] = strokeIndex + 1;
+
+        // Show pinyin after first hint
+        if (strokeIndex === 0) {
+            this.showPinyin();
+        }
     },
 
     /**
