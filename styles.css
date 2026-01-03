@@ -255,17 +255,13 @@ body {
 
 /* Pinyin label below box */
 .char-pinyin-label {
-    font-size: 1.4rem;
+    font-size: 1.6rem;
     color: var(--gold);
-    opacity: 0;
-    transform: translateY(-5px);
-    transition: all 0.3s ease;
-    min-height: 1.6rem;
-}
-
-.char-pinyin-label.visible {
     opacity: 1;
-    transform: translateY(0);
+    margin-top: 5px;
+    min-height: 1.8rem;
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+    font-family: system-ui, -apple-system, sans-serif;
 }
 
 /* The Box for Writing */
@@ -332,6 +328,20 @@ body {
 .btn-audio {
     background: linear-gradient(to bottom, #a78bfa, #7c3aed);
     border-color: #6d28d9;
+}
+
+.secondary-btn {
+    background: var(--card-bg);
+    border: 2px solid #334155;
+    color: #94a3b8;
+    font-size: 1rem;
+    padding: 10px 20px;
+    margin-bottom: 20px;
+}
+
+.secondary-btn:hover {
+    border-color: var(--primary);
+    color: white;
 }
 
 /* --- Level Progress Bar --- */

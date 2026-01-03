@@ -69,6 +69,15 @@ function init(): void {
             startBtn.addEventListener('click', startGame);
         }
 
+        const reviewBtn = document.getElementById('review-btn');
+        if (reviewBtn) {
+            reviewBtn.addEventListener('click', () => {
+                const overlay = document.getElementById('start-overlay');
+                if (overlay) overlay.remove();
+                Game.showProgress();
+            });
+        }
+
         // Set up game control buttons
         const menuBtn = document.getElementById('menu-btn');
         if (menuBtn) menuBtn.addEventListener('click', () => Game.showMenu());
