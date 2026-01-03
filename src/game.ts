@@ -235,9 +235,9 @@ export const Game: GameState = {
         const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
         if (controlsArea) controlsArea.style.display = 'none';
 
-        // Ensure HUD controls are visible (if returning from progress view)
+        // Hide HUD controls (audio, hint, score) in Chapter Selection
         const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
-        if (hudControls) hudControls.style.display = 'flex';
+        if (hudControls) hudControls.style.display = 'none';
 
         const footer = document.getElementById('footer-progress');
         if (footer) footer.style.display = 'none';
@@ -261,6 +261,8 @@ export const Game: GameState = {
         // Ensure HUD controls are visible
         const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
         if (hudControls) hudControls.style.display = 'flex';
+
+        this.renderProgressDots();
 
         // Update lesson display in HUD
         const lesson = getCurrentLesson();
@@ -435,6 +437,10 @@ export const Game: GameState = {
         const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
         if (controlsArea) controlsArea.style.display = 'flex';
 
+        // Ensure HUD controls are visible
+        const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
+        if (hudControls) hudControls.style.display = 'flex';
+
         this.renderProgressDots();
         this.loadLevel();
     },
@@ -563,8 +569,8 @@ export const Game: GameState = {
             });
         });
 
-        // Add score display
-        this.renderWordScore();
+        // Score display removed per user request
+        // this.renderWordScore();
 
         // Update progress dots
         this.updateProgressDot(this.currentWordIndex, 'active');
