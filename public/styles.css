@@ -281,6 +281,10 @@ body {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
     transition: border-color 0.2s, box-shadow 0.2s;
     touch-action: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
 }
 
 .char-slot.active {
@@ -1223,7 +1227,9 @@ body {
     .lesson-select-actions .game-btn {
         width: 100%;
     }
-}/* Footer Progress */
+}
+
+/* Footer Progress */
 .footer-progress {
     position: fixed;
     bottom: 0;
@@ -1292,6 +1298,7 @@ body {
         height: 10px;
     }
 }
+
 /* Session Actions */
 .session-actions {
     display: flex;
@@ -1304,6 +1311,7 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
 }
+
 /* Quantity Select */
 .quantity-select {
     display: flex;
@@ -1350,6 +1358,7 @@ body {
 .quantity-btn:active {
     transform: scale(0.98);
 }
+
 /* Session Length Toggle */
 .session-length-toggle {
     display: flex;
@@ -1417,6 +1426,7 @@ body {
         font-size: 0.85rem;
     }
 }
+
 .main-practice-btn {
     background: linear-gradient(to bottom, #a78bfa, #7c3aed);
     border: none;
@@ -1437,10 +1447,12 @@ body {
     transform: translateY(6px);
     border-bottom-width: 0;
 }
+
 .btn-skip {
     background: linear-gradient(to bottom, #94a3b8, #64748b);
     border-color: #475569;
 }
+
 /* Achievements Navigation */
 .ach-header {
     display: flex;

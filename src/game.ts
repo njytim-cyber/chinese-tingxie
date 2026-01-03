@@ -576,8 +576,8 @@ export const Game: GameState = {
             container.appendChild(charBox);
 
             const writer = HanziWriter.create(`char-${index}`, char, {
-                width: 230,
-                height: 230,
+                width: 234,
+                height: 234,
                 padding: 5,
                 showOutline: false,
                 strokeColor: '#38bdf8',
