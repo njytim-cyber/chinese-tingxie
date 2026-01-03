@@ -160,8 +160,10 @@ export const Game = {
                 leniency: 1.5,  // More forgiving stroke matching (default is 1.0)
                 showHintAfterMisses: 3,  // Show hint after 3 misses
                 highlightOnComplete: true,
-                onCorrectStroke: () => {
+                onCorrectStroke: (strokeData) => {
                     SoundFX.correctStroke();
+                    // Track current stroke position for hints
+                    this.hintStrokeIndex[index] = strokeData.strokeNum + 1;
                 },
                 onMistake: () => {
                     SoundFX.wrong();
@@ -503,7 +505,7 @@ export const Game = {
     },
 
     /**
-     * Use a hint (highlight only the next stroke)
+     * Use a hint (highlight the next stroke based on user's progress)
      */
     useHint: function () {
         this.sessionStreak = 0;
@@ -518,19 +520,14 @@ export const Game = {
         const writer = this.writers[activeIndex];
         if (!writer) return;
 
-        // Get current stroke index to hint
+        // Get current stroke index based on user's actual progress
         const strokeIndex = this.hintStrokeIndex[activeIndex] || 0;
 
-        // Highlight just this one stroke
+        // Highlight the next stroke they need to write
         writer.highlightStroke(strokeIndex);
 
-        // Increment for next hint press
-        this.hintStrokeIndex[activeIndex] = strokeIndex + 1;
-
-        // Show pinyin after first hint
-        if (strokeIndex === 0) {
-            this.showPinyin();
-        }
+        // Show pinyin on first hint
+        this.showPinyin();
     },
 
     /**

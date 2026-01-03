@@ -19,6 +19,10 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-text-size-adjust: 100%;
 }
 
 /* --- Start Screen Overlay --- */
