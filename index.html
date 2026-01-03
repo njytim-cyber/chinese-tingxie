@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>星空听写</title>
     <meta name="description" content="练习汉字听写。通过互动描红学习词汇。">
-    <meta name="version" content="1.4.0">
+    <meta name="version" content="1.4.1">
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#38bdf8">
@@ -27,7 +27,7 @@
     <div id="start-overlay">
         <h1 class="start-title">星空听写</h1>
         <p class="start-subtitle">银河听写练习</p>
-        <p class="version-tag">v1.4.0</p>
+        <p class="version-tag">v1.4.1</p>
 
         <input type="text" id="player-name" class="name-input" placeholder="你的名字" maxlength="20">
 
@@ -45,24 +45,26 @@
 
     <div class="hud">
         <button class="menu-btn" id="menu-btn" title="返回">❮</button>
-        <h1 class="game-title" style="font-size: 1.5rem; margin: 0;">星空听写</h1>
-        <div class="hud-center">
+
+        <div class="hud-controls">
+            <!-- Buttons -->
+            <button class="game-btn btn-audio compact-btn" id="btn-audio" title="听读音">🔊</button>
+            <button class="game-btn btn-hint compact-btn" id="btn-hint" title="提示">💡</button>
+
+            <!-- Stats -->
+            <div class="score-box">
+                <span>⭐</span> <span id="score">0</span>
+            </div>
+
+            <!-- Streak Badge -->
+            <div class="streak-badge" id="streak-badge" style="display: none;">
+                🔥 x<span id="streak-count">0</span>
+            </div>
+
             <div class="daily-streak-display" id="streak-container" style="display: none;">
                 <span class="streak-fire">🔥</span>
                 <span id="daily-streak">0</span>
             </div>
-        </div>
-    </div>
-    <div class="hud-center">
-        <button class="game-btn btn-audio compact-btn" id="btn-audio" title="听读音">🔊</button>
-        <button class="game-btn btn-hint compact-btn" id="btn-hint" title="提示">💡</button>
-    </div>
-    <div class="hud-right">
-        <div class="score-box">
-            <span>⭐</span> <span id="score">0</span>
-        </div>
-        <div class="streak-badge" id="streak-badge" style="display: none;">
-            🔥 x<span id="streak-count">0</span>
         </div>
     </div>
     </div>
