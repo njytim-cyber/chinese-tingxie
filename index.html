@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>星空听写</title>
     <meta name="description" content="练习汉字听写。通过互动描红学习词汇。">
-    <meta name="version" content="1.4.2">
+    <meta name="version" content="1.5.0">
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#38bdf8">
@@ -27,7 +27,7 @@
     <div id="start-overlay">
         <h1 class="start-title">星空听写</h1>
         <p class="start-subtitle">银河听写练习</p>
-        <p class="version-tag">v1.4.2</p>
+        <p class="version-tag">v1.5.0</p>
 
         <input type="text" id="player-name" class="name-input" placeholder="你的名字" maxlength="20">
 
@@ -82,9 +82,7 @@
 
         <div id="pinyin-display" class="pinyin-display"></div>
 
-        <div class="progress-container">
-            <div class="progress-fill" id="xp-bar"></div>
-        </div>
+        <!-- Progress bar removed, moved to footer -->
 
         <div class="controls-area">
             <!-- Buttons moved to HUD -->
@@ -111,6 +109,7 @@
             });
         }
     </script>
+    <div id="footer-progress" class="footer-progress"></div>
 </body>
 
 </html>

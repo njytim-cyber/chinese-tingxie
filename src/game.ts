@@ -62,6 +62,8 @@ interface GameState {
     getRandomPraise: (quality?: number, streak?: number) => string;
     showAchievements: () => void;
     showMenu: () => void;
+    renderProgressDots: () => void;
+    updateProgressDot: (index: number, status: 'active' | 'correct' | 'wrong') => void;
 }
 
 export const Game: GameState = {
@@ -236,6 +238,9 @@ export const Game: GameState = {
         // Ensure HUD controls are visible (if returning from progress view)
         const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
         if (hudControls) hudControls.style.display = 'flex';
+
+        const footer = document.getElementById('footer-progress');
+        if (footer) footer.style.display = 'none';
     },
 
     /**
@@ -430,7 +435,39 @@ export const Game: GameState = {
         const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
         if (controlsArea) controlsArea.style.display = 'flex';
 
+        this.renderProgressDots();
         this.loadLevel();
+    },
+
+    /**
+     * Render the footer progress dots
+     */
+    renderProgressDots: function () {
+        const container = document.getElementById('footer-progress');
+        if (!container) return;
+        container.innerHTML = '';
+        container.style.display = 'flex'; // Ensure visible
+
+        this.practiceWords.forEach((_, i) => {
+            const dot = document.createElement('div');
+            dot.className = 'progress-dot';
+            dot.id = `dot-${i}`;
+            container.appendChild(dot);
+        });
+    },
+
+    /**
+     * Update a specific progress dot
+     */
+    updateProgressDot: function (index: number, status: 'active' | 'correct' | 'wrong') {
+        const dot = document.getElementById(`dot-${index}`);
+        if (!dot) return;
+
+        // Remove exclusive states if setting definitive status
+        if (status === 'correct' || status === 'wrong') {
+            dot.classList.remove('active');
+        }
+        dot.classList.add(status);
     },
 
     /**
@@ -529,9 +566,8 @@ export const Game: GameState = {
         // Add score display
         this.renderWordScore();
 
-        const progress = (this.currentWordIndex / this.practiceWords.length) * 100;
-        const xpBar = document.getElementById('xp-bar');
-        if (xpBar) xpBar.style.width = `${progress}%`;
+        // Update progress dots
+        this.updateProgressDot(this.currentWordIndex, 'active');
 
         // Play audio after animations settle
         setTimeout(() => {
@@ -664,6 +700,10 @@ export const Game: GameState = {
 
         // Update SRS
         updateWordSRS(this.currentWord.term, quality);
+
+        // Update Progress Dot
+        const isSuccess = quality >= 3;
+        this.updateProgressDot(this.currentWordIndex, isSuccess ? 'correct' : 'wrong');
 
         // Calculate XP earned
         let xpEarned = 10;
@@ -821,7 +861,11 @@ export const Game: GameState = {
         const reloadBtn = document.createElement('button');
         reloadBtn.className = 'game-btn restart-btn';
         reloadBtn.innerText = '🔄 再练一次';
-        reloadBtn.onclick = () => location.reload();
+        reloadBtn.onclick = () => {
+            // Reset and restart with same words
+            this.currentWordIndex = 0;
+            this.startPractice();
+        };
 
         sessionDiv.appendChild(reloadBtn);
         container.appendChild(sessionDiv);
