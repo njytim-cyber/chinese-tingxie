@@ -44,6 +44,7 @@ interface GameState {
     startPractice: () => void;
     selectLesson: (lessonId: number, wordLimit?: number) => void;
     loadLevel: () => void;
+    skipLevel: () => void;
     showPinyin: () => void;
     renderWordScore: () => void;
     handleMistake: (index: number) => void;
@@ -318,7 +319,7 @@ export const Game: GameState = {
 
         const lessons = getLessons();
         const masteryLabels = ['未学', '入门', '熟悉', '掌握', '精通', '完美'];
-        const masteryColors = ['#64748b', '#ef4444', '#f97316', '#eab308', '#22c55e', '#38bdf8'];
+        const masteryColors = ['#64748b', '#ef4444', '#f97316', '#eab308', '#22c5e', '#38bdf8'];
 
         container.innerHTML = `
             <div class="progress-view">
@@ -402,12 +403,17 @@ export const Game: GameState = {
                 </div>
                 <div class="practice-actions">
                     <button class="game-btn" id="select-all-lessons">全选</button>
-                    <button class="game-btn btn-audio" id="start-practice-btn">开始练习</button>
+                    <button class="game-btn review-start-btn" id="start-practice-btn" disabled>开始复习 (0)</button>
                     <button class="game-btn btn-hint" id="back-to-lessons-btn">返回</button>
                 </div>
             </div>
         `;
 
+        // Hide HUD controls (audio, hint, score)
+        const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
+        if (hudControls) hudControls.style.display = 'none';
+
+        // Add click handlers
         const self = this;
 
         // Select all button
@@ -1001,6 +1007,7 @@ export const Game: GameState = {
 
         const activeIndex = parseInt(activeSlot.id.replace('char-', ''));
         const writer = this.writers[activeIndex];
+
         if (!writer) return;
 
         // Get current stroke index based on user's actual progress
@@ -1011,6 +1018,29 @@ export const Game: GameState = {
 
         // Show pinyin on first hint
         this.showPinyin();
+        // Show pinyin on first hint
+        this.showPinyin();
+    },
+
+    /**
+     * Skip current level
+     */
+    skipLevel: function () {
+        // Mark as incorrect
+        this.updateProgressDot(this.currentWordIndex, 'wrong');
+
+        // Reset streak
+        this.sessionStreak = 0;
+        this.updateHud();
+
+        // Reveal answer? Maybe just move on.
+        // Moving on immediately feels snappy.
+        this.currentWordIndex++;
+
+        // Play skip sound (or mistake sound?)
+        // SoundFX.wrong(); // Optional
+
+        this.loadLevel();
     },
 
     /**
@@ -1114,7 +1144,11 @@ export const Game: GameState = {
 
         overlay.innerHTML = `
             <div class="achievements-panel">
-                <h2>🏆 成就</h2>
+                <div class="ach-header">
+                     <button class="nav-back-btn" onclick="this.closest('.achievements-overlay').remove()">❮</button>
+                     <h2>🏆 成就</h2>
+                     <div style="width: 30px;"></div> <!-- Spacer for centering -->
+                </div>
                 <div class="achievements-grid">
                     ${unlocked.map(a => `
                         <div class="achievement-item unlocked">
@@ -1129,7 +1163,6 @@ export const Game: GameState = {
                         </div>
                     `).join('')}
                 </div>
-                <button class="game-btn" onclick="this.closest('.achievements-overlay').remove()">关闭</button>
             </div>
         `;
 

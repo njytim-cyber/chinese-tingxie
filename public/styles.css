@@ -1437,3 +1437,26 @@ body {
     transform: translateY(6px);
     border-bottom-width: 0;
 }
+.btn-skip {
+    background: linear-gradient(to bottom, #94a3b8, #64748b);
+    border-color: #475569;
+}
+/* Achievements Navigation */
+.ach-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+}
+
+.nav-back-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px 10px;
+}
