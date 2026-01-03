@@ -151,11 +151,15 @@ export const Game = {
                 strokeColor: '#38bdf8',
                 radicalColor: '#f472b6',
                 outlineColor: '#334155',
-                drawingWidth: 10,
+                drawingWidth: 12,  // Slightly thicker for easier touch
                 showCharacter: false,
+                drawingFadeDuration: 300,
             });
 
             writer.quiz({
+                leniency: 1.5,  // More forgiving stroke matching (default is 1.0)
+                showHintAfterMisses: 3,  // Show hint after 3 misses
+                highlightOnComplete: true,
                 onCorrectStroke: () => {
                     SoundFX.correctStroke();
                 },
