@@ -14,6 +14,7 @@ export interface DictationPassage {
     isFullDictation?: boolean;
     hint?: string;
     chunks?: string[];
+    chunkPinyins?: string[];
 }
 
 /**
@@ -46,7 +47,7 @@ export class DictationManager {
     private inputField: HTMLInputElement | null = null;
 
     // Chunking state
-    private chunks: { start: number; end: number; text: string }[] = [];
+    private chunks: { start: number; end: number; text: string; pinyin: string[] }[] = [];
     private currentChunkIndex = 0;
 
     onComplete: ((score: number, total: number) => void) | null = null;
@@ -62,13 +63,19 @@ export class DictationManager {
 
         // Process chunks
         this.chunks = [];
+        const chunkPinyins = passage.chunkPinyins || [];
+
         if (passage.chunks && passage.chunks.length > 0) {
             let currentIndex = 0;
-            this.chunks = passage.chunks.map(chunkText => {
+            this.chunks = passage.chunks.map((chunkText, i) => {
                 const start = currentIndex;
                 const end = start + chunkText.length;
                 currentIndex = end; // Assuming chunks are contiguous
-                return { start, end, text: chunkText };
+
+                const pinyinStr = chunkPinyins[i] || "";
+                const pinyin = pinyinStr.trim() ? pinyinStr.split(" ") : [];
+
+                return { start, end, text: chunkText, pinyin };
             });
         } else {
             // Auto-split by punctuation if no chunks provided
@@ -87,14 +94,15 @@ export class DictationManager {
                     this.chunks.push({
                         start: currentStart,
                         end: currentStart + fullChunk.length,
-                        text: fullChunk
+                        text: fullChunk,
+                        pinyin: []
                     });
                     currentStart += fullChunk.length;
                 }
             }
 
             if (this.chunks.length === 0) {
-                this.chunks = [{ start: 0, end: passage.text.length, text: passage.text }];
+                this.chunks = [{ start: 0, end: passage.text.length, text: passage.text, pinyin: [] }];
             }
         }
 
@@ -227,35 +235,61 @@ export class DictationManager {
                 const boxEl = document.createElement('div');
                 boxEl.className = 'dictation-char-box focus-box';
                 boxEl.style.width = '100%';
-                boxEl.style.aspectRatio = '1';
+                // Auto height
+                boxEl.style.aspectRatio = '0.8'; // Taller for pinyin
                 boxEl.style.fontSize = '1.5rem';
                 boxEl.style.display = 'flex';
+                boxEl.style.flexDirection = 'column';
                 boxEl.style.alignItems = 'center';
                 boxEl.style.justifyContent = 'center';
                 boxEl.style.border = '2px solid #e2e8f0';
                 boxEl.style.borderRadius = '8px';
                 boxEl.style.cursor = 'pointer';
 
+                // Pinyin
+                const pinyin = chunkState.pinyin[i - chunkState.start] || '';
+                const pinyinEl = document.createElement('div');
+                pinyinEl.className = 'char-pinyin';
+                pinyinEl.textContent = pinyin;
+                pinyinEl.style.fontSize = '0.9rem';
+                pinyinEl.style.color = '#94a3b8';
+                pinyinEl.style.marginBottom = '2px';
+                // Always take up space
+                if (!pinyin) pinyinEl.innerHTML = '&nbsp;';
+                boxEl.appendChild(pinyinEl);
+
+                // Content
+                const contentEl = document.createElement('div');
+                contentEl.className = 'char-content';
+                contentEl.style.width = '40px';
+                contentEl.style.height = '40px';
+                contentEl.style.display = 'flex';
+                contentEl.style.alignItems = 'center';
+                contentEl.style.justifyContent = 'center';
+                contentEl.style.fontWeight = 'bold';
+
                 if (box.isBlank) {
                     boxEl.classList.add('blank');
                     boxEl.style.background = '#f8fafc';
                     if (box.userInput) {
-                        boxEl.textContent = box.userInput;
+                        contentEl.textContent = box.userInput;
                         boxEl.classList.add('filled');
-                        boxEl.style.color = '#0f172a';
+                        contentEl.style.color = '#0f172a';
 
                         if (box.isCorrect === true) {
                             boxEl.classList.add('correct');
                             boxEl.style.borderColor = '#22c55e';
-                            boxEl.style.color = '#22c55e';
+                            contentEl.style.color = '#22c55e';
                             boxEl.style.background = '#f0fdf4';
                         }
                         if (box.isCorrect === false) {
                             boxEl.classList.add('wrong');
                             boxEl.style.borderColor = '#ef4444';
-                            boxEl.style.color = '#ef4444';
+                            contentEl.style.color = '#ef4444';
                             boxEl.style.background = '#fef2f2';
                         }
+                    } else {
+                        // Empty placeholder?
                     }
 
                     // Highlight current blank
@@ -271,11 +305,12 @@ export class DictationManager {
                         this.focusCurrentBlank();
                     });
                 } else {
-                    boxEl.textContent = box.char;
+                    contentEl.textContent = box.char;
                     boxEl.classList.add('given');
                     boxEl.style.background = '#e2e8f0';
-                    boxEl.style.color = '#64748b';
+                    contentEl.style.color = '#64748b';
                 }
+                boxEl.appendChild(contentEl);
                 grid.appendChild(boxEl);
             }
             chunkContainer.appendChild(grid);
@@ -338,9 +373,6 @@ export class DictationManager {
         const isMobile = /Mobi|Android/i.test(navigator.userAgent);
         if (this.inputField) {
             this.inputField.value = '';
-            // Only force focus on user interaction to avoid virtual keyboard flicker
-            // But we need it active for typing. 
-            // The hidden input strategy requires focus.
             this.inputField.focus();
         }
     }

@@ -1887,3 +1887,24 @@ body {
     z-index: 10;
 }
 
+
+/* Enhanced Focus Box (v1.18.1) */
+.focus-box {
+    background: #fff !important;
+    border: 2px solid #cbd5e1 !important;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+.focus-box.active {
+    border-color: #3b82f6 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2);
+}
+.char-pinyin {
+    font-family: sans-serif;
+    font-weight: 500;
+}
+.char-content {
+    font-family: 'Ma Shan Zheng', 'KaiTi', serif;
+    font-size: 2rem;
+}
+
