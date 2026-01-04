@@ -1855,7 +1855,9 @@ body {
     .dictation-char-box {
         font-size: 1.8rem;
     }
-}/* Focus View Styles */
+}
+
+/* Focus View Styles */
 .dictation-container.focus-view {
     max-width: 600px;
     margin: 0 auto;
@@ -1863,19 +1865,36 @@ body {
 }
 
 .focus-context {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    letter-spacing: 0.05em;
-    border-left: 4px solid var(--primary);
+    font-size: 1rem;
+    line-height: 1.5;
+    letter-spacing: 0.1em;
+    text-align: center;
+    color: var(--gold);
+    min-height: 1.5rem;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 4px;
 }
 
 .focus-chunk-container {
     animation: slideIn 0.3s ease-out;
+    background: transparent !important;
+    /* Ensure no white box */
+    box-shadow: none !important;
+    /* Remove box shadow from container if transparent */
 }
 
 @keyframes slideIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .focus-box {
@@ -1892,17 +1911,20 @@ body {
 .focus-box {
     background: #fff !important;
     border: 2px solid #cbd5e1 !important;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
+
 .focus-box.active {
     border-color: #3b82f6 !important;
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2);
 }
+
 .char-pinyin {
     font-family: sans-serif;
     font-weight: 500;
 }
+
 .char-content {
     font-family: 'Ma Shan Zheng', 'KaiTi', serif;
     font-size: 2rem;
@@ -1916,11 +1938,13 @@ body {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
     border-radius: 16px !important;
 }
+
 .focus-box.active {
     border-color: var(--primary) !important;
     box-shadow: 0 0 20px rgba(56, 189, 248, 0.3) !important;
     transform: none !important;
 }
+
 .char-pinyin {
     color: var(--gold) !important;
     font-size: 1.2rem !important;
@@ -1928,6 +1952,7 @@ body {
     margin-top: 8px;
     font-weight: normal;
 }
+
 .focus-view .dictation-grid {
     gap: 20px;
 }
@@ -1937,9 +1962,11 @@ body {
 .mobile-nav-container {
     display: contents;
 }
+
 .mobile-nav-btn {
     display: none;
 }
+
 .dictation-char-box {
     transition: opacity 0.3s;
 }
@@ -1951,6 +1978,7 @@ body {
         width: 100%;
         height: 100%;
     }
+
     .focus-view {
         height: 100dvh;
         display: flex;
@@ -1958,6 +1986,7 @@ body {
         justify-content: flex-start;
         padding-top: 10px;
     }
+
     .focus-chunk-container {
         flex: 1;
         display: flex;
@@ -1966,6 +1995,7 @@ body {
         align-items: center;
         position: relative;
     }
+
     .mobile-nav-container {
         display: flex;
         justify-content: space-between;
@@ -1973,6 +2003,7 @@ body {
         width: 100%;
         gap: 10px;
     }
+
     .mobile-nav-btn {
         display: flex;
         justify-content: center;
@@ -1986,38 +2017,45 @@ body {
         font-size: 1.5rem;
         cursor: pointer;
     }
+
     .mobile-nav-btn:active {
         background: var(--primary);
     }
+
     .dictation-grid {
         display: flex !important;
         grid-template-columns: none !important;
         width: 100%;
         justify-content: center;
     }
+
     .dictation-char-box {
         display: none !important;
     }
+
     .dictation-char-box.active-mobile-char {
         display: flex !important;
         width: 280px !important;
         height: auto !important;
     }
+
     .char-content.focus-box {
         aspect-ratio: 1 !important;
         /* Ensure square on mobile */
     }
+
     .focus-context {
         font-size: 0.9rem;
         padding: 5px;
         min-height: 30px;
         margin-bottom: 10px;
     }
+
     .focus-header {
         margin-bottom: 10px;
     }
+
     .focus-controls {
         margin-bottom: 20px;
     }
 }
-

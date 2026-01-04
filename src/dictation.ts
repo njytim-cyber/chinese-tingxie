@@ -56,6 +56,7 @@ export class DictationManager {
 
     // HanziWriter instances for current chunk
     private writers: HanziWriter[] = [];
+    private _isPlaying = false;
 
     onComplete: ((score: number, total: number) => void) | null = null;
 
@@ -150,6 +151,19 @@ export class DictationManager {
 
     stopAudio(): void {
         window.speechSynthesis.cancel();
+        this._isPlaying = false;
+    }
+
+    toggleAudio(): boolean {
+        if (this._isPlaying) {
+            this.stopAudio();
+        } else {
+            this.playAudio();
+            this._isPlaying = true;
+            // Auto-reset state after delay (approximate)
+            setTimeout(() => { this._isPlaying = false; }, 5000);
+        }
+        return this._isPlaying;
     }
 
     /**
@@ -179,58 +193,16 @@ export class DictationManager {
         progress.innerHTML = `<span class="progress-count" style="font-weight:bold;color:var(--primary)">${filled}/${total}</span>`;
         header.appendChild(progress);
 
-        // Header controls container
-        const headerControls = document.createElement('div');
-        headerControls.style.display = 'flex';
-        headerControls.style.gap = '10px';
-
-        // Audio Toggle Button (Replacing simple play)
-        const audioBtn = document.createElement('button');
-        audioBtn.className = 'game-btn btn-audio compact-btn';
-        audioBtn.innerHTML = '🔊'; // Start with play icon
-        audioBtn.style.padding = '8px 12px';
-
-        let isPlaying = false;
-        audioBtn.onclick = () => {
-            if (isPlaying) {
-                this.stopAudio();
-                audioBtn.innerHTML = '🔊';
-                isPlaying = false;
-            } else {
-                this.playAudio();
-                audioBtn.innerHTML = '⏸';
-                isPlaying = true;
-
-                // Reset icon when audio likely finishes (simple timeout for MVP)
-                // Better: SpeechSynthesis event, but that needs refactor
-                setTimeout(() => {
-                    audioBtn.innerHTML = '🔊';
-                    isPlaying = false;
-                }, 5000);
-            }
-        };
-        headerControls.appendChild(audioBtn);
-        header.appendChild(headerControls);
-
-        this.container.appendChild(header);
-
         // 2. Context Area
         const contextArea = document.createElement('div');
         contextArea.className = 'focus-context';
-        contextArea.style.marginBottom = '20px';
-        contextArea.style.padding = '10px';
-        contextArea.style.background = '#f1f5f9';
-        contextArea.style.borderRadius = '8px';
-        contextArea.style.minHeight = '40px';
-        contextArea.style.color = '#475569';
-        contextArea.style.fontSize = '1rem';
-        contextArea.style.lineHeight = '1.6';
+        // Styled via CSS for "small font above big squares"
+        // keeping DOM structure simple
 
         let contextText = "";
         for (let i = 0; i < this.currentChunkIndex; i++) {
             const chunk = this.chunks[i];
             for (let j = chunk.start; j < chunk.end; j++) {
-                // Use check or just show char if correct
                 const box = this.charBoxes[j];
                 contextText += (box.isCorrect || !box.isBlank) ? box.char : '_';
             }
@@ -246,7 +218,7 @@ export class DictationManager {
 
             const chunkContainer = document.createElement('div');
             chunkContainer.className = 'focus-chunk-container';
-            chunkContainer.style.background = 'white';
+            // chunkContainer.style.background = 'white'; // REMOVED per valid request
             chunkContainer.style.padding = '15px';
             chunkContainer.style.borderRadius = '16px';
             chunkContainer.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';

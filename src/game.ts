@@ -28,6 +28,9 @@ let ui: UIManager;
 // Input handler instance (stroke or handwriting)
 let inputHandler: InputHandler;
 
+// Dictation Manager instance (dynamic)
+let dictationManager: import('./dictation').DictationManager | null = null;
+
 // Current input mode
 let inputMode: InputMode = 'stroke';
 
@@ -263,6 +266,20 @@ export const Game = {
      * Skip current level
      */
     skipLevel(): void {
+        // Dictation Mode: Skip button acts as Pause/Play toggle
+        if (state.currentView === 'dictation' && dictationManager) {
+            const isPlaying = dictationManager.toggleAudio();
+            const btn = document.getElementById('btn-skip');
+            if (btn) {
+                btn.innerHTML = isPlaying ? '⏸' : '▶';
+                btn.title = isPlaying ? '暂停' : '播放';
+                // Add active class if playing to show state
+                if (isPlaying) btn.classList.add('active');
+                else btn.classList.remove('active');
+            }
+            return;
+        }
+
         ui.updateProgressDot(state.currentWordIndex, 'wrong');
         state.sessionStreak = 0;
         ui.updateHud(state.score, state.sessionStreak);
@@ -357,12 +374,27 @@ export const Game = {
         // Dynamically import and create dictation manager
         import('./dictation').then(({ DictationManager }) => {
             const dictation = new DictationManager();
+            dictationManager = dictation; // Assign to global for access
+
+            // Update HUD Skip button to Play/Pause
+            const skipBtn = document.getElementById('btn-skip');
+            if (skipBtn) {
+                skipBtn.innerHTML = '▶'; // Initial state (stopped) or ⏸ if auto-play
+                skipBtn.title = '播放/暂停';
+                skipBtn.classList.remove('compact-btn'); // Make it slightly bigger?
+            }
+
             dictation.onComplete = (score, total) => {
                 ui.showDictationResult(score, total, () => {
                     this.showDictationSelect();
                 });
             };
             dictation.init(passage, container);
+
+            // Sync button state if auto-play is on (init calls playAudio)
+            if (passage.isFullDictation) {
+                if (skipBtn) skipBtn.innerHTML = '⏸';
+            }
         });
     },
 };
