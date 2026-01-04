@@ -1932,3 +1932,92 @@ body {
     gap: 20px;
 }
 
+
+/* Mobile Focus View Optimization */
+.mobile-nav-container {
+    display: contents;
+}
+.mobile-nav-btn {
+    display: none;
+}
+.dictation-char-box {
+    transition: opacity 0.3s;
+}
+
+@media (max-width: 600px) {
+    body {
+        overflow: hidden !important;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+    }
+    .focus-view {
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        padding-top: 10px;
+    }
+    .focus-chunk-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+    }
+    .mobile-nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        gap: 10px;
+    }
+    .mobile-nav-btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 44px;
+        height: 44px;
+        background: var(--card-bg);
+        border: 2px solid #334155;
+        border-radius: 50%;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+    .mobile-nav-btn:active {
+        background: var(--primary);
+    }
+    .dictation-grid {
+        display: flex !important;
+        grid-template-columns: none !important;
+        width: 100%;
+        justify-content: center;
+    }
+    .dictation-char-box {
+        display: none !important;
+    }
+    .dictation-char-box.active-mobile-char {
+        display: flex !important;
+        width: 280px !important;
+        height: auto !important;
+    }
+    .char-content.focus-box {
+        aspect-ratio: 1 !important;
+        /* Ensure square on mobile */
+    }
+    .focus-context {
+        font-size: 0.9rem;
+        padding: 5px;
+        min-height: 30px;
+        margin-bottom: 10px;
+    }
+    .focus-header {
+        margin-bottom: 10px;
+    }
+    .focus-controls {
+        margin-bottom: 20px;
+    }
+}
+

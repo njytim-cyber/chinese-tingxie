@@ -51,6 +51,9 @@ export class DictationManager {
     private chunks: { start: number; end: number; text: string; pinyin: string[] }[] = [];
     private currentChunkIndex = 0;
 
+    // Mobile Carousel State
+    private mobileCharIndex = 0;
+
     // HanziWriter instances for current chunk
     private writers: HanziWriter[] = [];
 
@@ -63,6 +66,7 @@ export class DictationManager {
         this.passage = passage;
         this.container = container;
         this.currentChunkIndex = 0;
+        this.mobileCharIndex = 0;
         this.writers = [];
 
         // Process chunks
@@ -144,6 +148,10 @@ export class DictationManager {
         window.speechSynthesis.speak(utterance);
     }
 
+    stopAudio(): void {
+        window.speechSynthesis.cancel();
+    }
+
     /**
      * Render the dictation UI (Focus View)
      */
@@ -171,12 +179,38 @@ export class DictationManager {
         progress.innerHTML = `<span class="progress-count" style="font-weight:bold;color:var(--primary)">${filled}/${total}</span>`;
         header.appendChild(progress);
 
+        // Header controls container
+        const headerControls = document.createElement('div');
+        headerControls.style.display = 'flex';
+        headerControls.style.gap = '10px';
+
+        // Audio Toggle Button (Replacing simple play)
         const audioBtn = document.createElement('button');
         audioBtn.className = 'game-btn btn-audio compact-btn';
-        audioBtn.textContent = '🔊';
+        audioBtn.innerHTML = '🔊'; // Start with play icon
         audioBtn.style.padding = '8px 12px';
-        audioBtn.onclick = () => this.playAudio();
-        header.appendChild(audioBtn);
+
+        let isPlaying = false;
+        audioBtn.onclick = () => {
+            if (isPlaying) {
+                this.stopAudio();
+                audioBtn.innerHTML = '🔊';
+                isPlaying = false;
+            } else {
+                this.playAudio();
+                audioBtn.innerHTML = '⏸';
+                isPlaying = true;
+
+                // Reset icon when audio likely finishes (simple timeout for MVP)
+                // Better: SpeechSynthesis event, but that needs refactor
+                setTimeout(() => {
+                    audioBtn.innerHTML = '🔊';
+                    isPlaying = false;
+                }, 5000);
+            }
+        };
+        headerControls.appendChild(audioBtn);
+        header.appendChild(headerControls);
 
         this.container.appendChild(header);
 
@@ -212,16 +246,35 @@ export class DictationManager {
 
             const chunkContainer = document.createElement('div');
             chunkContainer.className = 'focus-chunk-container';
-            chunkContainer.style.background = 'white'; // Keep container white/clean
+            chunkContainer.style.background = 'white';
             chunkContainer.style.padding = '15px';
             chunkContainer.style.borderRadius = '16px';
             chunkContainer.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
 
+            // Mobile Navigation Container (Arrows)
+            const mobileNav = document.createElement('div');
+            mobileNav.className = 'mobile-nav-container';
+            // Hidden by default, shown via CSS on mobile
+
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'mobile-nav-btn';
+            prevBtn.textContent = '❮';
+            prevBtn.onclick = () => this.prevMobileChar();
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'mobile-nav-btn';
+            nextBtn.textContent = '❯';
+            nextBtn.onclick = () => this.nextMobileChar();
+
+            mobileNav.appendChild(prevBtn);
+            // Grid inserted here
+
             const grid = document.createElement('div');
             grid.className = 'dictation-grid focus-grid';
-            grid.style.display = 'grid';
-            grid.style.gap = '8px';
-            grid.style.justifyContent = 'center';
+            mobileNav.appendChild(grid); // Wrap grid in nav for mobile layout
+
+            mobileNav.appendChild(nextBtn);
+            chunkContainer.appendChild(mobileNav);
 
             const chunkLen = chunkState.end - chunkState.start;
             const cols = Math.min(Math.max(chunkLen, 4), 8); // Adjust layout
@@ -231,7 +284,13 @@ export class DictationManager {
                 const box = this.charBoxes[i];
                 const boxEl = document.createElement('div');
                 boxEl.className = 'dictation-char-box';
-                // Remove fixed size/ratio on wrapper to allow flexible Pinyin
+                // Mark initial active char for mobile
+                if (i - chunkState.start === this.mobileCharIndex) {
+                    boxEl.classList.add('active-mobile-char');
+                } else {
+                    boxEl.classList.add('mobile-hidden');
+                }
+
                 boxEl.style.width = '100%';
                 boxEl.style.display = 'flex';
                 boxEl.style.flexDirection = 'column';
@@ -239,35 +298,33 @@ export class DictationManager {
                 boxEl.style.justifyContent = 'center';
                 boxEl.style.position = 'relative';
 
-                // Content / Writer Container (FIRST)
+                // Content / Writer Container
                 const contentEl = document.createElement('div');
-                // Unique ID for HanziWriter
                 const writerId = `dictation-char-${i}`;
                 contentEl.id = writerId;
-                contentEl.className = 'char-content focus-box'; // Style HERE
+                contentEl.className = 'char-content focus-box';
                 contentEl.style.width = '100%';
-                contentEl.style.aspectRatio = '1'; // Square box
+                contentEl.style.aspectRatio = '1';
                 contentEl.style.position = 'relative';
 
                 if (!box.isBlank) {
-                    // Pre-filled (punctuation or given)
                     contentEl.textContent = box.char;
                     contentEl.style.display = 'flex';
                     contentEl.style.alignItems = 'center';
                     contentEl.style.justifyContent = 'center';
                     contentEl.style.fontSize = '2rem';
                     contentEl.style.color = '#94a3b8';
-                    contentEl.style.background = '#e2e8f0'; // Given visual
-                    contentEl.style.border = '3px solid #cbd5e1'; // Explicit subtle border
+                    contentEl.style.background = '#e2e8f0';
+                    contentEl.style.border = '3px solid #cbd5e1';
                     contentEl.style.borderRadius = '16px';
-                    contentEl.classList.remove('focus-box'); // Remove glow focus for given chars
+                    contentEl.classList.remove('focus-box');
                 } else {
                     boxEl.classList.add('blank');
                 }
 
                 boxEl.appendChild(contentEl);
 
-                // Pinyin (SECOND)
+                // Pinyin
                 const pinyin = chunkState.pinyin[i - chunkState.start] || '';
                 const pinyinEl = document.createElement('div');
                 pinyinEl.className = 'char-pinyin';
@@ -277,7 +334,6 @@ export class DictationManager {
                 boxEl.appendChild(pinyinEl);
                 grid.appendChild(boxEl);
             }
-            chunkContainer.appendChild(grid);
             this.container.appendChild(chunkContainer);
 
             // Controls
@@ -295,7 +351,6 @@ export class DictationManager {
             checkBtn.style.padding = '12px 30px';
             checkBtn.style.fontSize = '1.1rem';
 
-            // Auto-enable if chunk is fully correct (HanziWriter handles internal state)
             checkBtn.onclick = () => this.nextChunk();
             controls.appendChild(checkBtn);
 
@@ -309,8 +364,44 @@ export class DictationManager {
             this.container.appendChild(controls);
 
             // Initialize writers AFTER DOM is ready
-            setTimeout(() => this.initWritersForChunk(), 10);
+            setTimeout(() => {
+                this.initWritersForChunk();
+                this.updateMobileView(); // Correctly init mobile view
+            }, 10);
         }
+    }
+
+    // Mobile Navigation Methods
+    private prevMobileChar(): void {
+        if (this.mobileCharIndex > 0) {
+            this.mobileCharIndex--;
+            this.updateMobileView();
+        }
+    }
+
+    private nextMobileChar(): void {
+        const chunk = this.chunks[this.currentChunkIndex];
+        const len = chunk.end - chunk.start;
+        if (this.mobileCharIndex < len - 1) {
+            this.mobileCharIndex++;
+            this.updateMobileView();
+        }
+    }
+
+    private updateMobileView(): void {
+        const container = document.querySelector('.focus-chunk-container');
+        if (!container) return;
+
+        const boxes = container.querySelectorAll('.dictation-char-box');
+        boxes.forEach((box, index) => {
+            if (index === this.mobileCharIndex) {
+                box.classList.add('active-mobile-char');
+                box.classList.remove('mobile-hidden');
+            } else {
+                box.classList.remove('active-mobile-char');
+                box.classList.add('mobile-hidden');
+            }
+        });
     }
 
     /**
@@ -335,8 +426,16 @@ export class DictationManager {
 
             if (box.isBlank && !isPunctuation) {
                 // Determine dimensions based on container
-                const width = el.clientWidth || 60;
-                const size = Math.min(width, 240); // Max size constraint
+                // On mobile, the box might be hidden initially, so clientWidth is 0
+                // We default to a standard size or force a check
+                // For HanziWriter, it adapts, but initial size matters.
+                // Mobile layout forces large box.
+                const isMobile = window.innerWidth <= 600;
+                let width = el.clientWidth;
+                if (width === 0 && isMobile) width = 280; // Fallback for hidden mobile boxes
+                if (width === 0) width = 60; // Desktop fallback
+
+                const size = Math.min(width, 300);
 
                 const writer = HanziWriter.create(writerId, box.char, {
                     width: size,
@@ -346,7 +445,7 @@ export class DictationManager {
                     strokeColor: '#38bdf8',
                     radicalColor: '#f472b6',
                     outlineColor: '#334155',
-                    drawingWidth: 10, // Standard width
+                    drawingWidth: 10,
                     showCharacter: false,
                     drawingFadeDuration: 300,
                 });
@@ -356,15 +455,19 @@ export class DictationManager {
                     showHintAfterMisses: 3,
                     highlightOnComplete: true,
                     onCorrectStroke: () => {
-                        SoundFX.correctStroke(); // Assuming imported
+                        SoundFX.correctStroke();
                     },
                     onMistake: () => {
                         // Shake?
                     },
                     onComplete: () => {
                         box.isCorrect = true;
-                        box.userInput = box.char; // Mark as done
-                        // Auto-advance logic if needed
+                        box.userInput = box.char;
+
+                        // Auto-advance logic for mobile
+                        if (window.innerWidth <= 600) {
+                            setTimeout(() => this.nextMobileChar(), 400);
+                        }
                     }
                 });
 
@@ -405,6 +508,7 @@ export class DictationManager {
 
         if (this.currentChunkIndex < this.chunks.length - 1) {
             this.currentChunkIndex++;
+            this.mobileCharIndex = 0; // Reset mobile index
             this.render();
         } else {
             this.showResults();
@@ -428,6 +532,33 @@ export class DictationManager {
 
     private showHint(): void {
         const chunk = this.chunks[this.currentChunkIndex];
+
+        // In mobile view, user is focused on ONE char (mobileCharIndex)
+        // So hint should target visible char first if active.
+        if (window.innerWidth <= 600) {
+            const activeCharIndex = chunk.start + this.mobileCharIndex;
+
+
+            // HanziWriter instance doesn't easily expose ID.
+            // Fallback: iterate chunk, count writers
+            let writerIdx = 0;
+            for (let i = chunk.start; i < chunk.end; i++) {
+                const box = this.charBoxes[i];
+                const punctuationRegex = /[，。！？、：；“”‘’（）《》]/;
+                if (!punctuationRegex.test(box.char) && box.isBlank) {
+                    if (i === activeCharIndex) {
+                        const w = this.writers[writerIdx];
+                        if (w) {
+                            w.hideOutline();
+                            w.showOutline({ duration: 1000 });
+                        }
+                        return;
+                    }
+                    writerIdx++;
+                }
+            }
+            return;
+        }
 
         let writerIndex = 0;
         for (let i = chunk.start; i < chunk.end; i++) {
