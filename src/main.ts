@@ -11,7 +11,6 @@ import { saveDataSync } from './data';
  * Start the game (called from start button)
  */
 export function startGame(): void {
-    console.log('Starting game...');
     try {
         // Save player name
         const nameInput = document.getElementById('player-name') as HTMLInputElement | null;
@@ -48,7 +47,7 @@ export function startGame(): void {
  * Initialize application
  */
 function init(): void {
-    console.log('Initializing app (v1.21.11)...');
+    console.log('Initializing app (v1.21.12)...');
     try {
         // Initialize voices
         initVoices();
@@ -125,7 +124,7 @@ function init(): void {
         const nextBtn = document.getElementById('next-btn');
         if (nextBtn) nextBtn.addEventListener('click', () => Game.nextLevel());
 
-        console.log('App initialized successfully.');
+        console.log('App initialized');
     } catch (error) {
         console.error('App initialization failed:', error);
     }
@@ -134,7 +133,6 @@ function init(): void {
 // Prevent PWA install prompt
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
-    console.log('PWA install prompt prevented');
 });
 
 // Ensure data is saved when user leaves

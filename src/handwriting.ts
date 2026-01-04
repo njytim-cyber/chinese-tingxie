@@ -277,7 +277,6 @@ export class HandwritingInput implements InputHandler {
             }
 
             const result: OCRResult = await response.json();
-            console.log('[Vision OCR] Result:', result);
 
             // Build candidates from OCR results
             this.ocrResults = [result.text, ...result.alternatives].filter(Boolean);
