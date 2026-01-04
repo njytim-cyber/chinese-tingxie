@@ -71,6 +71,12 @@ export interface GameState {
     wordsCompletedThisSession: number;
     selectedLessonsForPractice: number[];
     currentView: GameView;
+    sessionResults: {
+        term: string;
+        correct: boolean;
+        mistakeCount: number;
+        hintUsed: boolean;
+    }[];
 }
 
 /**

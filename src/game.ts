@@ -9,6 +9,7 @@ import {
     checkAchievements,
     getCurrentLesson, setCurrentLesson,
     getUnmasteredWords,
+    logAttempt, type AttemptLog,
 } from './data';
 import { SoundFX, speakWord } from './audio';
 import { spawnParticles } from './particles';
@@ -51,6 +52,7 @@ const state: GameState = {
     wordsCompletedThisSession: 0,
     selectedLessonsForPractice: [],
     currentView: 'lesson-select',
+    sessionResults: [],
 };
 
 /**
@@ -187,6 +189,7 @@ export const Game = {
         state.sessionStartTime = Date.now();
         state.wordsCompletedThisSession = 0;
         state.sessionStreak = 0;
+        state.sessionResults = [];
         state.currentView = 'game';
 
         // Set lesson phrases for handwriting mode candidate generation
@@ -532,6 +535,13 @@ function handleWordFailure(): void {
 
     ui.updateHud(state.score, state.sessionStreak);
     ui.showFeedback('再试一次! 💪', '#ef4444');
+    // Track result
+    state.sessionResults.push({
+        term: state.currentWord.term,
+        correct: false,
+        mistakeCount: 2,
+        hintUsed: true,
+    });
 
     // Show pinyin as hint
     ui.showPinyin(state.currentWord.pinyin);
@@ -609,6 +619,14 @@ function handleWordSuccess(result?: { mistakeCount: number; hintUsed: boolean })
     }
     ui.showNextButton();
 
+    // Track result
+    state.sessionResults.push({
+        term: state.currentWord.term,
+        correct: isSuccess,
+        mistakeCount: mistakeCount,
+        hintUsed: hintUsed,
+    });
+
     // Celebration particles
     const particleCount = quality === 5 ? 5 : (state.sessionStreak >= 3 ? 3 : 1);
     for (let i = 0; i < particleCount; i++) {
@@ -625,6 +643,23 @@ function handleWordSuccess(result?: { mistakeCount: number; hintUsed: boolean })
  * Show session complete screen
  */
 function showSessionComplete(): void {
+    // Log the attempt
+    const lesson = getCurrentLesson();
+    const duration = state.sessionStartTime ? Math.round((Date.now() - state.sessionStartTime) / 1000) : 0;
+    const correctCount = state.sessionResults.filter(r => r.correct).length;
+
+    const attempt: AttemptLog = {
+        timestamp: new Date().toISOString(),
+        lessonId: lesson.id,
+        lessonTitle: lesson.title,
+        mode: 'spelling',
+        phrases: state.sessionResults,
+        totalScore: correctCount,
+        totalPhrases: state.sessionResults.length,
+        duration: duration,
+    };
+    logAttempt(attempt);
+
     ui.showSessionComplete(
         state.wordsCompletedThisSession,
         state.score,

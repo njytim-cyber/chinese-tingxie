@@ -44,8 +44,26 @@ export interface Achievement {
     unlocked?: boolean;
 }
 
+// Attempt logging for tracking performance
+export interface AttemptLog {
+    timestamp: string;
+    lessonId: number;
+    lessonTitle: string;
+    mode: 'spelling' | 'dictation';
+    phrases: {
+        term: string;
+        correct: boolean;
+        mistakeCount: number;
+        hintUsed: boolean;
+    }[];
+    totalScore: number;
+    totalPhrases: number;
+    duration: number; // seconds
+}
+
 const STORAGE_KEY = 'tingxie_word_data';
 const STATS_KEY = 'tingxie_stats';
+const ATTEMPT_LOG_KEY = 'tingxie_attempt_log';
 
 // 9 Lessons × 15 Phrases = 135 vocabulary items
 export const LESSONS: Lesson[] = [
@@ -824,4 +842,47 @@ export function loadScores(): void { loadData(); }
 export function updateWordScore(term: string, delta: number): void {
     const quality = delta > 0 ? (delta >= 2 ? 5 : 4) : 2;
     updateWordSRS(term, quality);
+}
+
+/**
+ * Log a practice attempt to localStorage
+ */
+export function logAttempt(attempt: AttemptLog): void {
+    try {
+        const logs = getAttemptLogs();
+        logs.push(attempt);
+        // Keep only last 100 attempts to avoid storage overflow
+        if (logs.length > 100) {
+            logs.splice(0, logs.length - 100);
+        }
+        localStorage.setItem(ATTEMPT_LOG_KEY, JSON.stringify(logs));
+    } catch (e) {
+        console.warn('Could not save attempt log:', e);
+    }
+}
+
+/**
+ * Get all attempt logs from localStorage
+ */
+export function getAttemptLogs(): AttemptLog[] {
+    try {
+        const saved = localStorage.getItem(ATTEMPT_LOG_KEY);
+        if (saved) {
+            return JSON.parse(saved);
+        }
+    } catch (e) {
+        console.warn('Could not load attempt logs:', e);
+    }
+    return [];
+}
+
+/**
+ * Clear all attempt logs
+ */
+export function clearAttemptLogs(): void {
+    try {
+        localStorage.removeItem(ATTEMPT_LOG_KEY);
+    } catch (e) {
+        console.warn('Could not clear attempt logs:', e);
+    }
 }
