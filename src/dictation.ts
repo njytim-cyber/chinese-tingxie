@@ -3,6 +3,9 @@
  * Fill-in-the-blank dictation from memory
  */
 
+import HanziWriter from 'hanzi-writer';
+import { SoundFX } from './audio';
+
 /**
  * Dictation passage data structure
  */
@@ -30,7 +33,7 @@ export interface DictationData {
 interface CharBox {
     char: string;
     isBlank: boolean;
-    userInput: string;
+    userInput: string; // Unused for strokes, but kept for state
     isCorrect: boolean | null;
     index: number;
 }
@@ -44,11 +47,13 @@ export class DictationManager {
     private passage: DictationPassage | null = null;
     private charBoxes: CharBox[] = [];
     private currentBlankIndex = 0;
-    private inputField: HTMLInputElement | null = null;
 
     // Chunking state
     private chunks: { start: number; end: number; text: string; pinyin: string[] }[] = [];
     private currentChunkIndex = 0;
+
+    // HanziWriter instances for current chunk
+    private writers: HanziWriter[] = [];
 
     onComplete: ((score: number, total: number) => void) | null = null;
 
@@ -58,8 +63,8 @@ export class DictationManager {
     init(passage: DictationPassage, container: HTMLElement): void {
         this.passage = passage;
         this.container = container;
-        this.currentBlankIndex = 0;
         this.currentChunkIndex = 0;
+        this.writers = [];
 
         // Process chunks
         this.chunks = [];
@@ -70,7 +75,7 @@ export class DictationManager {
             this.chunks = passage.chunks.map((chunkText, i) => {
                 const start = currentIndex;
                 const end = start + chunkText.length;
-                currentIndex = end; // Assuming chunks are contiguous
+                currentIndex = end;
 
                 const pinyinStr = chunkPinyins[i] || "";
                 const pinyin = pinyinStr.trim() ? pinyinStr.split(" ") : [];
@@ -78,7 +83,7 @@ export class DictationManager {
                 return { start, end, text: chunkText, pinyin };
             });
         } else {
-            // Auto-split by punctuation if no chunks provided
+            // Auto-split fallback
             const punctuationRegex = /([，。！？、：；“”‘’（）《》]+)/;
             const parts = passage.text.split(punctuationRegex);
 
@@ -100,7 +105,6 @@ export class DictationManager {
                     currentStart += fullChunk.length;
                 }
             }
-
             if (this.chunks.length === 0) {
                 this.chunks = [{ start: 0, end: passage.text.length, text: passage.text, pinyin: [] }];
             }
@@ -111,7 +115,7 @@ export class DictationManager {
 
         this.charBoxes = passage.text.split('').map((char, index) => {
             const isBlank = isFull ? true : passage.blanks.includes(index);
-
+            // Punctuation is technically "blank" in full dictation but we handle it specifically
             return {
                 char,
                 isBlank,
@@ -121,15 +125,11 @@ export class DictationManager {
             };
         });
 
-        // Set initial blank index to start of first chunk
-        if (this.chunks.length > 0) {
-            this.currentBlankIndex = this.chunks[0].start;
-        }
+
 
         this.render();
-        this.focusCurrentBlank();
 
-        // Auto-play audio for full dictation
+        // Auto-play audio
         if (isFull) {
             setTimeout(() => this.playAudio(), 500);
         }
@@ -140,13 +140,10 @@ export class DictationManager {
      */
     playAudio(): void {
         if (!this.passage) return;
-
-        // Cancel any current speech
         window.speechSynthesis.cancel();
-
         const utterance = new SpeechSynthesisUtterance(this.passage.text);
         utterance.lang = 'zh-CN';
-        utterance.rate = 0.8; // Slightly slower for dictation
+        utterance.rate = 0.8;
         window.speechSynthesis.speak(utterance);
     }
 
@@ -156,10 +153,13 @@ export class DictationManager {
     private render(): void {
         if (!this.container || !this.passage || !this.chunks.length) return;
 
+        // Cleanup old writers before clearing DOM
+        this.destroyWriters();
+
         this.container.innerHTML = '';
         this.container.className = 'dictation-container focus-view';
 
-        // 1. Top Bar: Progress & Audio
+        // 1. Top Bar
         const header = document.createElement('div');
         header.className = 'focus-header';
         header.style.display = 'flex';
@@ -169,7 +169,7 @@ export class DictationManager {
 
         const progress = document.createElement('div');
         progress.className = 'focus-progress';
-        const filled = this.charBoxes.filter(b => b.isBlank && b.userInput).length;
+        const filled = this.charBoxes.filter(b => b.isCorrect).length;
         const total = this.charBoxes.filter(b => b.isBlank).length;
         progress.innerHTML = `<span class="progress-count" style="font-weight:bold;color:var(--primary)">${filled}/${total}</span>`;
         header.appendChild(progress);
@@ -183,7 +183,7 @@ export class DictationManager {
 
         this.container.appendChild(header);
 
-        // 2. Context Area (Previously typed chunks)
+        // 2. Context Area
         const contextArea = document.createElement('div');
         contextArea.className = 'focus-context';
         contextArea.style.marginBottom = '20px';
@@ -198,25 +198,25 @@ export class DictationManager {
         let contextText = "";
         for (let i = 0; i < this.currentChunkIndex; i++) {
             const chunk = this.chunks[i];
-            // In context, show what was typed (or the char if it wasn't blank)
             for (let j = chunk.start; j < chunk.end; j++) {
-                contextText += this.charBoxes[j].userInput || this.charBoxes[j].char;
+                // Use check or just show char if correct
+                const box = this.charBoxes[j];
+                contextText += (box.isCorrect || !box.isBlank) ? box.char : '_';
             }
         }
-
         if (contextText) {
             contextArea.textContent = contextText;
             this.container.appendChild(contextArea);
         }
 
-        // 3. Active Chunk (Magnified)
+        // 3. Active Chunk
         if (this.currentChunkIndex < this.chunks.length) {
             const chunkState = this.chunks[this.currentChunkIndex];
 
             const chunkContainer = document.createElement('div');
             chunkContainer.className = 'focus-chunk-container';
             chunkContainer.style.background = 'white';
-            chunkContainer.style.padding = '20px';
+            chunkContainer.style.padding = '15px';
             chunkContainer.style.borderRadius = '16px';
             chunkContainer.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
 
@@ -225,26 +225,25 @@ export class DictationManager {
             grid.style.display = 'grid';
             grid.style.gap = '8px';
             grid.style.justifyContent = 'center';
-            // Scale columns: min 5, max 10
+
             const chunkLen = chunkState.end - chunkState.start;
-            const cols = Math.min(Math.max(chunkLen, 5), 10);
+            const cols = Math.min(Math.max(chunkLen, 4), 8); // Adjust layout
             grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
 
             for (let i = chunkState.start; i < chunkState.end; i++) {
                 const box = this.charBoxes[i];
                 const boxEl = document.createElement('div');
                 boxEl.className = 'dictation-char-box focus-box';
+                // Adjust size for drawing
                 boxEl.style.width = '100%';
-                // Auto height
-                boxEl.style.aspectRatio = '0.8'; // Taller for pinyin
-                boxEl.style.fontSize = '1.5rem';
+                boxEl.style.aspectRatio = '0.7'; // Taller for pinyin
                 boxEl.style.display = 'flex';
                 boxEl.style.flexDirection = 'column';
                 boxEl.style.alignItems = 'center';
                 boxEl.style.justifyContent = 'center';
                 boxEl.style.border = '2px solid #e2e8f0';
                 boxEl.style.borderRadius = '8px';
-                boxEl.style.cursor = 'pointer';
+                boxEl.style.position = 'relative'; // For writer positioning
 
                 // Pinyin
                 const pinyin = chunkState.pinyin[i - chunkState.start] || '';
@@ -253,63 +252,36 @@ export class DictationManager {
                 pinyinEl.textContent = pinyin;
                 pinyinEl.style.fontSize = '0.9rem';
                 pinyinEl.style.color = '#94a3b8';
-                pinyinEl.style.marginBottom = '2px';
-                // Always take up space
-                if (!pinyin) pinyinEl.innerHTML = '&nbsp;';
+                pinyinEl.style.marginTop = '4px';
+                pinyinEl.style.height = '20px';
                 boxEl.appendChild(pinyinEl);
 
-                // Content
+                // Content / Writer Container
                 const contentEl = document.createElement('div');
+                // Unique ID for HanziWriter
+                const writerId = `dictation-char-${i}`;
+                contentEl.id = writerId;
                 contentEl.className = 'char-content';
-                contentEl.style.width = '40px';
-                contentEl.style.height = '40px';
-                contentEl.style.display = 'flex';
-                contentEl.style.alignItems = 'center';
-                contentEl.style.justifyContent = 'center';
-                contentEl.style.fontWeight = 'bold';
+                contentEl.style.width = '100%';
+                contentEl.style.flex = '1';
+                contentEl.style.position = 'relative';
 
-                if (box.isBlank) {
-                    boxEl.classList.add('blank');
-                    boxEl.style.background = '#f8fafc';
-                    if (box.userInput) {
-                        contentEl.textContent = box.userInput;
-                        boxEl.classList.add('filled');
-                        contentEl.style.color = '#0f172a';
-
-                        if (box.isCorrect === true) {
-                            boxEl.classList.add('correct');
-                            boxEl.style.borderColor = '#22c55e';
-                            contentEl.style.color = '#22c55e';
-                            boxEl.style.background = '#f0fdf4';
-                        }
-                        if (box.isCorrect === false) {
-                            boxEl.classList.add('wrong');
-                            boxEl.style.borderColor = '#ef4444';
-                            contentEl.style.color = '#ef4444';
-                            boxEl.style.background = '#fef2f2';
-                        }
-                    } else {
-                        // Empty placeholder?
-                    }
-
-                    // Highlight current blank
-                    if (i === this.currentBlankIndex) {
-                        boxEl.classList.add('active');
-                        boxEl.style.borderColor = '#3b82f6';
-                        boxEl.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.2)';
-                    }
-
-                    boxEl.addEventListener('click', () => {
-                        this.currentBlankIndex = i;
-                        this.render();
-                        this.focusCurrentBlank();
-                    });
-                } else {
+                // We won't use textContent for blanks, we use HanziWriter
+                if (!box.isBlank) {
+                    // Pre-filled (punctuation or non-blank)
                     contentEl.textContent = box.char;
+                    contentEl.style.display = 'flex';
+                    contentEl.style.alignItems = 'center';
+                    contentEl.style.justifyContent = 'center';
+                    contentEl.style.fontSize = '2rem';
+                    contentEl.style.color = '#64748b';
                     boxEl.classList.add('given');
                     boxEl.style.background = '#e2e8f0';
-                    contentEl.style.color = '#64748b';
+                } else {
+                    // Blank - Writer destination
+                    boxEl.classList.add('blank');
                 }
+
                 boxEl.appendChild(contentEl);
                 grid.appendChild(boxEl);
             }
@@ -319,27 +291,21 @@ export class DictationManager {
             // Controls
             const controls = document.createElement('div');
             controls.className = 'dictation-controls focus-controls';
-            controls.style.marginTop = '30px';
+            controls.style.marginTop = '20px';
             controls.style.display = 'flex';
             controls.style.justifyContent = 'center';
             controls.style.gap = '15px';
 
-            // Check if current chunk is filled
-            let isChunkFilled = true;
-            for (let i = chunkState.start; i < chunkState.end; i++) {
-                if (this.charBoxes[i].isBlank && !this.charBoxes[i].userInput) {
-                    isChunkFilled = false;
-                    break;
-                }
-            }
-
             const checkBtn = document.createElement('button');
             checkBtn.className = 'game-btn dictation-check-btn';
-            checkBtn.textContent = '✓ 下一步'; // Next
+            const isLastChunk = this.currentChunkIndex === this.chunks.length - 1;
+            checkBtn.textContent = isLastChunk ? '✓ 完成' : '✓ 下一步';
             checkBtn.style.padding = '12px 30px';
             checkBtn.style.fontSize = '1.1rem';
-            checkBtn.disabled = !isChunkFilled;
-            checkBtn.onclick = () => this.validateChunk();
+
+            // Auto-enable if chunk is fully correct (HanziWriter handles internal state)
+            // But we need to listen to corrections
+            checkBtn.onclick = () => this.nextChunk();
             controls.appendChild(checkBtn);
 
             const hintBtn = document.createElement('button');
@@ -350,161 +316,133 @@ export class DictationManager {
             controls.appendChild(hintBtn);
 
             this.container.appendChild(controls);
-        }
 
-        // 4. Input Field (Hidden)
-        this.inputField = document.createElement('input');
-        this.inputField.type = 'text';
-        this.inputField.className = 'dictation-input';
-        this.inputField.style.position = 'absolute';
-        this.inputField.style.opacity = '0';
-        this.inputField.style.pointerEvents = 'none';
-        this.inputField.autocomplete = 'off';
-        this.inputField.inputMode = 'text';
-        this.inputField.addEventListener('input', (e) => this.handleInput(e));
-        this.inputField.addEventListener('keydown', (e) => this.handleKeydown(e));
-        this.container.appendChild(this.inputField);
-    }
-
-    /**
-     * Focus the input field
-     */
-    private focusCurrentBlank(): void {
-        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-        if (this.inputField) {
-            this.inputField.value = '';
-            this.inputField.focus();
+            // Initialize writers AFTER DOM is ready
+            setTimeout(() => this.initWritersForChunk(), 10);
         }
     }
 
     /**
-     * Handle input
+     * Initialize HanziWriters for current chunk
      */
-    private handleInput(e: Event): void {
-        const input = (e.target as HTMLInputElement).value;
-        if (!input) return;
+    private initWritersForChunk(): void {
+        this.destroyWriters();
+        if (this.currentChunkIndex >= this.chunks.length) return;
 
-        // Normalize punctuation (English -> Chinese)
-        const punctMap: Record<string, string> = {
-            ',': '，', '.': '。', '?': '？', '!': '！',
-            ':': '：', ';': '；', '(': '（', ')': '）'
-        };
-
-        const lastChar = input.slice(-1);
-        const mappedChar = punctMap[lastChar] || lastChar;
-
-        // Fill current blank
-        if (this.currentBlankIndex >= 0 && this.currentBlankIndex < this.charBoxes.length) {
-            this.charBoxes[this.currentBlankIndex].userInput = mappedChar;
-        }
-
-        // Move to next blank WITHIN current chunk
-        if (this.currentChunkIndex < this.chunks.length) {
-            const chunk = this.chunks[this.currentChunkIndex];
-            // Find next blank in this chunk
-            let nextIdx = this.currentBlankIndex + 1;
-            while (nextIdx < chunk.end) {
-                if (this.charBoxes[nextIdx].isBlank) {
-                    this.currentBlankIndex = nextIdx;
-                    break;
-                }
-                nextIdx++;
-            }
-        }
-
-        this.render();
-        this.focusCurrentBlank();
-    }
-
-    /**
-     * Handle keyboard navigation
-     */
-    private handleKeydown(e: KeyboardEvent): void {
-        if (this.chunks.length === 0) return;
         const chunk = this.chunks[this.currentChunkIndex];
+        const punctuationRegex = /[，。！？、：；“”‘’（）《》]/;
 
-        if (e.key === 'Backspace') {
-            e.preventDefault();
-
-            // If current box has content, clear it. 
-            // If empty, move back and clear.
-            if (this.charBoxes[this.currentBlankIndex].userInput) {
-                this.charBoxes[this.currentBlankIndex].userInput = '';
-            } else {
-                // Move back within chunk
-                let prevIdx = this.currentBlankIndex - 1;
-                while (prevIdx >= chunk.start) {
-                    if (this.charBoxes[prevIdx].isBlank) {
-                        this.currentBlankIndex = prevIdx;
-                        this.charBoxes[prevIdx].userInput = '';
-                        break;
-                    }
-                    prevIdx--;
-                }
-            }
-            this.render();
-            this.focusCurrentBlank();
-        } else if (e.key === 'Enter') {
-            this.validateChunk();
-        }
-    }
-
-    /**
-     * Validate current chunk and move to next
-     */
-    private validateChunk(): void {
-        const chunk = this.chunks[this.currentChunkIndex];
-
-        // Validate inputs in this chunk
-        let isCorrect = true;
         for (let i = chunk.start; i < chunk.end; i++) {
             const box = this.charBoxes[i];
-            if (box.isBlank) {
-                box.isCorrect = box.userInput === box.char;
-                if (!box.isCorrect) isCorrect = false;
-            }
-        }
+            const writerId = `dictation-char-${i}`; // Must match ID in render
+            const el = document.getElementById(writerId);
 
-        this.render(); // Show validation colors
+            if (!el) continue;
 
-        if (isCorrect) {
-            // Wait a moment then move to next chunk
-            setTimeout(() => {
-                if (this.currentChunkIndex < this.chunks.length - 1) {
-                    this.currentChunkIndex++;
-                    // Find first blank in next chunk
-                    const nextChunk = this.chunks[this.currentChunkIndex];
-                    let foundSort = false;
-                    for (let i = nextChunk.start; i < nextChunk.end; i++) {
-                        if (this.charBoxes[i].isBlank) {
-                            this.currentBlankIndex = i;
-                            foundSort = true;
-                            break;
-                        }
+            // Determine if we should create a writer
+            // If it's punctuation, we skip writer creation (it's already text)
+            // If it's a character, we create writer
+            const isPunctuation = punctuationRegex.test(box.char);
+
+            if (box.isBlank && !isPunctuation) {
+                // Determine dimensions based on container
+                const width = el.clientWidth || 60;
+                const size = Math.min(width, 100);
+
+                const writer = HanziWriter.create(writerId, box.char, {
+                    width: size,
+                    height: size,
+                    padding: 5,
+                    showOutline: false, // UNSEEN dictation
+                    strokeColor: '#38bdf8',
+                    radicalColor: '#f472b6',
+                    outlineColor: '#334155',
+                    drawingWidth: 10, // Adjusted for smaller box
+                    showCharacter: false,
+                    drawingFadeDuration: 300,
+                });
+
+                writer.quiz({
+                    leniency: 1.5,
+                    showHintAfterMisses: 3,
+                    highlightOnComplete: true,
+                    onCorrectStroke: () => {
+                        SoundFX.correctStroke(); // Assuming imported
+                    },
+                    onMistake: () => {
+                        // Shake?
+                    },
+                    onComplete: () => {
+                        box.isCorrect = true;
+                        box.userInput = box.char; // Mark as done
+                        // Auto-advance visual focus if we add it later
+                        this.canAdvance();
                     }
-                    if (!foundSort) this.currentBlankIndex = nextChunk.start;
+                });
 
-                    this.render();
-                    this.focusCurrentBlank();
-                } else {
-                    this.showResults();
-                }
-            }, 500);
-        } else {
-            // Shake effect?
+                this.writers.push(writer);
+            } else if (box.isBlank && isPunctuation) {
+                // Auto-fill punctuation
+                box.isCorrect = true;
+                box.userInput = box.char;
+                el.textContent = box.char;
+                el.style.fontSize = '2rem';
+                el.style.display = 'flex';
+                el.style.alignItems = 'center';
+                el.style.justifyContent = 'center';
+            }
         }
     }
 
     /**
-     * Show final results
+     * Check if we can advance
      */
+    private canAdvance(): void {
+        const chunk = this.chunks[this.currentChunkIndex];
+        const allCorrect = this.charBoxes.slice(chunk.start, chunk.end).every(b => b.isCorrect);
+
+        const btn = document.querySelector('.dictation-check-btn') as HTMLButtonElement;
+        if (btn) {
+            if (allCorrect) {
+                btn.classList.add('pulse'); // Visual cue
+            }
+        }
+    }
+
+    private destroyWriters(): void {
+        // HanziWriter doesn't have a simple destroy on the instance,
+        // but removing the DOM element usually clears it.
+        // We clear the array.
+        this.writers = [];
+    }
+
+    private nextChunk(): void {
+        const chunk = this.chunks[this.currentChunkIndex];
+        const allCorrect = this.charBoxes.slice(chunk.start, chunk.end).every(b => b.isCorrect);
+
+        if (!allCorrect) {
+            // Shake effect or feedback
+            const container = document.querySelector('.focus-chunk-container');
+            container?.classList.add('shake');
+            setTimeout(() => container?.classList.remove('shake'), 400);
+            return;
+        }
+
+        if (this.currentChunkIndex < this.chunks.length - 1) {
+            this.currentChunkIndex++;
+            this.render();
+        } else {
+            this.showResults();
+        }
+    }
+
     private showResults(): void {
         let correct = 0;
         let total = 0;
         this.charBoxes.forEach(box => {
             if (box.isBlank) {
                 total++;
-                if (box.userInput === box.char) correct++;
+                if (box.isCorrect) correct++;
             }
         });
 
@@ -513,41 +451,42 @@ export class DictationManager {
         }
     }
 
-    /**
-     * Show hint for current blank
-     */
     private showHint(): void {
-        if (this.currentBlankIndex >= 0) {
-            const box = this.charBoxes[this.currentBlankIndex];
-            box.userInput = box.char;
-            box.isCorrect = true;
+        const chunk = this.chunks[this.currentChunkIndex];
+        // Find first incomplete writer
+        // Mapping writers to boxes is tricky since we store writers in array
+        // But we iterate simply.
+        // Let's iterate boxes in chunk.
 
-            // Move to next unfilled blank in chunk
-            if (this.currentChunkIndex < this.chunks.length) {
-                const chunk = this.chunks[this.currentChunkIndex];
-                let nextIdx = this.currentBlankIndex + 1;
-                while (nextIdx < chunk.end) {
-                    if (this.charBoxes[nextIdx].isBlank && !this.charBoxes[nextIdx].userInput) {
-                        this.currentBlankIndex = nextIdx;
-                        break;
+        let writerIndex = 0;
+        for (let i = chunk.start; i < chunk.end; i++) {
+            const box = this.charBoxes[i];
+            const punctuationRegex = /[，。！？、：；“”‘’（）《》]/;
+            if (!punctuationRegex.test(box.char) && box.isBlank) {
+                if (!box.isCorrect) {
+                    // Found the writer
+                    const writer = this.writers[writerIndex];
+                    if (writer) {
+                        // We can't access quiz state easily to know stroke index
+                        // But we can trigger a hint animate
+                        // writer.animateCharacter(); // Too easy?
+                        // writer.outline(); // Show outline briefly
+                        // Better: show outline
+                        writer.hideOutline();
+                        writer.showOutline({ duration: 1000 });
                     }
-                    nextIdx++;
+                    return;
                 }
+                writerIndex++;
             }
-
-            this.render();
-            this.focusCurrentBlank();
         }
     }
 
-    /**
-     * Clean up
-     */
     destroy(): void {
+        this.destroyWriters();
         this.container = null;
         this.passage = null;
         this.charBoxes = [];
-        this.inputField = null;
     }
 }
 
