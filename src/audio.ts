@@ -167,9 +167,10 @@ export function unlockAudio(): void {
     window.addEventListener('click', unlockHandler);
 
     // Unlock Speech Synthesis with a dummy utterance
-    const u = new SpeechSynthesisUtterance('准备');
+    // Unlock Speech Synthesis with a dummy utterance (silent)
+    const u = new SpeechSynthesisUtterance('');
     if (selectedVoice) u.voice = selectedVoice;
-    u.volume = 0.1;
+    u.volume = 0.0; // Silent
     u.rate = 2.0;
     window.speechSynthesis.speak(u);
 }

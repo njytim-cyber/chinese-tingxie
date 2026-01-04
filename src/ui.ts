@@ -50,18 +50,13 @@ export class UIManager {
             <div class="lesson-select">
                 <h2 class="lesson-select-title">选择课程</h2>
 
-                <div class="input-mode-toggle">
-                    <button class="mode-btn ${mode === 'stroke' ? 'active' : ''}" data-mode="stroke">✍️ 笔画</button>
-                    <button class="mode-btn ${mode === 'handwriting' ? 'active' : ''}" data-mode="handwriting">🖊️ 手写</button>
-                </div>
+                <!-- Input Mode Toggle Removed (Default to Handwriting) -->
                 
                 <div class="session-length-toggle">
                     <span class="toggle-label">每次练习:</span>
-                    <div class="toggle-options">
-                        <button class="toggle-btn active" data-count="5">5词</button>
-                        <button class="toggle-btn" data-count="10">10词</button>
-                        <button class="toggle-btn" data-count="0">全部</button>
-                    </div>
+                    <button class="toggle-btn ${selectedLimit === 5 ? 'active' : ''}" data-limit="5">5词</button>
+                    <button class="toggle-btn ${selectedLimit === 10 ? 'active' : ''}" data-limit="10">10词</button>
+                    <button class="toggle-btn ${selectedLimit === 20 ? 'active' : ''}" data-limit="20">全部</button>
                 </div>
 
                 <div class="lesson-grid">
@@ -93,24 +88,15 @@ export class UIManager {
 
         let selectedLimit = 5;
 
-        // Mode toggle buttons
-        if (onModeChange) {
-            container.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    container.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    const newMode = (btn as HTMLElement).dataset.mode as 'stroke' | 'handwriting';
-                    onModeChange(newMode);
-                });
-            });
-        }
+        // Mode toggle buttons (Removed)
+        // if (onModeChange) { ... }
 
         // Toggle Buttons Logic
         container.querySelectorAll('.toggle-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 container.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                selectedLimit = parseInt((btn as HTMLElement).dataset.count || '0');
+                selectedLimit = parseInt((btn as HTMLElement).dataset.limit || '0'); // Changed data-count to data-limit
             });
         });
 
@@ -135,55 +121,115 @@ export class UIManager {
 
         this.hideControls();
         this.setHudTransparent(true);
+        document.body.classList.remove('noscroll'); // Enable scrolling
     }
 
     /**
-     * Show progress view with all lessons and phrases
+     * Show progress view with Tabs (Progress & Achievements)
      */
     showProgress(): void {
         const container = this.domCache.writingArea;
         if (!container) return;
 
         const lessons = getLessons();
+        const achievements = getAchievements();
+
+        // Mastery colors for progress list
         const masteryLabels = ['未学', '入门', '熟悉', '掌握', '精通', '完美'];
         const masteryColors = ['#64748b', '#ef4444', '#f97316', '#eab308', '#22c55e', '#38bdf8'];
 
         this.setHudTransparent(true);
         if (this.domCache.hudControls) this.domCache.hudControls.style.display = 'none';
 
+        // --- Render the main structure ---
         container.innerHTML = `
             <div class="progress-view">
-                <h2 class="progress-title">📊 学习进度</h2>
-                <div class="progress-lessons">
-                    ${lessons.map(lesson => {
+                <div class="progress-header">
+                    <button class="menu-btn nav-back-btn" onclick="location.reload()">❮ 返回</button>
+                    <h2 class="progress-title">档案</h2>
+                </div>
+
+                <div class="progress-tabs">
+                    <button class="tab-btn active" data-tab="progress">📊 学习进度</button>
+                    <button class="tab-btn" data-tab="achievements">🏆 成就徽章</button>
+                </div>
+
+                <!-- Tab Content: Progress -->
+                <div class="tab-content active" id="tab-progress">
+                    ${this.renderProgressSummary(lessons)}
+                    <div class="progress-lessons">
+                        ${lessons.map(lesson => {
             const progress = getLessonProgress(lesson.id);
             const progressPercent = Math.round(progress * 100);
             return `
-                            <div class="progress-lesson">
-                                <div class="progress-lesson-header" data-lesson-id="${lesson.id}">
-                                    <span class="progress-lesson-title">${lesson.title}</span>
-                                    <span class="progress-lesson-percent">${progressPercent}%</span>
-                                </div>
-                                <div class="progress-phrases" id="phrases-${lesson.id}" style="display: none;">
-                                    ${lesson.phrases.map(phrase => {
+                                <div class="progress-lesson">
+                                    <div class="progress-lesson-header" data-lesson-id="${lesson.id}">
+                                        <span class="progress-lesson-title">${lesson.title}</span>
+                                        <span class="progress-lesson-percent">${progressPercent}%</span>
+                                    </div>
+                                    <div class="progress-phrases" id="phrases-${lesson.id}" style="display: none;">
+                                        ${lesson.phrases.map(phrase => {
                 const state = getWordState(phrase.term);
                 const score = state.score;
                 return `
-                                            <div class="progress-phrase">
-                                                <span class="phrase-term">${phrase.term}</span>
-                                                <span class="phrase-mastery" style="background: ${masteryColors[score]}">${masteryLabels[score]}</span>
-                                            </div>
-                                        `;
+                                                <div class="progress-phrase">
+                                                    <span class="phrase-term">${phrase.term}</span>
+                                                    <span class="phrase-mastery" style="background: ${masteryColors[score]}">${masteryLabels[score]}</span>
+                                                </div>
+                                            `;
             }).join('')}
+                                    </div>
                                 </div>
-                            </div>
-                        `;
+                            `;
         }).join('')}
+                    </div>
+                </div>
+
+                <!-- Tab Content: Achievements -->
+                <div class="tab-content" id="tab-achievements" style="display: none;">
+                    <div class="achievements-grid">
+                        ${achievements.map(a => `
+                            <div class="achievement-item ${a.unlocked ? 'unlocked' : 'locked'}">
+                                <span class="ach-icon">${a.unlocked ? a.icon : '🔒'}</span>
+                                <span class="ach-name">${a.unlocked ? a.name : '???'}</span>
+                                ${a.unlocked ? `<span class="ach-desc">${a.desc}</span>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="ach-summary" style="text-align: center; margin-top: 20px; color: #94a3b8;">
+                        已解锁 ${achievements.filter(a => a.unlocked).length} / ${achievements.length} 个成就
+                    </div>
                 </div>
             </div>
         `;
 
-        // Toggle phrase visibility on header click
+        // --- Logic: Tab Switching ---
+        const tabs = container.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class
+                container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                container.querySelectorAll('.tab-content').forEach(c => (c as HTMLElement).style.display = 'none');
+
+                // Add active class
+                tab.classList.add('active');
+                const tabId = `tab-${(tab as HTMLElement).dataset.tab}`;
+                const content = document.getElementById(tabId);
+                if (content) {
+                    content.style.display = 'block';
+                    // Trigger animation
+                    content.style.opacity = '0';
+                    content.style.transform = 'translateY(10px)';
+                    setTimeout(() => {
+                        content.style.transition = 'all 0.3s ease';
+                        content.style.opacity = '1';
+                        content.style.transform = 'translateY(0)';
+                    }, 50);
+                }
+            });
+        });
+
+        // Toggle phrase visibility
         container.querySelectorAll('.progress-lesson-header').forEach(header => {
             header.addEventListener('click', () => {
                 const lessonId = (header as HTMLElement).dataset.lessonId;
@@ -195,6 +241,55 @@ export class UIManager {
         });
 
         this.hideControls();
+        document.body.classList.remove('noscroll');
+    }
+
+    /**
+     * Generate HTML for progress summary
+     */
+    private renderProgressSummary(lessons: ReturnType<typeof getLessons>): string {
+        let totalWords = 0;
+        let masteredWords = 0; // Score >= 4
+        let startedWords = 0; // Score > 0
+        let totalScore = 0;
+        let maxTotalScore = 0;
+
+        lessons.forEach(lesson => {
+            lesson.phrases.forEach(phrase => {
+                totalWords++;
+                const state = getWordState(phrase.term);
+                maxTotalScore += 5;
+                totalScore += state.score;
+
+                if (state.score > 0) startedWords++;
+                if (state.score >= 4) masteredWords++; // 4=Good, 5=Perfect
+            });
+        });
+
+        const overallProgress = totalWords > 0 ? Math.round((totalScore / maxTotalScore) * 100) : 0;
+        const masteredPercent = totalWords > 0 ? Math.round((masteredWords / totalWords) * 100) : 0;
+
+        return `
+            <div class="progress-summary-card">
+                <div class="summary-row">
+                    <div class="summary-stat">
+                        <span class="stat-value highlight">${overallProgress}%</span>
+                        <span class="stat-label">总掌握度</span>
+                    </div>
+                    <div class="summary-stat">
+                        <span class="stat-value">${masteredWords} / ${totalWords}</span>
+                        <span class="stat-label">精通词汇</span>
+                    </div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-fill" style="width: ${overallProgress}%"></div>
+                </div>
+                <div class="summary-details">
+                    <span>已学习: ${startedWords} 词</span>
+                    <span>待解锁: ${totalWords - startedWords} 词</span>
+                </div>
+            </div>
+        `;
     }
 
     /**
@@ -262,6 +357,7 @@ export class UIManager {
         }
 
         this.hideControls();
+        document.body.classList.remove('noscroll');
     }
 
     /**
@@ -344,6 +440,7 @@ export class UIManager {
                 );
             }, i * 150);
         }
+        document.body.classList.remove('noscroll');
     }
 
     /**
@@ -374,6 +471,7 @@ export class UIManager {
         }
 
         setTimeout(() => overlay.remove(), 2500);
+        document.body.classList.remove('noscroll');
     }
 
     /**
@@ -442,6 +540,7 @@ export class UIManager {
         `;
 
         document.body.appendChild(overlay);
+        document.body.classList.remove('noscroll');
     }
 
     /**
@@ -468,11 +567,7 @@ export class UIManager {
         resumeBtn.onclick = () => { overlay.remove(); onResume(); };
         buttons.appendChild(resumeBtn);
 
-        const achBtn = document.createElement('button');
-        achBtn.className = 'game-btn btn-hint';
-        achBtn.innerText = '🏆 成就';
-        achBtn.onclick = () => { overlay.remove(); onAchievements(); };
-        buttons.appendChild(achBtn);
+        // Achievements button removed as per request (moved to Progress screen)
 
         const menuBtn = document.createElement('button');
         menuBtn.className = 'game-btn';
@@ -649,6 +744,7 @@ export class UIManager {
      * Show game controls
      */
     showControls(): void {
+        document.body.classList.add('noscroll'); // Disable scrolling in game
         if (this.domCache.controlsArea) {
             this.domCache.controlsArea.style.display = 'flex';
         }
@@ -729,6 +825,7 @@ export class UIManager {
     showDictationSelect(
         onPassageSelect: (passage: { id: string; title: string; text: string; blanks: number[]; hint?: string }) => void
     ): void {
+        document.body.classList.remove('noscroll');
         // Hide any existing overlays
         this.setHudTransparent(true);
         this.clearWritingArea();
@@ -737,10 +834,14 @@ export class UIManager {
         if (!writingArea) return;
 
         writingArea.innerHTML = `
-            <div class="lesson-select-container">
-                <h2 class="select-title">默写练习</h2>
-                <div class="dictation-passage-list" id="dictation-passage-list">
-                    <p style="color: #64748b;">加载中...</p>
+            <div class="lesson-select">
+                <div class="progress-header">
+                    <button class="menu-btn nav-back-btn" onclick="location.reload()">❮ 返回</button>
+                    <h2 class="lesson-select-title" style="margin: 0;">默写练习</h2>
+                </div>
+                <!-- <h2 class="lesson-select-title">默写练习</h2> -->
+                <div class="lesson-grid" id="dictation-grid">
+                    <p style="color: #64748b; grid-column: 1/-1; text-align: center;">加载中...</p>
                 </div>
             </div>
         `;
@@ -749,26 +850,37 @@ export class UIManager {
         fetch('/dictation.json')
             .then(res => res.json())
             .then(data => {
-                const list = document.getElementById('dictation-passage-list');
-                if (!list) return;
+                const grid = document.getElementById('dictation-grid');
+                if (!grid) return;
 
-                list.innerHTML = '';
-                data.passages.forEach((passage: { id: string; title: string; text: string; blanks: number[]; hint?: string }) => {
-                    const item = document.createElement('button');
-                    item.className = 'lesson-card dictation-passage-card';
-                    item.innerHTML = `
-                        <div class="lesson-title">${passage.title}</div>
-                        <div class="lesson-hint">${passage.hint || ''}</div>
-                        <div class="lesson-stats">${passage.blanks.length} 个空格</div>
+                grid.innerHTML = '';
+                data.passages.forEach((passage: { id: string; title: string; text: string; blanks: number[]; hint?: string }, index: number) => {
+                    const item = document.createElement('div');
+                    item.className = 'lesson-card';
+
+                    // Use a generic icon instead of progress ring for now
+                    const iconHtml = `
+                        <div class="lesson-progress-ring" style="background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                            📝
+                        </div>
                     `;
+
+                    item.innerHTML = `
+                        ${iconHtml}
+                        <div class="lesson-info">
+                            <div class="lesson-title">${passage.title}</div>
+                            <div class="lesson-meta">${passage.blanks.length} 个填空</div>
+                        </div>
+                    `;
+
                     item.addEventListener('click', () => onPassageSelect(passage));
-                    list.appendChild(item);
+                    grid.appendChild(item);
                 });
             })
             .catch(err => {
                 console.error('Failed to load dictation passages:', err);
-                const list = document.getElementById('dictation-passage-list');
-                if (list) list.innerHTML = '<p style="color: #ef4444;">加载失败</p>';
+                const grid = document.getElementById('dictation-grid');
+                if (grid) grid.innerHTML = '<p style="color: #ef4444; text-align: center; grid-column: 1/-1;">加载失败</p>';
             });
     }
 

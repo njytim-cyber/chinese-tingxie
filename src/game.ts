@@ -59,8 +59,10 @@ const state: GameState = {
  * Get saved input mode from localStorage
  */
 function getSavedInputMode(): InputMode {
-    const saved = localStorage.getItem(INPUT_MODE_KEY);
-    return (saved === 'handwriting') ? 'handwriting' : 'stroke';
+    // Force handwriting mode by default now
+    return 'handwriting';
+    // const saved = localStorage.getItem(INPUT_MODE_KEY);
+    // return (saved === 'handwriting') ? 'handwriting' : 'stroke';
 }
 
 /**
