@@ -5,6 +5,7 @@
 import { initVoices, unlockAudio } from './audio';
 import { initParticles } from './particles';
 import { Game } from './game';
+import { saveDataSync } from './data';
 
 /**
  * Start the game (called from start button)
@@ -134,6 +135,18 @@ function init(): void {
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     console.log('PWA install prompt prevented');
+});
+
+// Ensure data is saved when user leaves
+window.addEventListener('beforeunload', () => {
+    saveDataSync();
+});
+
+// Also save when tab becomes hidden (mobile optimization)
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        saveDataSync();
+    }
 });
 
 if (document.readyState === 'loading') {

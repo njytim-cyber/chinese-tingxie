@@ -503,15 +503,38 @@ export function loadData(): void {
 }
 
 /**
- * Save data to localStorage
+ * Save data to localStorage (with debouncing for performance)
  */
-export function saveData(): void {
+let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+const SAVE_DEBOUNCE_MS = 500;
+
+function saveDataImmediate(): void {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(wordState));
         localStorage.setItem(STATS_KEY, JSON.stringify(playerStats));
     } catch (e) {
         console.warn('Could not save data:', e);
     }
+}
+
+export function saveData(): void {
+    // Debounce saves to avoid rapid localStorage writes
+    if (saveTimeout) {
+        clearTimeout(saveTimeout);
+    }
+    saveTimeout = setTimeout(() => {
+        saveDataImmediate();
+        saveTimeout = null;
+    }, SAVE_DEBOUNCE_MS);
+}
+
+// Force immediate save (use on page unload)
+export function saveDataSync(): void {
+    if (saveTimeout) {
+        clearTimeout(saveTimeout);
+        saveTimeout = null;
+    }
+    saveDataImmediate();
 }
 
 /**
