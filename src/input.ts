@@ -75,6 +75,9 @@ export class HanziWriterInput implements InputHandler {
         charsContainer.style.display = 'flex';
         charsContainer.style.justifyContent = 'center';
 
+        // Store char data for deferred writer creation
+        const charData: { char: string; index: number; element: HTMLElement }[] = [];
+
         chars.forEach((char, index) => {
             // Skip punctuation entirely
             if (punctuationRegex.test(char)) {
@@ -82,12 +85,14 @@ export class HanziWriterInput implements InputHandler {
             }
 
             const charBox = document.createElement('div');
-            charBox.className = 'char-box spelling-hidden';
+            // First char is visible, rest are hidden
+            const isFirst = this.charElements.length === 0;
+            charBox.className = isFirst ? 'char-box spelling-active' : 'char-box spelling-hidden';
             charBox.id = `char-box-${index}`;
 
             const div = document.createElement('div');
             div.id = `char-${index}`;
-            div.className = 'char-slot';
+            div.className = isFirst ? 'char-slot active' : 'char-slot';
 
             const pinyinLabel = document.createElement('div');
             pinyinLabel.className = 'char-pinyin-label';
@@ -97,37 +102,7 @@ export class HanziWriterInput implements InputHandler {
             charBox.appendChild(pinyinLabel);
             charsContainer.appendChild(charBox);
             this.charElements.push(charBox);
-
-            const writer = HanziWriter.create(`char-${index}`, char, {
-                width: 234,
-                height: 234,
-                padding: 5,
-                showOutline: false,
-                strokeColor: '#38bdf8',
-                radicalColor: '#f472b6',
-                outlineColor: '#334155',
-                drawingWidth: 12,
-                showCharacter: false,
-                drawingFadeDuration: 300,
-            });
-
-            writer.quiz({
-                leniency: 1.5,
-                showHintAfterMisses: 3,
-                highlightOnComplete: true,
-                onCorrectStroke: (strokeData) => {
-                    SoundFX.correctStroke();
-                    this.hintStrokeIndex[index] = strokeData.strokeNum + 1;
-                },
-                onMistake: () => {
-                    this.handleMistake(index);
-                },
-                onComplete: () => {
-                    this.handleCharComplete(index);
-                }
-            });
-
-            this.writers.push(writer);
+            charData.push({ char, index, element: div });
         });
 
         this.navContainer.appendChild(charsContainer);
@@ -148,8 +123,45 @@ export class HanziWriterInput implements InputHandler {
         progressEl.id = 'spelling-progress';
         container.appendChild(progressEl);
 
-        // Show first character
-        this.updateCarouselView();
+        // Create HanziWriters AFTER DOM insertion (elements must be visible)
+        // Use setTimeout to ensure DOM is fully rendered
+        setTimeout(() => {
+            charData.forEach(({ char, index }) => {
+                const writer = HanziWriter.create(`char-${index}`, char, {
+                    width: 234,
+                    height: 234,
+                    padding: 5,
+                    showOutline: false,
+                    strokeColor: '#38bdf8',
+                    radicalColor: '#f472b6',
+                    outlineColor: '#334155',
+                    drawingWidth: 12,
+                    showCharacter: false,
+                    drawingFadeDuration: 300,
+                });
+
+                writer.quiz({
+                    leniency: 1.5,
+                    showHintAfterMisses: 3,
+                    highlightOnComplete: true,
+                    onCorrectStroke: (strokeData) => {
+                        SoundFX.correctStroke();
+                        this.hintStrokeIndex[index] = strokeData.strokeNum + 1;
+                    },
+                    onMistake: () => {
+                        this.handleMistake(index);
+                    },
+                    onComplete: () => {
+                        this.handleCharComplete(index);
+                    }
+                });
+
+                this.writers.push(writer);
+            });
+
+            // Update the view after writers are created
+            this.updateCarouselView();
+        }, 50);
     }
 
     /**
