@@ -302,9 +302,20 @@ export const Game = {
     },
 
     /**
-     * Play audio for current word
+     * Play audio for current word (or toggle in dictation mode)
      */
     playCurrentAudio(): void {
+        // In dictation mode, toggle audio playback
+        if (state.currentView === 'dictation' && dictationManager) {
+            const isPlaying = dictationManager.toggleAudio();
+            const btn = document.getElementById('btn-audio');
+            if (btn) {
+                btn.innerHTML = isPlaying ? '⏸' : '▶';
+                btn.title = isPlaying ? '暂停' : '播放';
+            }
+            return;
+        }
+
         if (!state.currentWord) return;
         speakWord(state.currentWord.term);
     },
@@ -376,12 +387,17 @@ export const Game = {
             const dictation = new DictationManager();
             dictationManager = dictation; // Assign to global for access
 
-            // Update HUD Skip button to Play/Pause
+            // Hide skip button in dictation mode (redundant with audio toggle)
             const skipBtn = document.getElementById('btn-skip');
             if (skipBtn) {
-                skipBtn.innerHTML = '▶'; // Initial state (stopped) or ⏸ if auto-play
-                skipBtn.title = '播放/暂停';
-                skipBtn.classList.remove('compact-btn'); // Make it slightly bigger?
+                skipBtn.style.display = 'none';
+            }
+
+            // Use audio button as Play/Pause toggle
+            const audioBtn = document.getElementById('btn-audio');
+            if (audioBtn) {
+                audioBtn.innerHTML = '▶'; // Initial state (stopped)
+                audioBtn.title = '播放/暂停';
             }
 
             dictation.onComplete = (score, total) => {
@@ -393,7 +409,7 @@ export const Game = {
 
             // Sync button state if auto-play is on (init calls playAudio)
             if (passage.isFullDictation) {
-                if (skipBtn) skipBtn.innerHTML = '⏸';
+                if (audioBtn) audioBtn.innerHTML = '⏸';
             }
         });
     },
