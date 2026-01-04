@@ -1,8 +1,8 @@
 /**
- * Netlify Function: Gemini Vision API for Handwriting Recognition
+ * Netlify Function: Qwen-VL OCR for Handwriting Recognition
  * Returns top 5 possible interpretations of handwritten Chinese
  * 
- * Environment variable required: GOOGLE_CLOUD_API_KEY
+ * Environment variable required: DASHSCOPE_API_KEY
  */
 
 exports.handler = async (event) => {
@@ -14,13 +14,13 @@ exports.handler = async (event) => {
         };
     }
 
-    const apiKey = process.env.GOOGLE_CLOUD_API_KEY;
+    const apiKey = process.env.DASHSCOPE_API_KEY;
 
     if (!apiKey) {
-        console.error('GOOGLE_CLOUD_API_KEY not configured');
+        console.error('DASHSCOPE_API_KEY not configured');
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'API key not configured' })
+            body: JSON.stringify({ error: 'DashScope API key not configured' })
         };
     }
 
@@ -34,38 +34,42 @@ exports.handler = async (event) => {
             };
         }
 
-        // Call Gemini API for handwriting recognition
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        // Call Qwen-VL via DashScope OpenAI-compatible API
+        const dashscopeUrl = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
 
         const requestBody = {
-            contents: [{
-                parts: [
-                    {
-                        text: `You are a Chinese handwriting recognition expert. Look at this handwritten Chinese text and provide your top 5 best guesses for what was written. The handwriting may be imperfect.
+            model: "qwen-vl-max",
+            messages: [
+                {
+                    role: "user",
+                    content: [
+                        {
+                            type: "text",
+                            text: `你是一个中文手写识别专家。请仔细观察这张手写中文图片，给出你认为最可能的5个识别结果。
 
-Return ONLY a JSON array with exactly 5 Chinese phrases/words that could match this handwriting, ordered from most likely to least likely. No explanations, just the JSON array.
+请只返回一个JSON数组，包含5个最可能的中文词语或短语，按可能性从高到低排序。不要任何解释，只返回JSON数组。
 
-Example response format:
+返回格式示例：
 ["天气预报", "天氣预報", "大气预报", "天气须报", "天气预极"]`
-                    },
-                    {
-                        inlineData: {
-                            mimeType: "image/png",
-                            data: image
+                        },
+                        {
+                            type: "image_url",
+                            image_url: {
+                                url: `data:image/png;base64,${image}`
+                            }
                         }
-                    }
-                ]
-            }],
-            generationConfig: {
-                temperature: 0.2,
-                maxOutputTokens: 200
-            }
+                    ]
+                }
+            ],
+            temperature: 0.1,
+            max_tokens: 200
         };
 
-        const response = await fetch(geminiUrl, {
+        const response = await fetch(dashscopeUrl, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify(requestBody)
         });
@@ -73,16 +77,16 @@ Example response format:
         const data = await response.json();
 
         if (!response.ok) {
-            console.error('Gemini API error:', data);
+            console.error('Qwen API error:', data);
             return {
                 statusCode: response.status,
-                body: JSON.stringify({ error: data.error?.message || 'Gemini API error' })
+                body: JSON.stringify({ error: data.error?.message || 'Qwen API error', details: data })
             };
         }
 
         // Extract the text response
-        const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-        console.log('Gemini raw response:', textResponse);
+        const textResponse = data.choices?.[0]?.message?.content || '[]';
+        console.log('Qwen raw response:', textResponse);
 
         // Parse the JSON array from response
         let candidates = [];
@@ -93,7 +97,7 @@ Example response format:
                 candidates = JSON.parse(jsonMatch[0]);
             }
         } catch (e) {
-            console.error('Failed to parse Gemini response:', e);
+            console.error('Failed to parse Qwen response:', e);
             // Try to extract Chinese characters as fallback
             const chineseMatch = textResponse.match(/[\u4e00-\u9fff]+/g);
             if (chineseMatch) {
