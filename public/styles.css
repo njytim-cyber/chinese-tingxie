@@ -355,14 +355,43 @@ body {
     border-bottom-width: 0;
 }
 
+/* Glass-style HUD buttons - unified neutral background */
 .btn-hint {
-    background: linear-gradient(to bottom, #fbbf24, #d97706);
-    border-color: #b45309;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+    color: #fbbf24;
+    /* Yellow icon color */
+}
+
+.btn-hint:hover {
+    background: rgba(251, 191, 36, 0.2);
+    border-color: rgba(251, 191, 36, 0.3);
 }
 
 .btn-audio {
-    background: linear-gradient(to bottom, #a78bfa, #7c3aed);
-    border-color: #6d28d9;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+    color: #a78bfa;
+    /* Purple icon color */
+}
+
+.btn-audio:hover {
+    background: rgba(167, 139, 250, 0.2);
+    border-color: rgba(167, 139, 250, 0.3);
+}
+
+.btn-skip {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+}
+
+.btn-skip:hover {
+    background: rgba(148, 163, 184, 0.2);
+    border-color: rgba(148, 163, 184, 0.3);
 }
 
 .review-btn {
@@ -539,10 +568,16 @@ body {
     display: flex;
     align-items: center;
     gap: 5px;
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    background: transparent;
     padding: 5px 12px;
     border-radius: 20px;
     font-weight: bold;
+    color: white;
+}
+
+.daily-streak-display .streak-icon {
+    color: #f97316;
+    /* Keep fire icon orange */
 }
 
 .daily-streak-display.on-fire {
