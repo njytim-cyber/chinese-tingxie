@@ -48,7 +48,15 @@ export class DictationManager {
     private charBoxes: CharBox[] = [];
 
     // Chunking state
-    private chunks: { start: number; end: number; text: string; pinyin: string[] }[] = [];
+    private chunks: {
+        start: number;
+        end: number;
+        text: string;
+        pinyin: string[];
+        hintUsed: boolean;
+        revealUsed: boolean;
+        score: number;
+    }[] = [];
     private currentChunkIndex = 0;
 
     // Mobile Carousel State
@@ -88,7 +96,15 @@ export class DictationManager {
                 const pinyinStr = chunkPinyins[i] || "";
                 const pinyin = pinyinStr.trim() ? pinyinStr.split(" ") : [];
 
-                return { start, end, text: chunkText, pinyin };
+                return {
+                    start,
+                    end,
+                    text: chunkText,
+                    pinyin,
+                    hintUsed: false,
+                    revealUsed: false,
+                    score: 0
+                };
             });
         } else {
             // Auto-split fallback
@@ -108,15 +124,32 @@ export class DictationManager {
                         start: currentStart,
                         end: currentStart + fullChunk.length,
                         text: fullChunk,
-                        pinyin: []
+                        pinyin: [],
+                        hintUsed: false,
+                        revealUsed: false,
+                        score: 0
                     });
                     currentStart += fullChunk.length;
                 }
             }
             if (this.chunks.length === 0) {
-                this.chunks = [{ start: 0, end: passage.text.length, text: passage.text, pinyin: [] }];
+                this.chunks = [{
+                    start: 0,
+                    end: passage.text.length,
+                    text: passage.text,
+                    pinyin: [],
+                    hintUsed: false,
+                    revealUsed: false,
+                    score: 0
+                }];
             }
         }
+        // ... (rest of init)
+        // I need to skip 'init' middle part since replace_file_content handles contiguous blocks. 
+        // Ah, I see I included 'chunks' definition which is high up properly.
+        // But I need to preserve the rest of 'init' which is not shown in my replacement content.
+        // I should split this into two replacements or use a specific target.
+        // Let's target the 'private chunks' definition first.
 
         // Build character boxes
         const isFull = !!passage.isFullDictation;
@@ -538,31 +571,50 @@ export class DictationManager {
         }
 
         if (this.currentChunkIndex < this.chunks.length - 1) {
+            // Calculate Score for this chunk
+            if (chunk.revealUsed) {
+                chunk.score = 0;
+            } else if (chunk.hintUsed) {
+                chunk.score = 1;
+            } else {
+                chunk.score = 2; // Perfect
+            }
+
             this.currentChunkIndex++;
             this.mobileCharIndex = 0; // Reset mobile index
             this.render();
             this.renderFooterProgress(); // Update footer
         } else {
+            // Calculate last chunk score
+            if (chunk.revealUsed) {
+                chunk.score = 0;
+            } else if (chunk.hintUsed) {
+                chunk.score = 1;
+            } else {
+                chunk.score = 2;
+            }
             this.showResults();
         }
     }
 
     private showResults(): void {
-        let correct = 0;
-        let total = 0;
-        this.charBoxes.forEach(box => {
-            if (box.isBlank) {
-                total++;
-                if (box.isCorrect) correct++;
-            }
+        // Calculate total weighted score
+        let totalScore = 0;
+        let maxScore = this.chunks.length * 2;
+
+        this.chunks.forEach(chunk => {
+            totalScore += chunk.score;
         });
 
         if (this.onComplete) {
-            this.onComplete(correct, total);
+            this.onComplete(totalScore, maxScore);
         }
     }
 
     private showHint(): void {
+        // Mark hint as used for this chunk
+        this.chunks[this.currentChunkIndex].hintUsed = true;
+
         const chunk = this.chunks[this.currentChunkIndex];
 
         // In mobile view, user is focused on ONE char (mobileCharIndex)
@@ -607,6 +659,15 @@ export class DictationManager {
                 }
                 writerIndex++;
             }
+        }
+    }
+
+    /**
+     * Notify that reveal was used
+     */
+    notifyReveal(): void {
+        if (this.chunks && this.chunks[this.currentChunkIndex]) {
+            this.chunks[this.currentChunkIndex].revealUsed = true;
         }
     }
 

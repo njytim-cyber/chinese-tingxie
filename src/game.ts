@@ -438,6 +438,9 @@ export const Game = {
                 return;
             }
 
+            // Notify manager that reveal was used (score penalty)
+            dictationManager.notifyReveal();
+
             termEl.innerHTML = `<div style="text-align: left; font-size: 1.2rem; line-height: 1.6;">${passage.text}</div>`;
             pinyinEl.textContent = ''; // No pinyin for full passage
             modal.style.display = 'flex';
