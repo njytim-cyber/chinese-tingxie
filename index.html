@@ -26,18 +26,18 @@
 <body>
 
     <!-- START SCREEN -->
-    <div id="start-overlay">
-        <h1 class="start-title">星空听写</h1>
+    <div id="start-overlay" role="dialog" aria-labelledby="start-title">
+        <h1 class="start-title" id="start-title">星空听写</h1>
         <p class="start-subtitle">银河听写练习</p>
         <p class="version-tag">v1.21.12</p>
 
-        <input type="text" id="player-name" class="name-input" placeholder="你的名字" maxlength="20">
+        <input type="text" id="player-name" class="name-input" placeholder="你的名字" maxlength="20" aria-label="输入你的名字">
 
-        <button id="start-btn" class="start-btn">听写练习</button>
-        <button id="dictation-btn" class="dictation-btn">默写练习</button>
-        <button id="review-btn" class="review-btn">查看进度</button>
+        <button id="start-btn" class="start-btn" aria-label="开始听写练习">听写练习</button>
+        <button id="dictation-btn" class="dictation-btn" aria-label="开始默写练习">默写练习</button>
+        <button id="review-btn" class="review-btn" aria-label="查看学习进度">查看进度</button>
 
-        <div class="instructions-box">
+        <div class="instructions-box" role="note">
             <p>🔊 听词语 → ✍️ 写汉字 → ⭐ 升级！</p>
         </div>
 
@@ -46,34 +46,36 @@
 
     <canvas id="particle-canvas"></canvas>
 
-    <div class="hud" style="display: none;">
+    <header class="hud" style="display: none;" role="banner">
         <div class="hud-inner">
-            <button class="menu-btn" id="menu-btn" title="返回">❮</button>
+            <button class="menu-btn" id="menu-btn" title="返回" aria-label="返回上一页">❮</button>
 
-            <div class="hud-controls">
+            <nav class="hud-controls" role="toolbar" aria-label="游戏控制">
                 <!-- Buttons -->
-                <button class="game-btn btn-skip compact-btn" id="btn-skip" title="跳过">⏭</button>
-                <button class="game-btn btn-audio compact-btn" id="btn-audio" title="听读音">🔊</button>
-                <button class="game-btn btn-hint compact-btn" id="btn-hint" title="提示">💡</button>
-                <button class="game-btn btn-reveal compact-btn" id="btn-reveal" title="显示词语">👁️</button>
+                <button class="game-btn btn-skip compact-btn" id="btn-skip" title="跳过" aria-label="跳过当前词语">⏭</button>
+                <button class="game-btn btn-audio compact-btn" id="btn-audio" title="听读音"
+                    aria-label="播放词语读音">🔊</button>
+                <button class="game-btn btn-hint compact-btn" id="btn-hint" title="提示" aria-label="显示拼音提示">💡</button>
+                <button class="game-btn btn-reveal compact-btn" id="btn-reveal" title="显示词语"
+                    aria-label="显示完整词语">👁️</button>
 
                 <!-- Stats -->
-                <div class="score-box">
-                    <span>⭐</span> <span id="score">0</span>
+                <div class="score-box" role="status" aria-live="polite" aria-label="当前分数">
+                    <span aria-hidden="true">⭐</span> <span id="score">0</span>
                 </div>
 
                 <!-- Streak Badge -->
-                <div class="streak-badge" id="streak-badge" style="display: none;">
+                <div class="streak-badge" id="streak-badge" style="display: none;" role="status" aria-live="polite">
                     🔥 x<span id="streak-count">0</span>
                 </div>
 
                 <div class="daily-streak-display" id="streak-container" style="display: none;">
-                    <span class="streak-fire">🔥</span>
+                    <span class="streak-fire" aria-hidden="true">🔥</span>
                     <span id="daily-streak">0</span>
                 </div>
-            </div>
+            </nav>
         </div>
-    </div>
+    </header>
 
 
     <div class="game-stage">

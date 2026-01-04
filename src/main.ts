@@ -68,6 +68,16 @@ function init(): void {
             startBtn.addEventListener('click', startGame);
         }
 
+        // Allow Enter key to start game from name input
+        if (nameInput) {
+            nameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    startGame();
+                }
+            });
+        }
+
         const reviewBtn = document.getElementById('review-btn');
         if (reviewBtn) {
             reviewBtn.addEventListener('click', () => {
