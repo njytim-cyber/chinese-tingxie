@@ -14,8 +14,9 @@ test('header should remain fixed at the top when scrolling', async ({ page }) =>
     await page.locator('.lesson-card').first().click();
 
     // 3. Wait for game area
-    const charSlot = page.locator('.char-slot').first();
-    await expect(charSlot).toBeVisible();
+    // 3. Wait for game area
+    const carousel = page.locator('.spelling-carousel');
+    await expect(carousel).toBeVisible();
 
     // 4. Force some scrolling
     // We can add some height to body to ensure scrolling if content isn't enough
@@ -50,7 +51,8 @@ test('header should remain fixed at the top when scrolling', async ({ page }) =>
     // Note: elementFromPoint returns the top-most element.
     // If HUD is fixed and z-index 9999, it should be returned unless covered.
 
-    // 8. Check transparency class
+    // 8. Check transparency class (HUD should NOT be transparent in game mode)
+    // Note: The logic in ui.ts setHudTransparent(false) removes the class
     const classAttribute = await hud.getAttribute('class');
     console.log('HUD classes:', classAttribute);
     expect(classAttribute).not.toContain('transparent');

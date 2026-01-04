@@ -35,20 +35,18 @@ export class UIManager {
     showLessonSelect(
         onLessonSelect: (lessonId: number, wordLimit: number) => void,
         onProgressClick?: () => void,
-        onPracticeClick?: () => void,
-        currentMode?: 'stroke' | 'handwriting',
-        onModeChange?: (mode: 'stroke' | 'handwriting') => void
+        onPracticeClick?: () => void
     ): void {
         const container = this.domCache.writingArea;
         if (!container) return;
 
         const lessons = getLessons();
         const currentLesson = getCurrentLesson();
-        const mode = currentMode || 'stroke';
+        let selectedLimit = 5;
 
         container.innerHTML = `
             <div class="lesson-select">
-                <h2 class="lesson-select-title">选择课程</h2>
+                <h2 class="lesson-select-title">听写练习</h2>
 
                 <!-- Input Mode Toggle Removed (Default to Handwriting) -->
                 
@@ -85,8 +83,6 @@ export class UIManager {
                 </div>
             </div>
         `;
-
-        let selectedLimit = 5;
 
         // Mode toggle buttons (Removed)
         // if (onModeChange) { ... }
@@ -145,7 +141,7 @@ export class UIManager {
         container.innerHTML = `
             <div class="progress-view">
                 <div class="progress-header">
-                    <button class="menu-btn nav-back-btn" onclick="location.reload()">❮ 返回</button>
+                    <button class="nav-back-btn" onclick="location.reload()">❮</button>
                     <h2 class="progress-title">档案</h2>
                 </div>
 
@@ -267,7 +263,7 @@ export class UIManager {
         });
 
         const overallProgress = totalWords > 0 ? Math.round((totalScore / maxTotalScore) * 100) : 0;
-        const masteredPercent = totalWords > 0 ? Math.round((masteredWords / totalWords) * 100) : 0;
+
 
         return `
             <div class="progress-summary-card">
@@ -283,10 +279,6 @@ export class UIManager {
                 </div>
                 <div class="progress-bar-container">
                     <div class="progress-fill" style="width: ${overallProgress}%"></div>
-                </div>
-                <div class="summary-details">
-                    <span>已学习: ${startedWords} 词</span>
-                    <span>待解锁: ${totalWords - startedWords} 词</span>
                 </div>
             </div>
         `;
@@ -546,7 +538,7 @@ export class UIManager {
     /**
      * Show menu/pause overlay
      */
-    showMenu(onResume: () => void, onAchievements: () => void, onMainMenu: () => void): void {
+    showMenu(onResume: () => void, onMainMenu: () => void): void {
         const overlay = document.createElement('div');
         overlay.className = 'menu-overlay';
         overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
@@ -830,16 +822,17 @@ export class UIManager {
         this.setHudTransparent(true);
         this.clearWritingArea();
 
+        // Hide HUD controls to remove global buttons
+        if (this.domCache.hudControls) {
+            this.domCache.hudControls.style.display = 'none';
+        }
+
         const writingArea = this.domCache.writingArea;
         if (!writingArea) return;
 
         writingArea.innerHTML = `
             <div class="lesson-select">
-                <div class="progress-header">
-                    <button class="menu-btn nav-back-btn" onclick="location.reload()">❮ 返回</button>
-                    <h2 class="lesson-select-title" style="margin: 0;">默写练习</h2>
-                </div>
-                <!-- <h2 class="lesson-select-title">默写练习</h2> -->
+                <h2 class="lesson-select-title">默写练习</h2>
                 <div class="lesson-grid" id="dictation-grid">
                     <p style="color: #64748b; grid-column: 1/-1; text-align: center;">加载中...</p>
                 </div>
@@ -858,21 +851,24 @@ export class UIManager {
                     const item = document.createElement('div');
                     item.className = 'lesson-card';
 
-                    // Use a generic icon instead of progress ring for now
+                    // Match the visual style of Lesson Select
                     const iconHtml = `
-                        <div class="lesson-progress-ring" style="background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-                            📝
-                        </div>
-                    `;
+                    <div class="lesson-progress-ring">
+                        <svg viewBox="0 0 36 36">
+                            <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="ring-fill" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
+                        <span class="lesson-number">${index + 1}</span>
+                    </div>
+                `;
 
                     item.innerHTML = `
-                        ${iconHtml}
-                        <div class="lesson-info">
-                            <div class="lesson-title">${passage.title}</div>
-                            <div class="lesson-meta">${passage.blanks.length} 个填空</div>
-                        </div>
-                    `;
-
+                    ${iconHtml}
+                    <div class="lesson-info">
+                        <div class="lesson-title">${passage.title}</div>
+                        <div class="lesson-meta">${passage.blanks.length} 个填空</div>
+                    </div>
+                `;
                     item.addEventListener('click', () => onPassageSelect(passage));
                     grid.appendChild(item);
                 });

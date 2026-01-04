@@ -34,10 +34,11 @@ test('lesson selection and gameplay', async ({ page }) => {
     // Click on the first lesson
     await page.locator('.lesson-card').first().click();
 
-    // Wait for game to load by checking for character slots
-    await expect(page.locator('.char-slot').first()).toBeVisible();
+    // Wait for game to load by checking for character slots or carousel
+    await expect(page.locator('.spelling-carousel')).toBeVisible();
 
     // Verify controls are visible
+    // Note: btn-audio matches the ID in the HUD
     await expect(page.locator('#btn-audio')).toBeVisible();
     await expect(page.locator('#btn-hint')).toBeVisible();
 });

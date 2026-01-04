@@ -169,9 +169,7 @@ export const Game = {
         ui.showLessonSelect(
             (lessonId, wordLimit) => Game.selectLesson(lessonId, wordLimit),
             () => Game.showProgress(),
-            () => Game.showPracticeSelect(),
-            inputMode,
-            (mode) => Game.setInputMode(mode)
+            () => Game.showPracticeSelect()
         );
     },
 
@@ -236,35 +234,47 @@ export const Game = {
      * Start practice with selected lessons
      */
     startPractice(): void {
-        if (state.selectedLessonsForPractice.length === 0) {
-            Game.showLessonSelect();
-            return;
+        try {
+            if (state.selectedLessonsForPractice.length === 0) {
+                Game.showLessonSelect();
+                return;
+            }
+
+            state.practiceWords = getUnmasteredWords(state.selectedLessonsForPractice);
+
+            if (state.practiceWords.length === 0) {
+                ui.showFeedback('所有词语都已掌握！', '#22c55e');
+                setTimeout(() => Game.showLessonSelect(), 1500);
+                return;
+            }
+
+            state.currentWordIndex = 0;
+            state.sessionStartTime = Date.now();
+            state.wordsCompletedThisSession = 0;
+            state.sessionStreak = 0;
+            state.currentView = 'game';
+
+            // Set lesson phrases for handwriting mode
+            if (inputHandler instanceof HandwritingInput) {
+                inputHandler.setLessonPhrases(state.practiceWords);
+            }
+
+            // Ensure valid state before UI updates
+            if (!state.practiceWords || state.practiceWords.length === 0) {
+                throw new Error("No words available for practice");
+            }
+
+            ui.showControls();
+            ui.setHudTransparent(false);
+            ui.renderProgressDots(state.practiceWords.length);
+
+            loadLevel();
+        } catch (error) {
+            console.error("Failed to start practice:", error);
+            ui.showFeedback("启动失败，请刷新页面", "#ef4444");
+            // Fallback to lesson select after delay
+            setTimeout(() => Game.showLessonSelect(), 2000);
         }
-
-        state.practiceWords = getUnmasteredWords(state.selectedLessonsForPractice);
-
-        if (state.practiceWords.length === 0) {
-            ui.showFeedback('所有词语都已掌握！', '#22c55e');
-            setTimeout(() => Game.showLessonSelect(), 1500);
-            return;
-        }
-
-        state.currentWordIndex = 0;
-        state.sessionStartTime = Date.now();
-        state.wordsCompletedThisSession = 0;
-        state.sessionStreak = 0;
-        state.currentView = 'game';
-
-        // Set lesson phrases for handwriting mode
-        if (inputHandler instanceof HandwritingInput) {
-            inputHandler.setLessonPhrases(state.practiceWords);
-        }
-
-        ui.showControls();
-        ui.setHudTransparent(false);
-        ui.renderProgressDots(state.practiceWords.length);
-
-        loadLevel();
     },
 
     /**
@@ -297,10 +307,12 @@ export const Game = {
      * Handle back navigation
      */
     handleBackNavigation(): void {
-        if (state.currentView === 'practice-select' || state.currentView === 'progress') {
-            Game.showLessonSelect();
+        if (state.currentView === 'practice-select' || state.currentView === 'progress' || state.currentView === 'dictation-select') {
+            Game.showLessonSelect(); // Return to main menu (SPA mode)
         } else if (state.currentView === 'lesson-select') {
             location.reload();
+        } else if (state.currentView === 'dictation') {
+            Game.showDictationSelect(); // Back to dictation select
         } else {
             Game.showMenu();
         }
@@ -355,7 +367,6 @@ export const Game = {
     showMenu(): void {
         ui.showMenu(
             () => { }, // Resume - just close menu
-            () => ui.showAchievements(),
             () => location.reload()
         );
     },

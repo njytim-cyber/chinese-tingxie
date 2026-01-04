@@ -47,7 +47,7 @@ export function startGame(): void {
  * Initialize application
  */
 function init(): void {
-    console.log('Initializing app (v1.14.5)...');
+    console.log('Initializing app (v1.21.11)...');
     try {
         // Initialize voices
         initVoices();

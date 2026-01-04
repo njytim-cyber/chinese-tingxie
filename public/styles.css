@@ -1641,8 +1641,15 @@ body {
 }
 
 .btn-skip {
-    background: linear-gradient(to bottom, #94a3b8, #64748b);
-    border-color: #475569;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+    color: #f97316;
+}
+
+.btn-skip:hover {
+    background: rgba(249, 115, 22, 0.2);
+    border-color: rgba(249, 115, 22, 0.3);
 }
 
 /* Achievements Navigation */
@@ -2389,4 +2396,366 @@ body {
 .feedback-overlay .stat-label {
     color: #94a3b8;
     font-size: 0.9rem;
+}
+
+/* --- Improved Profile / Progress View --- */
+
+.progress-view {
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.progress-header {
+    display: flex;
+    align-items: center;
+    position: relative;
+    margin-bottom: 5px;
+}
+
+.nav-back-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    padding: 0;
+    transition: all 0.2s;
+    color: white;
+    cursor: pointer;
+}
+
+.nav-back-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.progress-title {
+    flex: 1;
+    text-align: center;
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--primary);
+    text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    padding-right: 44px;
+}
+
+.progress-tabs {
+    display: flex;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 6px;
+    border-radius: 16px;
+    border: 1px solid rgba(51, 65, 85, 0.5);
+    gap: 5px;
+}
+
+.tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.tab-btn:hover {
+    color: #e2e8f0;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn.active {
+    background: var(--primary);
+    color: #0f172a;
+    font-weight: bold;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Summary Card */
+.progress-summary-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+}
+
+.summary-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: white;
+    line-height: 1.1;
+    font-family: 'ZCOOL KuaiLe', cursive;
+    white-space: nowrap;
+}
+
+.stat-value.highlight {
+    color: var(--primary);
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin-top: 5px;
+    font-weight: 500;
+}
+
+/* Progress Bars */
+.progress-bar-container {
+    height: 12px;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    box-shadow: 0 0 15px var(--primary);
+    border-radius: 6px;
+    transition: width 1s ease-out;
+}
+
+.summary-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    color: #cbd5e1;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 15px;
+    font-weight: 500;
+}
+
+/* Lesson Cards */
+.progress-lessons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.progress-lesson {
+    background: var(--card-bg);
+    border: 1px solid #334155;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.2s;
+}
+
+.progress-lesson:hover {
+    border-color: #475569;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.progress-lesson-header {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.progress-lesson-header:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.progress-lesson-title {
+    font-size: 1.1rem;
+    color: white;
+    font-weight: 500;
+}
+
+.progress-lesson-percent {
+    font-weight: bold;
+    color: var(--primary);
+    background: rgba(56, 189, 248, 0.1);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+/* Phrase List */
+.progress-phrases {
+    padding: 0;
+    border-top: 1px solid #334155;
+    background: rgba(15, 23, 42, 0.3);
+}
+
+.progress-phrase {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+    transition: background 0.2s;
+}
+
+.progress-phrase:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.progress-phrase:last-child {
+    border-bottom: none;
+}
+
+.phrase-term {
+    font-size: 1.2rem;
+    color: #e2e8f0;
+}
+
+.phrase-mastery {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    color: #0f172a;
+    font-weight: bold;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Achievements Grid Update */
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 15px;
+}
+
+.achievement-item {
+    aspect-ratio: 1;
+    background: var(--card-bg);
+    border: 2px solid #334155;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.achievement-item.unlocked {
+    border-color: var(--gold);
+    background: rgba(251, 191, 36, 0.05);
+}
+
+.achievement-item.locked {
+    opacity: 0.6;
+    filter: grayscale(1);
+}
+
+.ach-icon {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+}
+
+.ach-name {
+    font-size: 0.9rem;
+    color: white;
+    font-weight: bold;
+}
+
+.ach-desc {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin-top: 4px;
+    line-height: 1.2;
+}
+
+/* --- Improved Profile / Progress View --- */
+
+.progress-view {
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 10px;
+    min-height: 50px;
+}
+
+.nav-back-btn {
+    position: absolute;
+    left: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    padding: 0;
+    transition: all 0.2s;
+    color: white;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.nav-back-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.progress-title {
+    text-align: center;
+    margin: 0;
+    font-size: 2rem;
+    color: var(--primary);
+    text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    font-weight: normal;
+}
+
+/* Override for Skip Button Color */
+.btn-skip {
+    background: rgba(249, 115, 22, 0.15) !important;
+    border: 2px solid rgba(249, 115, 22, 0.3) !important;
+    border-bottom: 2px solid rgba(249, 115, 22, 0.2) !important;
+    color: #f97316 !important;
+}
+
+.btn-skip:hover {
+    background: rgba(249, 115, 22, 0.25) !important;
+    border-color: rgba(249, 115, 22, 0.4) !important;
 }
