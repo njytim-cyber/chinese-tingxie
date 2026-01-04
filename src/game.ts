@@ -418,7 +418,7 @@ export const Game = {
     },
 
     /**
-     * Reveal phrase modal - shows term and pinyin
+     * Reveal phrase modal - shows term and pinyin (toggle on/off)
      */
     revealPhrase(): void {
         if (!state.currentWord) return;
@@ -428,6 +428,12 @@ export const Game = {
         const pinyinEl = document.getElementById('reveal-pinyin');
 
         if (!modal || !termEl || !pinyinEl) return;
+
+        // Toggle: if already visible, hide it
+        if (modal.style.display === 'flex') {
+            modal.style.display = 'none';
+            return;
+        }
 
         termEl.textContent = state.currentWord.term;
         pinyinEl.textContent = state.currentWord.pinyin;

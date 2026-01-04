@@ -1,6 +1,6 @@
 {
   "name": "chinese-tingxie",
-  "version": "1.21.1",
+  "version": "1.21.2",
   "description": "Galaxy Ting Xie - Chinese Character Dictation Game",
   "main": "js/main.js",
   "scripts": {
