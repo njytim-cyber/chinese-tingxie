@@ -1,0 +1,750 @@
+/**
+ * UI Rendering Module
+ * Handles all UI rendering and display logic for the game
+ */
+
+import { SoundFX } from './audio';
+import { spawnParticles } from './particles';
+import {
+    getLessons, getCurrentLesson, getLessonProgress, getWordState,
+    getStats, getLevel, getLevelProgress, getAchievements,
+    type Achievement
+} from './data';
+import type { DOMCache, ProgressDotStatus } from './types';
+
+/**
+ * UI Manager class - handles all UI rendering
+ */
+export class UIManager {
+    private domCache: DOMCache;
+
+    constructor(domCache: DOMCache) {
+        this.domCache = domCache;
+    }
+
+    /**
+     * Update DOM cache (call after major view changes)
+     */
+    updateCache(cache: DOMCache): void {
+        this.domCache = cache;
+    }
+
+    /**
+     * Show lesson selection screen
+     */
+    showLessonSelect(
+        onLessonSelect: (lessonId: number, wordLimit: number) => void,
+        onProgressClick?: () => void,
+        onPracticeClick?: () => void,
+        currentMode?: 'stroke' | 'handwriting',
+        onModeChange?: (mode: 'stroke' | 'handwriting') => void
+    ): void {
+        const container = this.domCache.writingArea;
+        if (!container) return;
+
+        const lessons = getLessons();
+        const currentLesson = getCurrentLesson();
+        const mode = currentMode || 'stroke';
+
+        container.innerHTML = `
+            <div class="lesson-select">
+                <h2 class="lesson-select-title">选择课程</h2>
+
+                <div class="input-mode-toggle">
+                    <button class="mode-btn ${mode === 'stroke' ? 'active' : ''}" data-mode="stroke">✍️ 笔画</button>
+                    <button class="mode-btn ${mode === 'handwriting' ? 'active' : ''}" data-mode="handwriting">🖊️ 手写</button>
+                </div>
+                
+                <div class="session-length-toggle">
+                    <span class="toggle-label">每次练习:</span>
+                    <div class="toggle-options">
+                        <button class="toggle-btn active" data-count="5">5词</button>
+                        <button class="toggle-btn" data-count="10">10词</button>
+                        <button class="toggle-btn" data-count="15">15词</button>
+                        <button class="toggle-btn" data-count="0">全部</button>
+                    </div>
+                </div>
+
+                <div class="lesson-grid">
+                    ${lessons.map(lesson => {
+            const progress = getLessonProgress(lesson.id);
+            const progressPercent = Math.round(progress * 100);
+            const isActive = lesson.id === currentLesson.id;
+            return `
+                            <div class="lesson-card ${isActive ? 'active' : ''}" data-lesson-id="${lesson.id}">
+                                <div class="lesson-progress-ring">
+                                    <svg viewBox="0 0 36 36">
+                                        <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path class="ring-fill" stroke-dasharray="${progressPercent}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    </svg>
+                                    <span class="lesson-number">${lesson.id}</span>
+                                </div>
+                                <div class="lesson-info">
+                                    <div class="lesson-title">${lesson.title}</div>
+                                    <div class="lesson-meta">${lesson.phrases.length} 词语 · ${progressPercent}%</div>
+                                </div>
+                            </div>
+                        `;
+        }).join('')}
+                </div>
+                <div class="lesson-select-actions" style="display: none;">
+                </div>
+            </div>
+        `;
+
+        let selectedLimit = 5;
+
+        // Mode toggle buttons
+        if (onModeChange) {
+            container.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    container.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const newMode = (btn as HTMLElement).dataset.mode as 'stroke' | 'handwriting';
+                    onModeChange(newMode);
+                });
+            });
+        }
+
+        // Toggle Buttons Logic
+        container.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                container.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedLimit = parseInt((btn as HTMLElement).dataset.count || '0');
+            });
+        });
+
+        // Lesson Card Click
+        container.querySelectorAll('.lesson-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const lessonId = parseInt((card as HTMLElement).dataset.lessonId || '1');
+                onLessonSelect(lessonId, selectedLimit);
+            });
+        });
+
+        // Optional button handlers
+        const progressBtn = document.getElementById('view-progress-btn');
+        if (progressBtn && onProgressClick) {
+            progressBtn.addEventListener('click', onProgressClick);
+        }
+
+        const practiceBtn = document.getElementById('practice-mode-btn');
+        if (practiceBtn && onPracticeClick) {
+            practiceBtn.addEventListener('click', onPracticeClick);
+        }
+
+        this.hideControls();
+        this.setHudTransparent(true);
+    }
+
+    /**
+     * Show progress view with all lessons and phrases
+     */
+    showProgress(): void {
+        const container = this.domCache.writingArea;
+        if (!container) return;
+
+        const lessons = getLessons();
+        const masteryLabels = ['未学', '入门', '熟悉', '掌握', '精通', '完美'];
+        const masteryColors = ['#64748b', '#ef4444', '#f97316', '#eab308', '#22c55e', '#38bdf8'];
+
+        this.setHudTransparent(true);
+        if (this.domCache.hudControls) this.domCache.hudControls.style.display = 'none';
+
+        container.innerHTML = `
+            <div class="progress-view">
+                <h2 class="progress-title">📊 学习进度</h2>
+                <div class="progress-lessons">
+                    ${lessons.map(lesson => {
+            const progress = getLessonProgress(lesson.id);
+            const progressPercent = Math.round(progress * 100);
+            return `
+                            <div class="progress-lesson">
+                                <div class="progress-lesson-header" data-lesson-id="${lesson.id}">
+                                    <span class="progress-lesson-title">${lesson.title}</span>
+                                    <span class="progress-lesson-percent">${progressPercent}%</span>
+                                </div>
+                                <div class="progress-phrases" id="phrases-${lesson.id}" style="display: none;">
+                                    ${lesson.phrases.map(phrase => {
+                const state = getWordState(phrase.term);
+                const score = state.score;
+                return `
+                                            <div class="progress-phrase">
+                                                <span class="phrase-term">${phrase.term}</span>
+                                                <span class="phrase-mastery" style="background: ${masteryColors[score]}">${masteryLabels[score]}</span>
+                                            </div>
+                                        `;
+            }).join('')}
+                                </div>
+                            </div>
+                        `;
+        }).join('')}
+                </div>
+            </div>
+        `;
+
+        // Toggle phrase visibility on header click
+        container.querySelectorAll('.progress-lesson-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const lessonId = (header as HTMLElement).dataset.lessonId;
+                const phrasesEl = document.getElementById(`phrases-${lessonId}`);
+                if (phrasesEl) {
+                    phrasesEl.style.display = phrasesEl.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+        });
+
+        this.hideControls();
+    }
+
+    /**
+     * Show practice selection screen
+     */
+    showPracticeSelect(
+        onStartPractice: (selectedLessons: number[]) => void
+    ): void {
+        const container = this.domCache.writingArea;
+        if (!container) return;
+
+        const lessons = getLessons();
+
+        this.setHudTransparent(true);
+
+        container.innerHTML = `
+            <div class="practice-select">
+                <h2 class="practice-select-title">📝 选择练习章节</h2>
+                <p class="practice-select-desc">选择要复习的课程（只练习未掌握的词语）</p>
+                <div class="practice-lesson-grid">
+                    ${lessons.map(lesson => {
+            const unmasteredCount = lesson.phrases.filter(p => getWordState(p.term).score < 5).length;
+            return `
+                            <label class="practice-lesson-item ${unmasteredCount === 0 ? 'all-mastered' : ''}">
+                                <input type="checkbox" value="${lesson.id}" ${unmasteredCount === 0 ? 'disabled' : ''}>
+                                <span class="practice-lesson-name">${lesson.title.split(':')[0]}</span>
+                                <span class="practice-lesson-count">${unmasteredCount > 0 ? `${unmasteredCount}词` : '✓'}</span>
+                            </label>
+                        `;
+        }).join('')}
+                </div>
+                <div class="practice-actions">
+                    <button class="game-btn" id="select-all-lessons">全选</button>
+                    <button class="game-btn review-start-btn" id="start-practice-btn" disabled>开始复习 (0)</button>
+                </div>
+            </div>
+        `;
+
+        if (this.domCache.hudControls) this.domCache.hudControls.style.display = 'none';
+
+        // Select all button
+        const selectAllBtn = document.getElementById('select-all-lessons');
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', () => {
+                container.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(cb => {
+                    (cb as HTMLInputElement).checked = true;
+                });
+            });
+        }
+
+        // Start practice button
+        const startBtn = document.getElementById('start-practice-btn');
+        if (startBtn) {
+            startBtn.addEventListener('click', () => {
+                const selected: number[] = [];
+                container.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+                    selected.push(parseInt((cb as HTMLInputElement).value));
+                });
+                if (selected.length === 0) {
+                    this.showFeedback('请至少选择一课', '#ef4444');
+                    return;
+                }
+                onStartPractice(selected);
+            });
+        }
+
+        this.hideControls();
+    }
+
+    /**
+     * Show session complete screen
+     */
+    showSessionComplete(
+        wordsCompleted: number,
+        score: number,
+        sessionStartTime: number,
+        onRestart: () => void,
+        onShare: () => void
+    ): void {
+        const container = this.domCache.writingArea;
+        if (!container) return;
+
+        const stats = getStats();
+        const sessionTime = Math.round((Date.now() - sessionStartTime) / 1000);
+        const minutes = Math.floor(sessionTime / 60);
+        const seconds = sessionTime % 60;
+
+        container.innerHTML = '';
+
+        const sessionDiv = document.createElement('div');
+        sessionDiv.className = 'session-complete';
+
+        sessionDiv.innerHTML = `
+            <h2>🎉 练习完成!</h2>
+            
+            <div class="session-stats">
+                <div class="stat-item">
+                    <span class="stat-value">${wordsCompleted}</span>
+                    <span class="stat-label">词语</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">${score}</span>
+                    <span class="stat-label">经验</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">${minutes}:${seconds.toString().padStart(2, '0')}</span>
+                    <span class="stat-label">时间</span>
+                </div>
+            </div>
+            
+            <div class="streak-display ${stats.dailyStreak >= 3 ? 'on-fire' : ''}">
+                <span class="streak-icon">🔥</span>
+                <span class="streak-count">${stats.dailyStreak}</span>
+                <span class="streak-label">连胜</span>
+            </div>
+        `;
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'session-actions';
+
+        const reloadBtn = document.createElement('button');
+        reloadBtn.className = 'game-btn restart-btn';
+        reloadBtn.innerText = '🔄 再练一次';
+        reloadBtn.onclick = onRestart;
+
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'game-btn share-btn';
+        shareBtn.style.background = 'linear-gradient(to bottom, #8b5cf6, #7c3aed)';
+        shareBtn.style.borderColor = '#6d28d9';
+        shareBtn.innerHTML = '📤 分享成绩';
+        shareBtn.onclick = onShare;
+
+        actionsDiv.appendChild(reloadBtn);
+        actionsDiv.appendChild(shareBtn);
+        sessionDiv.appendChild(actionsDiv);
+
+        container.appendChild(sessionDiv);
+
+        this.hideControls();
+
+        SoundFX.levelUp();
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => {
+                spawnParticles(
+                    Math.random() * window.innerWidth,
+                    Math.random() * window.innerHeight
+                );
+            }, i * 150);
+        }
+    }
+
+    /**
+     * Show level up animation
+     */
+    showLevelUp(level: number): void {
+        SoundFX.levelUp();
+
+        const overlay = document.createElement('div');
+        overlay.className = 'level-up-overlay';
+        overlay.innerHTML = `
+            <div class="level-up-content">
+                <div class="level-up-icon">🎉</div>
+                <div class="level-up-text">升级!</div>
+                <div class="level-up-level">第 ${level} 级</div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        // Big confetti burst!
+        for (let i = 0; i < 15; i++) {
+            setTimeout(() => {
+                spawnParticles(
+                    window.innerWidth / 2 + (Math.random() - 0.5) * 400,
+                    window.innerHeight / 2 + (Math.random() - 0.5) * 300
+                );
+            }, i * 80);
+        }
+
+        setTimeout(() => overlay.remove(), 2500);
+    }
+
+    /**
+     * Show new achievements
+     */
+    showNewAchievements(achievements: Achievement[]): void {
+        if (!achievements || achievements.length === 0) return;
+
+        achievements.forEach((ach, i) => {
+            setTimeout(() => {
+                const toast = document.createElement('div');
+                toast.className = 'achievement-toast';
+                toast.innerHTML = `
+                    <div class="achievement-icon">${ach.icon}</div>
+                    <div class="achievement-info">
+                        <div class="achievement-title">🏅 ${ach.name}</div>
+                        <div class="achievement-desc">${ach.desc}</div>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+
+                SoundFX.success();
+
+                setTimeout(() => {
+                    toast.classList.add('fade-out');
+                    setTimeout(() => toast.remove(), 500);
+                }, 3000);
+            }, i * 1500);
+        });
+    }
+
+    /**
+     * Show achievements panel
+     */
+    showAchievements(): void {
+        const achievements = getAchievements();
+        const overlay = document.createElement('div');
+        overlay.className = 'achievements-overlay';
+        overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+        const unlocked = achievements.filter(a => a.unlocked);
+        const locked = achievements.filter(a => !a.unlocked);
+
+        overlay.innerHTML = `
+            <div class="achievements-panel">
+                <div class="ach-header">
+                     <button class="nav-back-btn" onclick="this.closest('.achievements-overlay').remove()">❮</button>
+                     <h2>🏆 成就</h2>
+                     <div style="width: 30px;"></div>
+                </div>
+                <div class="achievements-grid">
+                    ${unlocked.map(a => `
+                        <div class="achievement-item unlocked">
+                            <span class="ach-icon">${a.icon}</span>
+                            <span class="ach-name">${a.name}</span>
+                        </div>
+                    `).join('')}
+                    ${locked.map(() => `
+                        <div class="achievement-item locked">
+                            <span class="ach-icon">🔒</span>
+                            <span class="ach-name">???</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+    }
+
+    /**
+     * Show menu/pause overlay
+     */
+    showMenu(onResume: () => void, onAchievements: () => void, onMainMenu: () => void): void {
+        const overlay = document.createElement('div');
+        overlay.className = 'menu-overlay';
+        overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+        const panel = document.createElement('div');
+        panel.className = 'menu-panel';
+
+        const title = document.createElement('h2');
+        title.innerText = '⏸ 暂停';
+        panel.appendChild(title);
+
+        const buttons = document.createElement('div');
+        buttons.className = 'menu-buttons';
+
+        const resumeBtn = document.createElement('button');
+        resumeBtn.className = 'game-btn';
+        resumeBtn.innerText = '▶ 继续';
+        resumeBtn.onclick = () => { overlay.remove(); onResume(); };
+        buttons.appendChild(resumeBtn);
+
+        const achBtn = document.createElement('button');
+        achBtn.className = 'game-btn btn-hint';
+        achBtn.innerText = '🏆 成就';
+        achBtn.onclick = () => { overlay.remove(); onAchievements(); };
+        buttons.appendChild(achBtn);
+
+        const menuBtn = document.createElement('button');
+        menuBtn.className = 'game-btn';
+        menuBtn.style.background = 'linear-gradient(to bottom, #ef4444, #dc2626)';
+        menuBtn.style.borderColor = '#b91c1c';
+        menuBtn.innerText = '🏠 返回主菜单';
+        menuBtn.onclick = () => { overlay.remove(); onMainMenu(); };
+        buttons.appendChild(menuBtn);
+
+        panel.appendChild(buttons);
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+    }
+
+    /**
+     * Show feedback overlay
+     */
+    showFeedback(text: string, color: string): void {
+        const el = this.domCache.feedbackOverlay;
+        if (!el) return;
+        el.innerText = text;
+        el.style.color = color;
+        el.style.opacity = '1';
+        el.style.animation = 'none';
+        void (el as HTMLElement).offsetHeight;
+        el.style.animation = 'pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+    }
+
+    /**
+     * Render the footer progress dots
+     */
+    renderProgressDots(count: number): void {
+        const container = this.domCache.footerProgress;
+        if (!container) return;
+        container.innerHTML = '';
+        container.style.display = 'flex';
+
+        for (let i = 0; i < count; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'progress-dot';
+            dot.id = `dot-${i}`;
+            container.appendChild(dot);
+        }
+    }
+
+    /**
+     * Update a specific progress dot
+     */
+    updateProgressDot(index: number, status: ProgressDotStatus): void {
+        const dot = document.getElementById(`dot-${index}`);
+        if (!dot) return;
+
+        if (status === 'correct' || status === 'wrong') {
+            dot.classList.remove('active');
+        }
+        dot.classList.add(status);
+    }
+
+    /**
+     * Update stats display in HUD
+     */
+    updateStatsDisplay(): void {
+        const stats = getStats();
+
+        if (this.domCache.dailyStreak && this.domCache.streakContainer) {
+            this.domCache.dailyStreak.textContent = String(stats.dailyStreak);
+
+            if (stats.dailyStreak >= 2) {
+                this.domCache.streakContainer.style.display = 'flex';
+                if (stats.dailyStreak >= 3) {
+                    this.domCache.streakContainer.classList.add('on-fire');
+                }
+            } else {
+                this.domCache.streakContainer.style.display = 'none';
+            }
+        }
+
+        if (this.domCache.xpFill) {
+            this.domCache.xpFill.style.width = `${getLevelProgress() * 100}%`;
+        }
+        if (this.domCache.xpText) {
+            this.domCache.xpText.textContent = `${stats.totalXP} 经验`;
+        }
+    }
+
+    /**
+     * Display personalized greeting with level
+     */
+    displayGreeting(playerName: string): void {
+        const level = getLevel();
+        if (this.domCache.greetingEl) {
+            const nameDisplay = playerName ? `👋 ${playerName}` : '👋';
+            this.domCache.greetingEl.innerHTML = `${nameDisplay} <span class="level-badge">Lv.${level}</span>`;
+        }
+    }
+
+    /**
+     * Update HUD display
+     */
+    updateHud(score: number, sessionStreak: number): void {
+        if (this.domCache.scoreEl) {
+            this.domCache.scoreEl.innerText = String(score);
+        }
+
+        if (this.domCache.streakCountEl) {
+            this.domCache.streakCountEl.innerText = String(sessionStreak);
+        }
+
+        if (this.domCache.streakBadge) {
+            if (sessionStreak >= 2) {
+                this.domCache.streakBadge.style.display = 'flex';
+                if (sessionStreak >= 3) {
+                    this.domCache.streakBadge.classList.add('active');
+                }
+            } else {
+                this.domCache.streakBadge.style.display = 'none';
+                this.domCache.streakBadge.classList.remove('active');
+            }
+        }
+    }
+
+    /**
+     * Show pinyin for current word
+     */
+    showPinyin(pinyin: string): void {
+        if (this.domCache.pinyinDisplay) {
+            this.domCache.pinyinDisplay.textContent = pinyin;
+            this.domCache.pinyinDisplay.classList.add('visible');
+        }
+
+        document.querySelectorAll('.char-pinyin-label').forEach(label => {
+            label.classList.add('visible');
+        });
+    }
+
+    /**
+     * Hide pinyin display
+     */
+    hidePinyin(): void {
+        if (this.domCache.pinyinDisplay) {
+            this.domCache.pinyinDisplay.textContent = '';
+            this.domCache.pinyinDisplay.classList.remove('visible');
+        }
+    }
+
+    /**
+     * Show next button
+     */
+    showNextButton(): void {
+        if (this.domCache.nextBtn) {
+            this.domCache.nextBtn.style.display = 'flex';
+        }
+    }
+
+    /**
+     * Hide next button
+     */
+    hideNextButton(): void {
+        if (this.domCache.nextBtn) {
+            this.domCache.nextBtn.style.display = 'none';
+        }
+    }
+
+    /**
+     * Reset feedback overlay
+     */
+    resetFeedback(): void {
+        if (this.domCache.feedbackOverlay) {
+            this.domCache.feedbackOverlay.style.opacity = '0';
+        }
+    }
+
+    /**
+     * Show game controls
+     */
+    showControls(): void {
+        if (this.domCache.controlsArea) {
+            this.domCache.controlsArea.style.display = 'flex';
+        }
+        if (this.domCache.hudControls) {
+            this.domCache.hudControls.style.display = 'flex';
+        }
+    }
+
+    /**
+     * Hide game controls
+     */
+    hideControls(): void {
+        if (this.domCache.controlsArea) {
+            this.domCache.controlsArea.style.display = 'none';
+        }
+    }
+
+    /**
+     * Set HUD transparency mode
+     */
+    setHudTransparent(transparent: boolean): void {
+        if (this.domCache.hud) {
+            this.domCache.hud.style.display = 'flex';
+            if (transparent) {
+                this.domCache.hud.classList.add('transparent');
+            } else {
+                this.domCache.hud.classList.remove('transparent');
+            }
+        }
+    }
+
+    /**
+     * Hide footer progress
+     */
+    hideFooterProgress(): void {
+        if (this.domCache.footerProgress) {
+            this.domCache.footerProgress.style.display = 'none';
+        }
+    }
+
+    /**
+     * Clear writing area
+     */
+    clearWritingArea(): void {
+        if (this.domCache.writingArea) {
+            this.domCache.writingArea.innerHTML = '';
+        }
+    }
+
+    /**
+     * Get writing area container
+     */
+    getWritingArea(): HTMLElement | null {
+        return this.domCache.writingArea;
+    }
+}
+
+/**
+ * Get random praise message based on performance
+ */
+export function getRandomPraise(quality = 4, streak = 0): string {
+    const perfectPraises = [
+        "完美! 🌟", "太完美了!", "满分!", "无敌!", "太厉害了!",
+        "天才啊!", "简直完美!", "一次过关!", "神了!"
+    ];
+
+    const goodPraises = [
+        "太棒了! ⭐", "很好!", "厉害!", "不错!", "做得好!",
+        "继续加油!", "进步了!", "真棒!", "了不起!"
+    ];
+
+    const okayPraises = [
+        "加油! 💪", "继续努力!", "有进步!", "坚持住!", "再接再厉!",
+        "慢慢来!", "没关系!", "继续练习!"
+    ];
+
+    const streakPraises = [
+        "🔥 连续答对!", "🔥 势不可挡!", "🔥 火力全开!",
+        "连胜中!", "停不下来!", "太猛了!"
+    ];
+
+    let praises: string[];
+    if (quality === 5) {
+        praises = perfectPraises;
+    } else if (quality === 4) {
+        praises = goodPraises;
+    } else {
+        praises = okayPraises;
+    }
+
+    if (streak >= 5) {
+        return streakPraises[Math.floor(Math.random() * streakPraises.length)];
+    } else if (streak >= 3 && Math.random() > 0.5) {
+        return "🔥 " + praises[Math.floor(Math.random() * praises.length)];
+    }
+
+    return praises[Math.floor(Math.random() * praises.length)];
+}

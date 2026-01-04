@@ -1,964 +1,534 @@
 /**
  * Game Logic Module with Gamification
+ * Refactored to use modular architecture for UI and input handling
  */
 
 import {
-    loadData, getWordScore, getWordsForPractice, getWordState,
+    loadData, getWordsForPractice,
     updateWordSRS, recordPractice, addXP, getStats, getLevel,
-    getLevelProgress, checkAchievements, getAchievements,
-    getLessons, getCurrentLesson, setCurrentLesson, getLessonProgress,
+    checkAchievements,
+    getCurrentLesson, setCurrentLesson,
     getUnmasteredWords,
-    type PracticeWord, type Achievement
 } from './data';
 import { SoundFX, speakWord } from './audio';
 import { spawnParticles } from './particles';
-import HanziWriter from 'hanzi-writer';
+import { UIManager, getRandomPraise } from './ui';
+import { HanziWriterInput, type InputMode, HandwritingInput } from './input';
+import { initDOMCache, type GameState, type DOMCache, type InputHandler } from './types';
 
 const PLAYER_NAME_KEY = 'tingxie_player_name';
+const INPUT_MODE_KEY = 'tingxie_input_mode';
 
-// Game state interface
-interface GameState {
-    score: number;
-    streak: number;
-    sessionStreak: number;
-    level: number;
-    currentWordIndex: number;
-    currentWord: PracticeWord | null;
-    writers: HanziWriter[];
-    completedChars: number;
-    practiceWords: PracticeWord[];
-    mistakesMade: number;
-    hintUsed: boolean;
-    hintStrokeIndex: number[];
-    sessionStartTime: number | null;
-    wordsCompletedThisSession: number;
-    selectedLessonsForPractice: number[];
-    init: (showUI?: boolean) => void;
-    getPlayerName: () => string;
-    setPlayerName: (name: string) => void;
-    displayGreeting: () => void;
-    updateStatsDisplay: () => void;
-    showLessonSelect: () => void;
-    showProgress: () => void;
-    showPracticeSelect: () => void;
-    startPractice: () => void;
-    currentView: 'lesson-select' | 'practice-select' | 'progress' | 'game';
-    selectLesson: (lessonId: number, wordLimit?: number) => void;
-    loadLevel: () => void;
-    skipLevel: () => void;
-    handleBackNavigation: () => void;
-    showPinyin: () => void;
-    renderWordScore: () => void;
-    handleMistake: (index: number) => void;
-    handleCharComplete: (index: number) => void;
-    handleWordSuccess: () => void;
-    showLevelUp: (level: number) => void;
-    showNewAchievements: (achievements: Achievement[]) => void;
-    showSessionComplete: () => void;
-    animateScoreIncrease: () => void;
-    nextLevel: () => void;
-    playCurrentAudio: () => void;
-    useHint: () => void;
-    scrollToActiveChar: (element: HTMLElement) => void;
-    updateHud: () => void;
-    showFeedback: (text: string, color: string) => void;
-    getRandomPraise: (quality?: number, streak?: number) => string;
-    showAchievements: () => void;
-    showMenu: () => void;
-    renderProgressDots: () => void;
-    updateProgressDot: (index: number, status: 'active' | 'correct' | 'wrong') => void;
-}
+// DOM cache for performance
+let domCache: DOMCache;
 
-export const Game: GameState = {
+// UI Manager instance
+let ui: UIManager;
+
+// Input handler instance (stroke or handwriting)
+let inputHandler: InputHandler;
+
+// Current input mode
+let inputMode: InputMode = 'stroke';
+
+// Game state
+const state: GameState = {
     score: 0,
     streak: 0,
-    sessionStreak: 0, // Streak within current session
+    sessionStreak: 0,
     level: 1,
     currentWordIndex: 0,
     currentWord: null,
-    writers: [],
     completedChars: 0,
     practiceWords: [],
     mistakesMade: 0,
     hintUsed: false,
-    hintStrokeIndex: [], // Track which stroke to hint next for each character
+    hintStrokeIndex: [],
     sessionStartTime: null,
     wordsCompletedThisSession: 0,
-
     selectedLessonsForPractice: [],
     currentView: 'lesson-select',
+};
 
+/**
+ * Get saved input mode from localStorage
+ */
+function getSavedInputMode(): InputMode {
+    const saved = localStorage.getItem(INPUT_MODE_KEY);
+    return (saved === 'handwriting') ? 'handwriting' : 'stroke';
+}
+
+/**
+ * Save input mode to localStorage
+ */
+function saveInputMode(mode: InputMode): void {
+    localStorage.setItem(INPUT_MODE_KEY, mode);
+}
+
+/**
+ * Create input handler based on current mode
+ */
+function createInputHandler(): InputHandler {
+    if (inputMode === 'handwriting') {
+        const handler = new HandwritingInput();
+        return handler;
+    }
+    return new HanziWriterInput();
+}
+
+/**
+ * Game API object - exposed for external access
+ */
+export const Game = {
     /**
      * Initialize the game
      */
-    init: function (showUI?: boolean) {
+    init(showUI = true): void {
         loadData();
-        this.sessionStartTime = Date.now();
-        this.wordsCompletedThisSession = 0;
-        this.sessionStreak = 0;
+
+        // Load saved input mode
+        inputMode = getSavedInputMode();
+
+        // Initialize DOM cache
+        domCache = initDOMCache();
+        ui = new UIManager(domCache);
+        inputHandler = createInputHandler();
+
+        // Set up input handler callbacks
+        inputHandler.onCharComplete = handleCharComplete;
+        inputHandler.onMistake = handleMistake;
+        inputHandler.onComplete = handleInputComplete;
+
+        state.sessionStartTime = Date.now();
+        state.wordsCompletedThisSession = 0;
+        state.sessionStreak = 0;
 
         // Update UI with stats
-        this.updateStatsDisplay();
-        this.displayGreeting();
+        ui.updateStatsDisplay();
+        ui.displayGreeting(Game.getPlayerName());
 
         // Show lesson selection screen if requested
-        if (showUI !== false) {
-            this.showLessonSelect();
+        if (showUI) {
+            Game.showLessonSelect();
         }
 
         // Record that player practiced today
         recordPractice();
 
         // Check for new achievements on start
-        this.showNewAchievements(checkAchievements());
+        ui.showNewAchievements(checkAchievements());
     },
 
     /**
      * Get player name from localStorage
      */
-    getPlayerName: function () {
+    getPlayerName(): string {
         return localStorage.getItem(PLAYER_NAME_KEY) || '';
     },
 
     /**
      * Save player name to localStorage
      */
-    setPlayerName: function (name: string) {
+    setPlayerName(name: string): void {
         localStorage.setItem(PLAYER_NAME_KEY, name.trim());
     },
 
     /**
-     * Display personalized greeting with level
+     * Get current input mode
      */
-    displayGreeting: function () {
-        const name = this.getPlayerName();
-        const level = getLevel();
-        const greetingEl = document.getElementById('player-greeting');
-        if (greetingEl) {
-            const nameDisplay = name ? `👋 ${name}` : '👋';
-            greetingEl.innerHTML = `${nameDisplay} <span class="level-badge">Lv.${level}</span>`;
-        }
+    getInputMode(): InputMode {
+        return inputMode;
     },
 
     /**
-     * Update stats display in HUD
+     * Set input mode
      */
-    updateStatsDisplay: function () {
-        const stats = getStats();
-
-        // Update daily streak display
-        const streakEl = document.getElementById('daily-streak');
-        const streakContainer = document.getElementById('streak-container');
-
-        if (streakEl && streakContainer) {
-            streakEl.textContent = String(stats.dailyStreak);
-
-            // Only show if streak is 2 or more
-            if (stats.dailyStreak >= 2) {
-                streakContainer.style.display = 'flex';
-                if (stats.dailyStreak >= 3) {
-                    streakContainer.classList.add('on-fire');
-                }
-            } else {
-                streakContainer.style.display = 'none';
-            }
-        }
-
-        // Update XP bar
-        const xpFill = document.getElementById('xp-fill');
-        const xpText = document.getElementById('xp-text');
-        if (xpFill) {
-            xpFill.style.width = `${getLevelProgress() * 100}%`;
-        }
-        if (xpText) {
-            xpText.textContent = `${stats.totalXP} 经验`;
-        }
+    setInputMode(mode: InputMode): void {
+        inputMode = mode;
+        saveInputMode(mode);
+        // Recreate input handler with new mode
+        inputHandler = createInputHandler();
+        inputHandler.onCharComplete = handleCharComplete;
+        inputHandler.onMistake = handleMistake;
+        inputHandler.onComplete = handleInputComplete;
     },
 
     /**
      * Show lesson selection screen
      */
-    showLessonSelect: function () {
-        const container = document.getElementById('writing-area');
-        if (!container) return;
-
-        const lessons = getLessons();
-        const currentLesson = getCurrentLesson();
-
-        container.innerHTML = `
-            <div class="lesson-select">
-                <h2 class="lesson-select-title">选择课程</h2>
-                
-                <div class="session-length-toggle">
-                    <span class="toggle-label">每次练习:</span>
-                    <div class="toggle-options">
-                        <button class="toggle-btn active" data-count="5">5词</button>
-                        <button class="toggle-btn" data-count="10">10词</button>
-                        <button class="toggle-btn" data-count="15">15词</button>
-                        <button class="toggle-btn" data-count="0">全部</button>
-                    </div>
-                </div>
-
-                <div class="lesson-grid">
-                    ${lessons.map(lesson => {
-            const progress = getLessonProgress(lesson.id);
-            const progressPercent = Math.round(progress * 100);
-            const isActive = lesson.id === currentLesson.id;
-            return `
-                            <div class="lesson-card ${isActive ? 'active' : ''}" data-lesson-id="${lesson.id}">
-                                <div class="lesson-progress-ring">
-                                    <svg viewBox="0 0 36 36">
-                                        <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                        <path class="ring-fill" stroke-dasharray="${progressPercent}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                    </svg>
-                                    <span class="lesson-number">${lesson.id}</span>
-                                </div>
-                                <div class="lesson-info">
-                                    <div class="lesson-title">${lesson.title}</div>
-                                    <div class="lesson-meta">${lesson.phrases.length} 词语 · ${progressPercent}%</div>
-                                </div>
-                            </div>
-                        `;
-        }).join('')}
-                </div>
-                <div class="lesson-select-actions" style="display: none;">
-                    <!-- Buttons moved to main screen -->
-                </div>
-            </div>
-        `;
-
-        // Add click handlers
-        const self = this;
-        let selectedLimit = 5; // Default
-
-        // Toggle Buttons Logic
-        container.querySelectorAll('.toggle-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Remove active class from all
-                container.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-                // Add to clicked
-                btn.classList.add('active');
-                // Update limit
-                selectedLimit = parseInt((btn as HTMLElement).dataset.count || '0');
-            });
-        });
-
-        // Lesson Card Click
-        container.querySelectorAll('.lesson-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const lessonId = parseInt((card as HTMLElement).dataset.lessonId || '1');
-                self.selectLesson(lessonId, selectedLimit);
-            });
-        });
-
-        // Progress button
-        const progressBtn = document.getElementById('view-progress-btn');
-        if (progressBtn) {
-            progressBtn.addEventListener('click', () => self.showProgress());
-        }
-
-        // Practice mode button
-        const practiceBtn = document.getElementById('practice-mode-btn');
-        if (practiceBtn) {
-            practiceBtn.addEventListener('click', () => self.showPracticeSelect());
-        }
-
-        // Hide controls during lesson select
-        const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
-        if (controlsArea) controlsArea.style.display = 'none';
-
-        // Show HUD for Back button, but hide controls
-        const hud = document.querySelector('.hud') as HTMLElement | null;
-        if (hud) {
-            hud.style.display = 'flex';
-            hud.classList.add('transparent'); // Button only
-        }
-
-        const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
-        if (hudControls) hudControls.style.display = 'none';
-
-        const footer = document.getElementById('footer-progress');
-        if (footer) footer.style.display = 'none';
-
-        this.currentView = 'lesson-select';
+    showLessonSelect(): void {
+        state.currentView = 'lesson-select';
+        ui.hideFooterProgress();
+        ui.showLessonSelect(
+            (lessonId, wordLimit) => Game.selectLesson(lessonId, wordLimit),
+            () => Game.showProgress(),
+            () => Game.showPracticeSelect(),
+            inputMode,
+            (mode) => Game.setInputMode(mode)
+        );
     },
 
     /**
      * Select a lesson and start practicing
      */
-    selectLesson: function (lessonId: number, wordLimit: number = 0) {
+    selectLesson(lessonId: number, wordLimit = 0): void {
         setCurrentLesson(lessonId);
         let words = getWordsForPractice();
 
-        // Apply limit if specified
         if (wordLimit > 0 && words.length > wordLimit) {
-            // Shuffle slightly to ensure variety if picking a subset? 
-            // Actually, getWordsForPractice prioritizes due cards. We should keep that order.
-            // Just slice the first N words effectively reviewing the most urgent ones.
             words = words.slice(0, wordLimit);
         }
 
-        this.practiceWords = words;
-        this.currentWordIndex = 0;
-        this.sessionStartTime = Date.now();
-        this.wordsCompletedThisSession = 0;
-        this.sessionStreak = 0;
+        state.practiceWords = words;
+        state.currentWordIndex = 0;
+        state.sessionStartTime = Date.now();
+        state.wordsCompletedThisSession = 0;
+        state.sessionStreak = 0;
+        state.currentView = 'game';
+
+        // Set lesson phrases for handwriting mode candidate generation
+        if (inputHandler instanceof HandwritingInput) {
+            inputHandler.setLessonPhrases(words);
+        }
 
         // Show controls
-        const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
-        if (controlsArea) controlsArea.style.display = 'flex';
-
-        // Ensure HUD controls are visible
-        const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
-        if (hudControls) hudControls.style.display = 'flex';
-
-        // Restore HUD background (header fix)
-        const hud = document.querySelector('.hud') as HTMLElement | null;
-        if (hud) hud.classList.remove('transparent');
-
-        this.renderProgressDots();
+        ui.showControls();
+        ui.setHudTransparent(false);
+        ui.renderProgressDots(state.practiceWords.length);
 
         // Update lesson display in HUD
         const lesson = getCurrentLesson();
-        const lessonLabel = document.getElementById('current-lesson-label');
-        if (lessonLabel) lessonLabel.textContent = lesson.title;
+        if (domCache.lessonLabel) {
+            domCache.lessonLabel.textContent = lesson.title;
+        }
 
-        this.loadLevel();
+        loadLevel();
     },
 
     /**
-     * Show progress view with all lessons and phrases
+     * Show progress view
      */
-    showProgress: function () {
-        const container = document.getElementById('writing-area');
-        if (!container) return;
+    showProgress(): void {
+        state.currentView = 'progress';
+        ui.showProgress();
+    },
 
-        const lessons = getLessons();
-        const masteryLabels = ['未学', '入门', '熟悉', '掌握', '精通', '完美'];
-        const masteryColors = ['#64748b', '#ef4444', '#f97316', '#eab308', '#22c55e', '#38bdf8'];
-
-        // Show HUD header (for back button) but hide controls?
-        const hud = document.querySelector('.hud') as HTMLElement | null;
-        if (hud) {
-            hud.style.display = 'flex';
-            hud.classList.add('transparent');
-        }
-        const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
-        if (hudControls) hudControls.style.display = 'none';
-
-        this.currentView = 'progress';
-
-        container.innerHTML = `
-            <div class="progress-view">
-                <h2 class="progress-title">📊 学习进度</h2>
-                <div class="progress-lessons">
-                    ${lessons.map(lesson => {
-            const progress = getLessonProgress(lesson.id);
-            const progressPercent = Math.round(progress * 100);
-            return `
-                            <div class="progress-lesson">
-                                <div class="progress-lesson-header" data-lesson-id="${lesson.id}">
-                                    <span class="progress-lesson-title">${lesson.title}</span>
-                                    <span class="progress-lesson-percent">${progressPercent}%</span>
-                                </div>
-                                <div class="progress-phrases" id="phrases-${lesson.id}" style="display: none;">
-                                    ${lesson.phrases.map(phrase => {
-                const state = getWordState(phrase.term);
-                const score = state.score;
-                return `
-                                            <div class="progress-phrase">
-                                                <span class="phrase-term">${phrase.term}</span>
-                                                <span class="phrase-mastery" style="background: ${masteryColors[score]}">${masteryLabels[score]}</span>
-                                            </div>
-                                        `;
-            }).join('')}
-                                </div>
-                            </div>
-                        `;
-        }).join('')}
-                </div>
-            </div>
-        `;
-
-        // Toggle phrase visibility on header click
-        container.querySelectorAll('.progress-lesson-header').forEach(header => {
-            header.addEventListener('click', () => {
-                const lessonId = (header as HTMLElement).dataset.lessonId;
-                const phrasesEl = document.getElementById(`phrases-${lessonId}`);
-                if (phrasesEl) {
-                    phrasesEl.style.display = phrasesEl.style.display === 'none' ? 'block' : 'none';
-                }
-            });
+    /**
+     * Show practice selection
+     */
+    showPracticeSelect(): void {
+        state.currentView = 'practice-select';
+        ui.showPracticeSelect((selectedLessons) => {
+            state.selectedLessonsForPractice = selectedLessons;
+            Game.startPractice();
         });
-
-
-
-        // Hide controls area (bottom)
-        const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
-        if (controlsArea) controlsArea.style.display = 'none';
-
-
-    },
-
-    /**
-     * Show practice selection (choose chapters to practice)
-     */
-    showPracticeSelect: function () {
-        const container = document.getElementById('writing-area');
-        if (!container) return;
-
-        const lessons = getLessons();
-        this.selectedLessonsForPractice = [];
-        this.currentView = 'practice-select';
-
-        // Show HUD for back button
-        const hud = document.querySelector('.hud') as HTMLElement | null;
-        if (hud) {
-            hud.style.display = 'flex';
-            hud.classList.add('transparent');
-        }
-
-        container.innerHTML = `
-            <div class="practice-select">
-                <h2 class="practice-select-title">📝 选择练习章节</h2>
-                <p class="practice-select-desc">选择要复习的课程（只练习未掌握的词语）</p>
-                <div class="practice-lesson-grid">
-                    ${lessons.map(lesson => {
-            const unmasteredCount = lesson.phrases.filter(p => getWordState(p.term).score < 5).length;
-            return `
-                            <label class="practice-lesson-item ${unmasteredCount === 0 ? 'all-mastered' : ''}">
-                                <input type="checkbox" value="${lesson.id}" ${unmasteredCount === 0 ? 'disabled' : ''}>
-                                <span class="practice-lesson-name">${lesson.title.split(':')[0]}</span>
-                                <span class="practice-lesson-count">${unmasteredCount > 0 ? `${unmasteredCount}词` : '✓'}</span>
-                            </label>
-                        `;
-        }).join('')}
-                </div>
-                <div class="practice-actions">
-                    <button class="game-btn" id="select-all-lessons">全选</button>
-                    <button class="game-btn review-start-btn" id="start-practice-btn" disabled>开始复习 (0)</button>
-                </div>
-            </div>
-        `;
-
-        // Hide HUD controls (audio, hint, score)
-        const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
-        if (hudControls) hudControls.style.display = 'none';
-
-        // Add click handlers
-        const self = this;
-
-        // Select all button
-        const selectAllBtn = document.getElementById('select-all-lessons');
-        if (selectAllBtn) {
-            selectAllBtn.addEventListener('click', () => {
-                container.querySelectorAll('input[type="checkbox"]:not(:disabled)').forEach(cb => {
-                    (cb as HTMLInputElement).checked = true;
-                });
-            });
-        }
-
-        // Start practice button
-        const startBtn = document.getElementById('start-practice-btn');
-        if (startBtn) {
-            startBtn.addEventListener('click', () => {
-                const selected: number[] = [];
-                container.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
-                    selected.push(parseInt((cb as HTMLInputElement).value));
-                });
-                if (selected.length === 0) {
-                    self.showFeedback('请至少选择一课', '#ef4444');
-                    return;
-                }
-                self.selectedLessonsForPractice = selected;
-                self.startPractice();
-            });
-        }
-
-
-
-        // Hide controls
-        const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
-        if (controlsArea) controlsArea.style.display = 'none';
     },
 
     /**
      * Start practice with selected lessons
      */
-    startPractice: function () {
-        if (this.selectedLessonsForPractice.length === 0) {
-            this.showLessonSelect();
+    startPractice(): void {
+        if (state.selectedLessonsForPractice.length === 0) {
+            Game.showLessonSelect();
             return;
         }
 
-        this.practiceWords = getUnmasteredWords(this.selectedLessonsForPractice);
+        state.practiceWords = getUnmasteredWords(state.selectedLessonsForPractice);
 
-        if (this.practiceWords.length === 0) {
-            this.showFeedback('所有词语都已掌握！', '#22c55e');
-            setTimeout(() => this.showLessonSelect(), 1500);
+        if (state.practiceWords.length === 0) {
+            ui.showFeedback('所有词语都已掌握！', '#22c55e');
+            setTimeout(() => Game.showLessonSelect(), 1500);
             return;
         }
 
-        this.currentWordIndex = 0;
-        this.sessionStartTime = Date.now();
-        this.wordsCompletedThisSession = 0;
-        this.sessionStreak = 0;
+        state.currentWordIndex = 0;
+        state.sessionStartTime = Date.now();
+        state.wordsCompletedThisSession = 0;
+        state.sessionStreak = 0;
+        state.currentView = 'game';
 
-        // Show controls
-        const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
-        if (controlsArea) controlsArea.style.display = 'flex';
-
-        // Ensure HUD controls are visible
-        const hudControls = document.querySelector('.hud-controls') as HTMLElement | null;
-        if (hudControls) hudControls.style.display = 'flex';
-
-        // Restore HUD background
-        const hud = document.querySelector('.hud') as HTMLElement | null;
-        if (hud) hud.classList.remove('transparent');
-
-        this.renderProgressDots();
-        this.loadLevel();
-    },
-
-    /**
-     * Render the footer progress dots
-     */
-    renderProgressDots: function () {
-        const container = document.getElementById('footer-progress');
-        if (!container) return;
-        container.innerHTML = '';
-        container.style.display = 'flex'; // Ensure visible
-
-        this.practiceWords.forEach((_, i) => {
-            const dot = document.createElement('div');
-            dot.className = 'progress-dot';
-            dot.id = `dot-${i}`;
-            container.appendChild(dot);
-        });
-    },
-
-    /**
-     * Update a specific progress dot
-     */
-    updateProgressDot: function (index: number, status: 'active' | 'correct' | 'wrong') {
-        const dot = document.getElementById(`dot-${index}`);
-        if (!dot) return;
-
-        // Remove exclusive states if setting definitive status
-        if (status === 'correct' || status === 'wrong') {
-            dot.classList.remove('active');
-        }
-        dot.classList.add(status);
-    },
-
-    /**
-     * Load the current level/word
-     */
-    loadLevel: function () {
-        if (this.currentWordIndex >= this.practiceWords.length) {
-            this.showSessionComplete();
-            return;
+        // Set lesson phrases for handwriting mode
+        if (inputHandler instanceof HandwritingInput) {
+            inputHandler.setLessonPhrases(state.practiceWords);
         }
 
-        this.currentWord = this.practiceWords[this.currentWordIndex];
-        this.writers = [];
-        this.completedChars = 0;
-        this.mistakesMade = 0;
-        this.hintUsed = false;
-        this.hintStrokeIndex = []; // Reset hint tracking for new word
+        ui.showControls();
+        ui.setHudTransparent(false);
+        ui.renderProgressDots(state.practiceWords.length);
 
-        // UI Reset
-        const container = document.getElementById('writing-area');
-        if (!container) return;
-        container.innerHTML = '';
+        loadLevel();
+    },
 
-        const nextBtn = document.getElementById('next-btn');
-        if (nextBtn) nextBtn.style.display = 'none';
+    /**
+     * Skip current level
+     */
+    skipLevel(): void {
+        ui.updateProgressDot(state.currentWordIndex, 'wrong');
+        state.sessionStreak = 0;
+        ui.updateHud(state.score, state.sessionStreak);
 
-        const feedbackOverlay = document.getElementById('feedback-overlay');
-        if (feedbackOverlay) feedbackOverlay.style.opacity = '0';
+        state.currentWordIndex++;
+        loadLevel();
+    },
 
-        // Hide pinyin initially (shown after completion or hint)
-        const pinyinEl = document.getElementById('pinyin-display');
-        if (pinyinEl) {
-            pinyinEl.textContent = '';
-            pinyinEl.classList.remove('visible');
+    /**
+     * Handle back navigation
+     */
+    handleBackNavigation(): void {
+        if (state.currentView === 'practice-select' || state.currentView === 'progress') {
+            Game.showLessonSelect();
+        } else if (state.currentView === 'lesson-select') {
+            location.reload();
+        } else {
+            Game.showMenu();
         }
-
-        // Generate HanziWriters
-        const chars = this.currentWord.term.split('');
-        const pinyinSegments = this.currentWord.pinyin.split(' ');
-        const self = this;
-
-        chars.forEach((char, index) => {
-            const charBox = document.createElement('div');
-            charBox.className = 'char-box';
-
-            const div = document.createElement('div');
-            div.id = `char-${index}`;
-            div.className = 'char-slot';
-            if (index === 0) div.classList.add('active');
-
-            const pinyinLabel = document.createElement('div');
-            pinyinLabel.className = 'char-pinyin-label';
-            pinyinLabel.textContent = pinyinSegments[index] || '';
-
-            charBox.appendChild(div);
-            charBox.appendChild(pinyinLabel);
-            container.appendChild(charBox);
-
-            const writer = HanziWriter.create(`char-${index}`, char, {
-                width: 234,
-                height: 234,
-                padding: 5,
-                showOutline: false,
-                strokeColor: '#38bdf8',
-                radicalColor: '#f472b6',
-                outlineColor: '#334155',
-                drawingWidth: 12,  // Slightly thicker for easier touch
-                showCharacter: false,
-                drawingFadeDuration: 300,
-            });
-
-            writer.quiz({
-                leniency: 1.5,
-                showHintAfterMisses: 3,
-                highlightOnComplete: true,
-                onCorrectStroke: (strokeData) => {
-                    SoundFX.correctStroke();
-                    self.hintStrokeIndex[index] = strokeData.strokeNum + 1;
-                },
-                onMistake: () => {
-                    self.handleMistake(index);
-                },
-                onComplete: () => {
-                    self.handleCharComplete(index);
-                }
-            });
-
-            self.writers.push(writer);
-
-            // Add scroll listener
-            div.addEventListener('pointerdown', () => {
-                self.scrollToActiveChar(div);
-            });
-        });
-
-        // Score display removed per user request
-        // this.renderWordScore();
-
-        // Update progress dots
-        this.updateProgressDot(this.currentWordIndex, 'active');
-
-        // Play audio after animations settle
-        setTimeout(() => {
-            this.playCurrentAudio();
-            // Scroll to the first active character if on mobile
-            const activeChar = document.querySelector('.char-slot.active') as HTMLElement;
-            if (activeChar) this.scrollToActiveChar(activeChar);
-        }, 800);
     },
 
     /**
-     * Scroll the element into the center of the viewport
+     * Play audio for current word
      */
-    scrollToActiveChar: function (element: HTMLElement) {
-        // Only scroll if on mobile/small screen
-        if (window.innerWidth > 600) return;
-
-        element.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'center'
-        });
+    playCurrentAudio(): void {
+        if (!state.currentWord) return;
+        speakWord(state.currentWord.term);
     },
 
     /**
-     * Show pinyin for current word
+     * Use a hint
      */
-    showPinyin: function () {
-        const pinyinEl = document.getElementById('pinyin-display');
-        if (pinyinEl && this.currentWord) {
-            pinyinEl.textContent = this.currentWord.pinyin;
-            pinyinEl.classList.add('visible');
+    useHint(): void {
+        state.sessionStreak = 0;
+        state.hintUsed = true;
+        ui.updateHud(state.score, state.sessionStreak);
+
+        inputHandler.showHint();
+
+        // Show pinyin on hint
+        if (state.currentWord) {
+            ui.showPinyin(state.currentWord.pinyin);
         }
-
-        // Show per-character pinyin labels
-        document.querySelectorAll('.char-pinyin-label').forEach(label => {
-            label.classList.add('visible');
-        });
     },
 
     /**
-     * Render the current word's mastery score
+     * Move to next level/word
      */
-    renderWordScore: function () {
-        const container = document.getElementById('writing-area');
-        if (!container || !this.currentWord) return;
+    nextLevel(): void {
+        state.currentWordIndex++;
+        loadLevel();
+    },
 
-        // Remove existing score display
-        const existing = document.getElementById('word-score-display');
-        if (existing) existing.remove();
+    /**
+     * Show menu
+     */
+    showMenu(): void {
+        ui.showMenu(
+            () => { }, // Resume - just close menu
+            () => ui.showAchievements(),
+            () => location.reload()
+        );
+    },
 
-        const scoreDiv = document.createElement('div');
-        scoreDiv.id = 'word-score-display';
-        scoreDiv.className = 'word-score';
-        scoreDiv.style.width = '100%';
+    /**
+     * Show achievements
+     */
+    showAchievements(): void {
+        ui.showAchievements();
+    },
+};
 
-        const currentScore = getWordScore(this.currentWord.term);
-        for (let i = 0; i < 5; i++) {
-            const star = document.createElement('span');
-            star.className = 'score-star';
-            star.textContent = '⭐';
-            if (i < currentScore) {
-                star.classList.add('filled');
-            }
-            scoreDiv.appendChild(star);
+/**
+ * Load the current level/word
+ */
+function loadLevel(): void {
+    if (state.currentWordIndex >= state.practiceWords.length) {
+        showSessionComplete();
+        return;
+    }
+
+    state.currentWord = state.practiceWords[state.currentWordIndex];
+    state.completedChars = 0;
+    state.mistakesMade = 0;
+    state.hintUsed = false;
+    state.hintStrokeIndex = [];
+
+    // UI Reset
+    ui.clearWritingArea();
+    ui.hideNextButton();
+    ui.resetFeedback();
+    ui.hidePinyin();
+
+    // Initialize input handler
+    const container = ui.getWritingArea();
+    if (container && state.currentWord) {
+        inputHandler.init(state.currentWord, container);
+    }
+
+    // Update progress dots
+    ui.updateProgressDot(state.currentWordIndex, 'active');
+
+    // Play audio after animations settle
+    setTimeout(() => {
+        Game.playCurrentAudio();
+        // Scroll to the first active character if on mobile
+        const activeChar = document.querySelector('.char-slot.active') as HTMLElement;
+        if (activeChar) {
+            scrollToActiveChar(activeChar);
         }
+    }, 800);
+}
 
-        container.appendChild(scoreDiv);
-    },
-
-    /**
-     * Handle a stroke mistake
-     */
-    handleMistake: function (index: number) {
-        this.mistakesMade++;
-        const box = document.getElementById(`char-${index}`);
-        if (!box) return;
-        box.classList.remove('shake');
-        void (box as HTMLElement).offsetWidth;
-        box.classList.add('shake');
-    },
-
-    /**
-     * Handle character completion
-     */
-    handleCharComplete: function (index: number) {
-        const box = document.getElementById(`char-${index}`);
-        if (!box) return;
-        box.classList.remove('active');
-        box.classList.add('success');
-
+/**
+ * Handle character completion from input handler
+ */
+function handleCharComplete(index: number): void {
+    const box = document.getElementById(`char-${index}`);
+    if (box) {
         const rect = box.getBoundingClientRect();
         spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    }
+    state.completedChars++;
+}
 
-        this.completedChars++;
+/**
+ * Handle mistake from input handler
+ */
+function handleMistake(_index: number): void {
+    state.mistakesMade++;
+}
 
-        if (index + 1 < this.writers.length) {
-            const nextBox = document.getElementById(`char-${index + 1}`);
-            if (nextBox) nextBox.classList.add('active');
-        }
+/**
+ * Handle input completion
+ */
+function handleInputComplete(result?: { success: boolean; mistakeCount: number; hintUsed: boolean }): void {
+    // For handwriting mode, check if the selection was correct
+    if (result && !result.success) {
+        // Wrong selection in handwriting mode
+        handleWordFailure();
+        return;
+    }
+    handleWordSuccess(result);
+}
 
-        if (this.completedChars === this.writers.length) {
-            this.handleWordSuccess();
-        }
-    },
+/**
+ * Handle failed word (wrong selection in handwriting mode)
+ */
+function handleWordFailure(): void {
+    if (!state.currentWord) return;
 
-    /**
-     * Handle successful word completion
-     */
-    handleWordSuccess: function () {
-        if (!this.currentWord) return;
+    SoundFX.wrong();
+    state.sessionStreak = 0;
 
-        SoundFX.success();
-        this.sessionStreak++;
-        this.wordsCompletedThisSession++;
+    // Update SRS with failure
+    updateWordSRS(state.currentWord.term, 2);
 
-        // Calculate quality for SM-2 (0-5)
-        let quality: number;
-        if (this.hintUsed) {
-            quality = 2; // Failed - used hint
+    // Update Progress Dot
+    ui.updateProgressDot(state.currentWordIndex, 'wrong');
+
+    ui.updateHud(state.score, state.sessionStreak);
+    ui.showFeedback('再试一次! 💪', '#ef4444');
+
+    // Show pinyin as hint
+    ui.showPinyin(state.currentWord.pinyin);
+    ui.showNextButton();
+}
+
+/**
+ * Handle successful word completion
+ */
+function handleWordSuccess(result?: { mistakeCount: number; hintUsed: boolean }): void {
+    if (!state.currentWord) return;
+
+    SoundFX.success();
+    state.sessionStreak++;
+    state.wordsCompletedThisSession++;
+
+    // Get hint/mistake state from input handler or result
+    const hintUsed = result?.hintUsed || inputHandler.wasHintUsed() || state.hintUsed;
+    const mistakeCount = result?.mistakeCount ?? inputHandler.getMistakeCount();
+
+    // Calculate quality for SM-2 (0-5)
+    let quality: number;
+    if (hintUsed) {
+        quality = 2; // Failed - used hint
+    } else {
+        if (mistakeCount === 0) {
+            quality = 5; // Perfect
+        } else if (mistakeCount <= 2) {
+            quality = 4; // Good
         } else {
-            // Did not use hint - always allow a pass or better
-            if (this.mistakesMade === 0) {
-                quality = 5; // Perfect
-            } else if (this.mistakesMade <= 2) {
-                quality = 4; // Good
-            } else {
-                quality = 3; // Pass (even with mistakes, if no hint used)
-            }
+            quality = 3; // Pass
         }
+    }
 
-        // Update SRS
-        updateWordSRS(this.currentWord.term, quality);
+    // Update SRS
+    updateWordSRS(state.currentWord.term, quality);
 
-        // Update Progress Dot
-        const isSuccess = quality >= 3;
-        this.updateProgressDot(this.currentWordIndex, isSuccess ? 'correct' : 'wrong');
+    // Update Progress Dot
+    const isSuccess = quality >= 3;
+    ui.updateProgressDot(state.currentWordIndex, isSuccess ? 'correct' : 'wrong');
 
-        // Calculate XP earned
-        let xpEarned = 10;
-        if (quality === 5) xpEarned += 10; // Perfect bonus
-        if (this.sessionStreak >= 3) xpEarned += 5; // Streak bonus
-        if (this.sessionStreak >= 5) xpEarned += 5; // Hot streak bonus
+    // Calculate XP earned
+    let xpEarned = 10;
+    if (quality === 5) xpEarned += 10;
+    if (state.sessionStreak >= 3) xpEarned += 5;
+    if (state.sessionStreak >= 5) xpEarned += 5;
 
-        const oldLevel = getLevel();
-        this.score += xpEarned;
-        addXP(xpEarned);
-        const newLevel = getLevel();
+    const oldLevel = getLevel();
+    state.score += xpEarned;
+    addXP(xpEarned);
+    const newLevel = getLevel();
 
-        // Check for level up
-        if (newLevel > oldLevel) {
-            this.showLevelUp(newLevel);
-        }
+    // Check for level up
+    if (newLevel > oldLevel) {
+        ui.showLevelUp(newLevel);
+    }
 
-        this.updateHud();
-        this.updateStatsDisplay();
-        this.displayGreeting();
+    ui.updateHud(state.score, state.sessionStreak);
+    ui.updateStatsDisplay();
+    ui.displayGreeting(Game.getPlayerName());
 
-        // Show feedback with XP and extra encouragement
-        const praise = this.getRandomPraise(quality, this.sessionStreak);
-        this.showFeedback(`${praise} +${xpEarned} 经验`, "#4ade80");
+    // Show feedback
+    const praise = getRandomPraise(quality, state.sessionStreak);
+    ui.showFeedback(`${praise} +${xpEarned} 经验`, "#4ade80");
 
-        // Check achievements
-        const newAchievements = checkAchievements();
-        if (newAchievements.length > 0) {
-            setTimeout(() => this.showNewAchievements(newAchievements), 1500);
-        }
+    // Check achievements
+    const newAchievements = checkAchievements();
+    if (newAchievements.length > 0) {
+        setTimeout(() => ui.showNewAchievements(newAchievements), 1500);
+    }
 
-        // Animate score
-        this.animateScoreIncrease();
-        this.showPinyin();
+    // Show pinyin and next button
+    if (state.currentWord) {
+        ui.showPinyin(state.currentWord.pinyin);
+    }
+    ui.showNextButton();
 
-        const nextBtn = document.getElementById('next-btn');
-        if (nextBtn) nextBtn.style.display = 'flex';
+    // Celebration particles
+    const particleCount = quality === 5 ? 5 : (state.sessionStreak >= 3 ? 3 : 1);
+    for (let i = 0; i < particleCount; i++) {
+        setTimeout(() => {
+            spawnParticles(
+                window.innerWidth / 2 + (Math.random() - 0.5) * 200,
+                window.innerHeight / 2 + (Math.random() - 0.5) * 100
+            );
+        }, i * 150);
+    }
+}
 
-        // More celebration for perfect/streak
-        const particleCount = quality === 5 ? 5 : (this.sessionStreak >= 3 ? 3 : 1);
-        for (let i = 0; i < particleCount; i++) {
-            setTimeout(() => {
-                spawnParticles(
-                    window.innerWidth / 2 + (Math.random() - 0.5) * 200,
-                    window.innerHeight / 2 + (Math.random() - 0.5) * 100
-                );
-            }, i * 150);
-        }
-    },
-
-    /**
-     * Show level up animation
-     */
-    showLevelUp: function (level: number) {
-        SoundFX.levelUp();
-
-        const overlay = document.createElement('div');
-        overlay.className = 'level-up-overlay';
-        overlay.innerHTML = `
-            <div class="level-up-content">
-                <div class="level-up-icon">🎉</div>
-                <div class="level-up-text">升级!</div>
-                <div class="level-up-level">第 ${level} 级</div>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-
-        // Big confetti burst!
-        for (let i = 0; i < 15; i++) {
-            setTimeout(() => {
-                spawnParticles(
-                    window.innerWidth / 2 + (Math.random() - 0.5) * 400,
-                    window.innerHeight / 2 + (Math.random() - 0.5) * 300
-                );
-            }, i * 80);
-        }
-
-        setTimeout(() => overlay.remove(), 2500);
-    },
-
-    /**
-     * Show new achievements
-     */
-    showNewAchievements: function (achievements: Achievement[]) {
-        if (!achievements || achievements.length === 0) return;
-
-        achievements.forEach((ach, i) => {
-            setTimeout(() => {
-                const toast = document.createElement('div');
-                toast.className = 'achievement-toast';
-                toast.innerHTML = `
-                    <div class="achievement-icon">${ach.icon}</div>
-                    <div class="achievement-info">
-                        <div class="achievement-title">🏅 ${ach.name}</div>
-                        <div class="achievement-desc">${ach.desc}</div>
-                    </div>
-                `;
-                document.body.appendChild(toast);
-
-                SoundFX.success();
-
-                setTimeout(() => {
-                    toast.classList.add('fade-out');
-                    setTimeout(() => toast.remove(), 500);
-                }, 3000);
-            }, i * 1500);
-        });
-    },
-
-    /**
-     * Show session complete screen
-     */
-    showSessionComplete: function () {
-        // Set progress bar to 100%
-        const xpBar = document.getElementById('xp-bar');
-        if (xpBar) xpBar.style.width = '100%';
-
-        const stats = getStats();
-        const sessionTime = Math.round((Date.now() - (this.sessionStartTime || Date.now())) / 1000);
-        const minutes = Math.floor(sessionTime / 60);
-        const seconds = sessionTime % 60;
-
-        const container = document.getElementById('writing-area');
-        if (!container) return;
-        container.innerHTML = '';
-
-        const sessionDiv = document.createElement('div');
-        sessionDiv.className = 'session-complete';
-
-        sessionDiv.innerHTML = `
-            <h2>🎉 练习完成!</h2>
-            
-            <div class="session-stats">
-                <div class="stat-item">
-                    <span class="stat-value">${this.wordsCompletedThisSession}</span>
-                    <span class="stat-label">词语</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value">${this.score}</span>
-                    <span class="stat-label">经验</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value">${minutes}:${seconds.toString().padStart(2, '0')}</span>
-                    <span class="stat-label">时间</span>
-                </div>
-            </div>
-            
-            <div class="streak-display ${stats.dailyStreak >= 3 ? 'on-fire' : ''}">
-                <span class="streak-icon">🔥</span>
-                <span class="streak-count">${stats.dailyStreak}</span>
-                <span class="streak-label">连胜</span>
-            </div>
-        `;
-
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'session-actions';
-
-        const reloadBtn = document.createElement('button');
-        reloadBtn.className = 'game-btn restart-btn';
-        reloadBtn.innerText = '🔄 再练一次';
-        reloadBtn.onclick = () => {
-            // Reset and restart with same words
-            this.currentWordIndex = 0;
-            this.startPractice();
-        };
-
-        const shareBtn = document.createElement('button');
-        shareBtn.className = 'game-btn share-btn';
-        shareBtn.style.background = 'linear-gradient(to bottom, #8b5cf6, #7c3aed)';
-        shareBtn.style.borderColor = '#6d28d9';
-        shareBtn.innerHTML = '📤 分享成绩';
-        shareBtn.onclick = () => {
-            const text = `✨ 星空听写\n我刚刚练习了 ${this.wordsCompletedThisSession} 个词语！\n得分: ${this.score} | 连胜: ${stats.dailyStreak}🔥\n等级: Lv.${getLevel()}\n\n快来挑战吧！`;
+/**
+ * Show session complete screen
+ */
+function showSessionComplete(): void {
+    ui.showSessionComplete(
+        state.wordsCompletedThisSession,
+        state.score,
+        state.sessionStartTime || Date.now(),
+        () => {
+            state.currentWordIndex = 0;
+            Game.startPractice();
+        },
+        () => {
+            const stats = getStats();
+            const text = `✨ 星空听写\n我刚刚练习了 ${state.wordsCompletedThisSession} 个词语！\n得分: ${state.score} | 连胜: ${stats.dailyStreak}🔥\n等级: Lv.${getLevel()}\n\n快来挑战吧！`;
 
             if (navigator.share) {
                 navigator.share({
@@ -968,298 +538,25 @@ export const Game: GameState = {
                 }).catch(console.error);
             } else {
                 navigator.clipboard.writeText(text + ' ' + window.location.href).then(() => {
-                    this.showFeedback('已复制到剪贴板！', '#38bdf8');
+                    ui.showFeedback('已复制到剪贴板！', '#38bdf8');
                 });
             }
-        };
-
-        actionsDiv.appendChild(reloadBtn);
-        actionsDiv.appendChild(shareBtn);
-        sessionDiv.appendChild(actionsDiv);
-
-        container.appendChild(sessionDiv);
-
-        const controlsArea = document.querySelector('.controls-area') as HTMLElement | null;
-        if (controlsArea) controlsArea.style.display = 'none';
-
-        SoundFX.levelUp();
-        for (let i = 0; i < 8; i++) {
-            setTimeout(() => {
-                spawnParticles(
-                    Math.random() * window.innerWidth,
-                    Math.random() * window.innerHeight
-                );
-            }, i * 150);
         }
-    },
+    );
+}
 
-    /**
-     * Animate score stars filling up
-     */
-    animateScoreIncrease: function () {
-        if (!this.currentWord) return;
-        const stars = document.querySelectorAll('#word-score-display .score-star');
-        const newScore = getWordScore(this.currentWord.term);
+/**
+ * Scroll element into view (mobile optimization)
+ */
+function scrollToActiveChar(element: HTMLElement): void {
+    if (window.innerWidth > 600) return;
 
-        stars.forEach((star, i) => {
-            if (i < newScore && !star.classList.contains('filled')) {
-                setTimeout(() => {
-                    star.classList.add('filled', 'animate');
-                }, i * 100);
-            }
-        });
-    },
+    element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'center'
+    });
+}
 
-    /**
-     * Move to next level/word
-     */
-    nextLevel: function () {
-        this.currentWordIndex++;
-        this.loadLevel();
-    },
-
-    /**
-     * Play audio for current word
-     */
-    playCurrentAudio: function () {
-        if (!this.currentWord) return;
-        speakWord(this.currentWord.term);
-    },
-
-    /**
-     * Use a hint (highlight the next stroke based on user's progress)
-     */
-    useHint: function () {
-        this.sessionStreak = 0;
-        this.hintUsed = true;
-        this.updateHud();
-
-        // Find the active character slot
-        const activeSlot = document.querySelector('.char-slot.active');
-        if (!activeSlot) return;
-
-        const activeIndex = parseInt(activeSlot.id.replace('char-', ''));
-        const writer = this.writers[activeIndex];
-
-        if (!writer) return;
-
-        // Get current stroke index based on user's actual progress
-        const strokeIndex = this.hintStrokeIndex[activeIndex] || 0;
-
-        // Highlight the next stroke they need to write
-        writer.highlightStroke(strokeIndex);
-
-        // Show pinyin on first hint
-        this.showPinyin();
-        // Show pinyin on first hint
-        this.showPinyin();
-    },
-
-    /**
-     * Skip current level
-     */
-    skipLevel: function () {
-        // Mark as incorrect
-        this.updateProgressDot(this.currentWordIndex, 'wrong');
-
-        // Reset streak
-        this.sessionStreak = 0;
-        this.updateHud();
-
-        // Reveal answer? Maybe just move on.
-        // Moving on immediately feels snappy.
-        this.currentWordIndex++;
-
-        // Play skip sound (or mistake sound?)
-        // SoundFX.wrong(); // Optional
-
-        this.loadLevel();
-    },
-
-    /**
-     * Update the HUD display
-     */
-    updateHud: function () {
-        const scoreEl = document.getElementById('score');
-        if (scoreEl) scoreEl.innerText = String(this.score);
-
-        const streakCountEl = document.getElementById('streak-count');
-        if (streakCountEl) streakCountEl.innerText = String(this.sessionStreak);
-
-        const badge = document.getElementById('streak-badge');
-        if (badge) {
-            if (this.sessionStreak >= 2) {
-                badge.style.display = 'flex';
-                if (this.sessionStreak >= 3) {
-                    badge.classList.add('active');
-                }
-            } else {
-                badge.style.display = 'none';
-                badge.classList.remove('active');
-            }
-        }
-    },
-
-    /**
-     * Show feedback overlay
-     */
-    showFeedback: function (text: string, color: string) {
-        const el = document.getElementById('feedback-overlay');
-        if (!el) return;
-        el.innerText = text;
-        el.style.color = color;
-        el.style.opacity = '1';
-        el.style.animation = 'none';
-        void (el as HTMLElement).offsetHeight;
-        el.style.animation = 'pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-    },
-
-    /**
-     * Get random praise message based on performance
-     * @param quality - Performance quality (2-5)
-     * @param streak - Current session streak
-     */
-    getRandomPraise: function (quality = 4, streak = 0) {
-        // Perfect performance
-        const perfectPraises = [
-            "完美! 🌟", "太完美了!", "满分!", "无敌!", "太厉害了!",
-            "天才啊!", "简直完美!", "一次过关!", "神了!"
-        ];
-
-        // Good performance
-        const goodPraises = [
-            "太棒了! ⭐", "很好!", "厉害!", "不错!", "做得好!",
-            "继续加油!", "进步了!", "真棒!", "了不起!"
-        ];
-
-        // Okay performance
-        const okayPraises = [
-            "加油! 💪", "继续努力!", "有进步!", "坚持住!", "再接再厉!",
-            "慢慢来!", "没关系!", "继续练习!"
-        ];
-
-        // Streak bonuses
-        const streakPraises = [
-            "🔥 连续答对!", "🔥 势不可挡!", "🔥 火力全开!",
-            "连胜中!", "停不下来!", "太猛了!"
-        ];
-
-        let praises: string[];
-        if (quality === 5) {
-            praises = perfectPraises;
-        } else if (quality === 4) {
-            praises = goodPraises;
-        } else {
-            praises = okayPraises;
-        }
-
-        // Add streak praise for hot streaks
-        if (streak >= 5) {
-            return streakPraises[Math.floor(Math.random() * streakPraises.length)];
-        } else if (streak >= 3 && Math.random() > 0.5) {
-            return "🔥 " + praises[Math.floor(Math.random() * praises.length)];
-        }
-
-        return praises[Math.floor(Math.random() * praises.length)];
-    },
-
-    /**
-     * Show achievements panel
-     */
-    showAchievements: function () {
-        const achievements = getAchievements();
-        const overlay = document.createElement('div');
-        overlay.className = 'achievements-overlay';
-        overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-
-        const unlocked = achievements.filter(a => a.unlocked);
-        const locked = achievements.filter(a => !a.unlocked);
-
-        overlay.innerHTML = `
-            <div class="achievements-panel">
-                <div class="ach-header">
-                     <button class="nav-back-btn" onclick="this.closest('.achievements-overlay').remove()">❮</button>
-                     <h2>🏆 成就</h2>
-                     <div style="width: 30px;"></div> <!-- Spacer for centering -->
-                </div>
-                <div class="achievements-grid">
-                    ${unlocked.map(a => `
-                        <div class="achievement-item unlocked">
-                            <span class="ach-icon">${a.icon}</span>
-                            <span class="ach-name">${a.name}</span>
-                        </div>
-                    `).join('')}
-                    ${locked.map(() => `
-                        <div class="achievement-item locked">
-                            <span class="ach-icon">🔒</span>
-                            <span class="ach-name">???</span>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(overlay);
-    },
-
-    /**
-     * Handle top-left navigation button
-     */
-    handleBackNavigation: function () {
-        if (this.currentView === 'practice-select' || this.currentView === 'progress') {
-            this.showLessonSelect();
-        } else if (this.currentView === 'lesson-select') {
-            // Go back to Start Screen (simplest is reload)
-            location.reload();
-        } else {
-            this.showMenu();
-        }
-    },
-
-    /**
-     * Show menu/pause overlay
-     */
-    showMenu: function () {
-        const self = this;
-        const overlay = document.createElement('div');
-        overlay.className = 'menu-overlay';
-        overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-
-        const panel = document.createElement('div');
-        panel.className = 'menu-panel';
-
-        const title = document.createElement('h2');
-        title.innerText = '⏸ 暂停';
-        panel.appendChild(title);
-
-        const buttons = document.createElement('div');
-        buttons.className = 'menu-buttons';
-
-        const resumeBtn = document.createElement('button');
-        resumeBtn.className = 'game-btn';
-        resumeBtn.innerText = '▶ 继续';
-        resumeBtn.onclick = () => overlay.remove();
-        buttons.appendChild(resumeBtn);
-
-        const achBtn = document.createElement('button');
-        achBtn.className = 'game-btn btn-hint';
-        achBtn.innerText = '🏆 成就';
-        achBtn.onclick = () => {
-            self.showAchievements();
-            overlay.remove();
-        };
-        buttons.appendChild(achBtn);
-
-        const menuBtn = document.createElement('button');
-        menuBtn.className = 'game-btn';
-        menuBtn.style.background = 'linear-gradient(to bottom, #ef4444, #dc2626)';
-        menuBtn.style.borderColor = '#b91c1c';
-        menuBtn.innerText = '🏠 返回主菜单';
-        menuBtn.onclick = () => location.reload();
-        buttons.appendChild(menuBtn);
-
-        panel.appendChild(buttons);
-        overlay.appendChild(panel);
-        document.body.appendChild(overlay);
-    }
-};
+// Expose for backward compatibility
+(window as any).Game = Game;

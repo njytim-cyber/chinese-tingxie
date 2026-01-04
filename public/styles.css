@@ -1497,3 +1497,152 @@ body {
 .hud.transparent .hud-controls {
     pointer-events: auto;
 }
+
+/* --- Handwriting Input Mode --- */
+.handwriting-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+}
+
+.handwriting-instruction {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #94a3b8;
+}
+
+.handwriting-instruction .expected-chars {
+    color: var(--primary);
+    font-weight: bold;
+}
+
+.handwriting-canvas-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.handwriting-canvas {
+    background: var(--card-bg);
+    border: 3px solid #334155;
+    border-radius: 16px;
+    touch-action: none;
+    cursor: crosshair;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+.handwriting-canvas:active {
+    border-color: var(--primary);
+}
+
+.handwriting-controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.handwriting-clear-btn {
+    background: linear-gradient(to bottom, #94a3b8, #64748b);
+    border-color: #475569;
+}
+
+.handwriting-done-btn {
+    background: linear-gradient(to bottom, #4ade80, #22c55e);
+    border-color: #15803d;
+}
+
+/* --- Phrase Candidates Selection --- */
+.phrase-candidates {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.candidates-title {
+    font-size: 1rem;
+    color: #94a3b8;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.candidate-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    border: 2px solid #334155;
+    border-radius: 12px;
+    padding: 15px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+}
+
+.candidate-item:hover:not(:disabled) {
+    border-color: var(--primary);
+    background: rgba(56, 189, 248, 0.1);
+}
+
+.candidate-item:disabled {
+    cursor: default;
+}
+
+.candidate-item.correct {
+    border-color: var(--success);
+    background: rgba(74, 222, 128, 0.2);
+}
+
+.candidate-item.wrong {
+    border-color: var(--danger);
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.candidate-term {
+    font-size: 1.5rem;
+    color: white;
+}
+
+.candidate-pinyin {
+    font-size: 1rem;
+    color: var(--gold);
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* --- Input Mode Toggle --- */
+.input-mode-toggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.mode-btn {
+    padding: 10px 20px;
+    border: 2px solid #334155;
+    border-radius: 12px;
+    background: var(--card-bg);
+    color: #94a3b8;
+    font-family: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mode-btn.active {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(56, 189, 248, 0.1);
+}
+
+.mode-btn:hover:not(.active) {
+    border-color: #475569;
+    color: white;
+}

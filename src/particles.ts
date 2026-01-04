@@ -74,15 +74,28 @@ function animateParticles(): void {
         requestAnimationFrame(animateParticles);
         return;
     }
+
+    // Skip rendering when no particles (optimization)
+    if (particles.length === 0) {
+        requestAnimationFrame(animateParticles);
+        return;
+    }
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // In-place filter pattern: O(n) instead of O(n²) from splice
+    let writeIndex = 0;
     for (let i = 0; i < particles.length; i++) {
-        particles[i].update();
-        particles[i].draw();
-        if (particles[i].life <= 0) {
-            particles.splice(i, 1);
-            i--;
+        const particle = particles[i];
+        particle.update();
+        particle.draw();
+
+        if (particle.life > 0) {
+            particles[writeIndex++] = particle;
         }
     }
+    particles.length = writeIndex; // Truncate dead particles
+
     requestAnimationFrame(animateParticles);
 }
 
