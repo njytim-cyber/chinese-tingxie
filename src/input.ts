@@ -130,7 +130,7 @@ export class HanziWriterInput implements InputHandler {
                 const writer = HanziWriter.create(`char-${index}`, char, {
                     width: 234,
                     height: 234,
-                    padding: 5,
+                    padding: 15,
                     showOutline: false,
                     strokeColor: '#38bdf8',
                     radicalColor: '#f472b6',

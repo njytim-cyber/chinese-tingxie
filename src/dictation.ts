@@ -192,6 +192,19 @@ export class DictationManager {
         header.style.alignItems = 'center';
         header.style.marginBottom = '15px';
 
+        // Instructions
+        const instructions = document.createElement('div');
+        instructions.className = 'dictation-instructions';
+        instructions.innerText = '🎧 听写：点击播放，写出汉字';
+        instructions.style.color = '#cbd5e1';
+        instructions.style.fontSize = '0.9rem';
+        instructions.style.marginBottom = '10px';
+        instructions.style.textAlign = 'center';
+
+        // Append instructions after header (will append header first)
+        // Wait, header is not appended yet in original code?
+        // Let's check matching lines. The original code creates header, then progress, then appends progress TO header.
+
         const progress = document.createElement('div');
         progress.className = 'focus-progress';
         const filled = this.charBoxes.filter(b => b.isCorrect).length;
@@ -323,6 +336,8 @@ export class DictationManager {
                 boxEl.appendChild(pinyinEl);
                 grid.appendChild(boxEl);
             }
+            this.container.appendChild(header);
+            this.container.appendChild(instructions); // Add instructions
             this.container.appendChild(chunkContainer);
 
             // Controls

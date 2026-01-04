@@ -154,6 +154,18 @@ export function unlockAudio(): void {
         audioCtx.resume();
     }
 
+    // Add explicit touch handler for stubborn devices (Huawei)
+    const unlockHandler = () => {
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        window.removeEventListener('touchstart', unlockHandler);
+        window.removeEventListener('click', unlockHandler);
+    };
+
+    window.addEventListener('touchstart', unlockHandler);
+    window.addEventListener('click', unlockHandler);
+
     // Unlock Speech Synthesis with a dummy utterance
     const u = new SpeechSynthesisUtterance('准备');
     if (selectedVoice) u.voice = selectedVoice;

@@ -85,7 +85,7 @@ export const LESSONS: Lesson[] = [
             { term: "忍不住", pinyin: "rěn bu zhù" },
             { term: "提出建议", pinyin: "tí chū jiàn yì" },
             { term: "议论纷纷", pinyin: "yì lùn fēn fēn" },
-            { term: "华乐团的表演太精彩了，观众们忍不住拍手叫好。", pinyin: "Huá yuè tuán de biǎo yǎn tài jīng cǎi le, guān zhòng men rěn bu zhù pāi shǒu jiào hǎo." }
+            { term: "华乐团的表演太精彩了，观众们忍不住拍手叫好。", pinyin: "Huá yuè tuán de biǎo yǎn tài jīng cǎi le , guān zhòng men rěn bu zhù pāi shǒu jiào hǎo ." }
         ]
     },
     {
@@ -110,8 +110,8 @@ export const LESSONS: Lesson[] = [
             { term: "皱紧眉头", pinyin: "zhòu jǐn méi tóu" },
             { term: "忽然想起", pinyin: "hū rán xiǎng qǐ" },
             { term: "热烈鼓掌", pinyin: "rè liè gǔ zhǎng" },
-            { term: "伟明听了姑姑鼓励的话语，感到非常温暖。", pinyin: "Wěi míng tīng le gū gu gǔ lì de huà yǔ, gǎn dào fēi cháng wēn nuǎn." },
-            { term: "弟弟灵机一动，想到了解决这道难题的好方法。", pinyin: "Dì di líng jī yí dòng, xiǎng dào le jiě jué zhè dào nán tí de hǎo fāng fǎ." }
+            { term: "伟明听了姑姑鼓励的话语，感到非常温暖。", pinyin: "Wěi míng tīng le gū gu gǔ lì de huà yǔ , gǎn dào fēi cháng wēn nuǎn ." },
+            { term: "弟弟灵机一动，想到了解决这道难题的好方法。", pinyin: "Dì di líng jī yí dòng , xiǎng dào le jiě jué zhè dào nán tí de hǎo fāng fǎ ." }
         ]
     },
     {
@@ -133,8 +133,8 @@ export const LESSONS: Lesson[] = [
             { term: "感到后悔", pinyin: "gǎn dào hòu huǐ" },
             { term: "舍不得", pinyin: "shě bu de" },
             { term: "伤心流泪", pinyin: "shāng xīn liú lèi" },
-            { term: "家明迷上电脑游戏后，成绩一落千丈。他感到很后悔。", pinyin: "Jiā míng mí shàng diàn nǎo yóu xì hòu, chéng jì yí luò qiān zhàng. Tā gǎn dào hěn hòu huǐ." },
-            { term: "这个笔袋是奶奶送的，虽然它很旧了，但是我舍不得丢掉。", pinyin: "Zhè ge bǐ dài shì nǎi nai sòng de, suī rán tā hěn jiù le, dàn shì wǒ shě bu de diū diào." }
+            { term: "家明迷上电脑游戏后，成绩一落千丈。他感到很后悔。", pinyin: "Jiā míng mí shàng diàn nǎo yóu xì hòu , chéng jì yí luò qiān zhàng . Tā gǎn dào hěn hòu huǐ ." },
+            { term: "这个笔袋是奶奶送的，虽然它很旧了，但是我舍不得丢掉。", pinyin: "Zhè ge bǐ dài shì nǎi nai sòng de , suī rán tā hěn jiù le , dàn shì wǒ shě bu de diū diào ." }
         ]
     },
     {
@@ -157,8 +157,8 @@ export const LESSONS: Lesson[] = [
             { term: "责任心", pinyin: "zé rèn xīn" },
             { term: "值得", pinyin: "zhí dé" },
             { term: "注意安全", pinyin: "zhù yì ān quán" },
-            { term: "由于下大雨，爸爸早上没去跑步。", pinyin: "Yóu yú xià dà yǔ, bà ba zǎo shang méi qù pǎo bù." },
-            { term: "值日生要有责任心，把课室打扫干净。", pinyin: "Zhí rì shēng yào yǒu zé rèn xīn, bǎ kè shì dǎ sǎo gān jìng." }
+            { term: "由于下大雨，爸爸早上没去跑步。", pinyin: "Yóu yú xià dà yǔ , bà ba zǎo shang méi qù pǎo bù ." },
+            { term: "值日生要有责任心，把课室打扫干净。", pinyin: "Zhí rì shēng yào yǒu zé rèn xīn , bǎ kè shì dǎ sǎo gān jìng ." }
         ]
     },
     {
@@ -180,7 +180,7 @@ export const LESSONS: Lesson[] = [
             { term: "闷闷不乐", pinyin: "mèn mèn bú lè" },
             { term: "建议", pinyin: "jiàn yì" },
             { term: "闭目养神", pinyin: "bì mù yǎng shén" },
-            { term: "我接受父母的建议，不沉迷手机，多运动多阅读。", pinyin: "Wǒ jiē shòu fù mǔ de jiàn yì, bù chén mí shǒu jī, duō yùn dòng duō yuè dú." }
+            { term: "我接受父母的建议，不沉迷手机，多运动多阅读。", pinyin: "Wǒ jiē shòu fù mǔ de jiàn yì , bù chén mí shǒu jī , duō yùn dòng duō yuè dú ." }
         ]
     },
     {
@@ -203,8 +203,8 @@ export const LESSONS: Lesson[] = [
             { term: "刻苦的训练", pinyin: "kè kǔ de xùn liàn" },
             { term: "跑步比赛", pinyin: "pǎo bù bǐ sài" },
             { term: "内容丰富", pinyin: "nèi róng fēng fù" },
-            { term: "经过刻苦的训练，我在游泳比赛中得了第一名。", pinyin: "Jīng guò kè kǔ de xùn liàn, wǒ zài yóu yǒng bǐ sài zhōng dé le dì yī míng." },
-            { term: "在父母的鼓励下，子明报名参加了运动会的跑步比赛。", pinyin: "Zài fù mǔ de gǔ lì xià, zǐ míng bào míng cān jiā le yùn dòng huì de pǎo bù bǐ sài." }
+            { term: "经过刻苦的训练，我在游泳比赛中得了第一名。", pinyin: "Jīng guò kè kǔ de xùn liàn , wǒ zài yóu yǒng bǐ sài zhōng dé le dì yī míng ." },
+            { term: "在父母的鼓励下，子明报名参加了运动会的跑步比赛。", pinyin: "Zài fù mǔ de gǔ lì xià , zǐ míng bào míng cān jiā le yùn dòng huì de pǎo bù bǐ sài ." }
         ]
     },
     {
@@ -224,7 +224,7 @@ export const LESSONS: Lesson[] = [
             { term: "摇摇摆摆", pinyin: "yáo yáo bǎi bǎi" },
             { term: "批评", pinyin: "pī píng" },
             { term: "道歉", pinyin: "dào qiàn" },
-            { term: "子华做功课时粗心大意，老师批评了他。", pinyin: "Zǐ huá zuò gōng kè shí cū xīn dà yì, lǎo shī pī píng le tā." }
+            { term: "子华做功课时粗心大意，老师批评了他。", pinyin: "Zǐ huá zuò gōng kè shí cū xīn dà yì , lǎo shī pī píng le tā ." }
         ]
     },
     {
@@ -243,8 +243,8 @@ export const LESSONS: Lesson[] = [
             { term: "医院", pinyin: "yī yuàn" },
             { term: "司机被困", pinyin: "sī jī bèi kùn" },
             { term: "马路如虎口", pinyin: "mǎ lù rú hǔ kǒu" },
-            { term: "马路如虎口，因此我们过马路时，应该遵守交通规则。", pinyin: "Mǎ lù rú hǔ kǒu, yīn cǐ wǒ men guò mǎ lù shí, yīng gāi zūn shǒu jiāo tōng guī zé." },
-            { term: "被困在车里的司机得救后，医护人员马上送他去了医院。", pinyin: "Bèi kùn zài chē lǐ de sī jī dé jiù hòu, yī hù rén yuán mǎ shàng sòng tā qù le yī yuàn." }
+            { term: "马路如虎口，因此我们过马路时，应该遵守交通规则。", pinyin: "Mǎ lù rú hǔ kǒu , yīn cǐ wǒ men guò mǎ lù shí , yīng gāi zūn shǒu jiāo tōng guī zé ." },
+            { term: "被困在车里的司机得救后，医护人员马上送他去了医院。", pinyin: "Bèi kùn zài chē lǐ de sī jī dé jiù hòu , yī hù rén yuán mǎ shàng sòng tā qù le yī yuàn ." }
         ]
     },
     {
@@ -265,7 +265,7 @@ export const LESSONS: Lesson[] = [
             { term: "令人讨厌", pinyin: "lìng rén tǎo yàn" },
             { term: "发音清楚", pinyin: "fā yīn qīng chǔ" },
             { term: "解释清楚", pinyin: "jiě shì qīng chǔ" },
-            { term: "丽美不但学习成绩好，而且乐于助人。", pinyin: "Lì měi bú dàn xué xí chéng jì hǎo, ér qiě lè yú zhù rén." }
+            { term: "丽美不但学习成绩好，而且乐于助人。", pinyin: "Lì měi bú dàn xué xí chéng jì hǎo , ér qiě lè yú zhù rén ." }
         ]
     },
     {
@@ -306,8 +306,8 @@ export const LESSONS: Lesson[] = [
             { term: "争取", pinyin: "zhēng qǔ" },
             { term: "四年级", pinyin: "sì nián jí" },
             { term: "乐曲动听", pinyin: "yuè qǔ dòng tīng" },
-            { term: "弟弟这次考试成绩不理想，他决心下次取得好成绩。", pinyin: "Dì di zhè cì kǎo shì chéng jì bù lǐ xiǎng, tā jué xīn xià cì qǔ dé hǎo chéng jì." },
-            { term: "我第一次代表班级参加演讲比赛，因此，我既紧张又兴奋。", pinyin: "Wǒ dì yī cì dài biǎo bān jí cān jiā yǎn jiǎng bǐ sài, yīn cǐ, wǒ jì jǐn zhāng yòu xīng fèn." }
+            { term: "弟弟这次考试成绩不理想，他决心下次取得好成绩。", pinyin: "Dì di zhè cì kǎo shì chéng jì bù lǐ xiǎng , tā jué xīn xià cì qǔ dé hǎo chéng jì ." },
+            { term: "我第一次代表班级参加演讲比赛，因此，我既紧张又兴奋。", pinyin: "Wǒ dì yī cì dài biǎo bān jí cān jiā yǎn jiǎng bǐ sài , yīn cǐ , wǒ jì jǐn zhāng yòu xīng fèn ." }
         ]
     },
     {
@@ -327,8 +327,8 @@ export const LESSONS: Lesson[] = [
             { term: "美术展览", pinyin: "měi shù zhǎn lǎn" },
             { term: "度假", pinyin: "dù jià" },
             { term: "充满信心", pinyin: "chōng mǎn xìn xīn" },
-            { term: "为了充实自己，明光假期里读完了好几本课外书。", pinyin: "Wèi le chōng shí zì jǐ, míng guāng jià qī lǐ dú wán le hǎo jǐ běn kè wài shū." },
-            { term: "昨天，我们到老人院做义工，度过了难忘而有意义的一天。", pinyin: "Zuó tiān, wǒ men dào lǎo rén yuàn zuò yì gōng, dù guò le nán wàng ér yǒu yì yì de yì tiān." }
+            { term: "为了充实自己，明光假期里读完了好几本课外书。", pinyin: "Wèi le chōng shí zì jǐ , míng guāng jià qī lǐ dú wán le hǎo jǐ běn kè wài shū ." },
+            { term: "昨天，我们到老人院做义工，度过了难忘而有意义的一天。", pinyin: "Zuó tiān , wǒ men dào lǎo rén yuàn zuò yì gōng , dù guò le nán wàng ér yǒu yì yì de yì tiān ." }
         ]
     },
     {
@@ -348,7 +348,7 @@ export const LESSONS: Lesson[] = [
             { term: "丈二金刚摸不着头脑", pinyin: "zhàng èr jīn gāng mō bu zháo tóu nǎo" },
             { term: "花盆", pinyin: "huā pén" },
             { term: "立刻", pinyin: "lì kè" },
-            { term: "家明不小心打破老婆婆家的花盆，他立刻向老婆婆承认错误。", pinyin: "Jiā míng bù xiǎo xīn dǎ pò lǎo pó po jiā de huā pén, tā lì kè xiàng lǎo pó po chéng rèn cuò wù." }
+            { term: "家明不小心打破老婆婆家的花盆，他立刻向老婆婆承认错误。", pinyin: "Jiā míng bù xiǎo xīn dǎ pò lǎo pó po jiā de huā pén , tā lì kè xiàng lǎo pó po chéng rèn cuò wù ." }
         ]
     },
     {
@@ -368,7 +368,7 @@ export const LESSONS: Lesson[] = [
             { term: "阅读", pinyin: "yuè dú" },
             { term: "不慌不忙", pinyin: "bù huāng bù máng" },
             { term: "香蕉蛋糕", pinyin: "xiāng jiāo dàn gāo" },
-            { term: "为了提高语文能力，我们要养成阅读的好习惯。", pinyin: "Wèi le tí gāo yǔ wén néng lì, wǒ men yào yǎng chéng yuè dú de hǎo xí guàn." }
+            { term: "为了提高语文能力，我们要养成阅读的好习惯。", pinyin: "Wèi le tí gāo yǔ wén néng lì , wǒ men yào yǎng chéng yuè dú de hǎo xí guàn ." }
         ]
     },
     {
@@ -387,7 +387,7 @@ export const LESSONS: Lesson[] = [
             { term: "一双拖鞋", pinyin: "yì shuāng tuō xié" },
             { term: "舒服", pinyin: "shū fu" },
             { term: "寒冷的冬天", pinyin: "hán lěng de dōng tiān" },
-            { term: "最近天气凉爽，不冷不热，很舒服。", pinyin: "Zuì jìn tiān qì liáng shuǎng, bù lěng bú rè, hěn shū fu." }
+            { term: "最近天气凉爽，不冷不热，很舒服。", pinyin: "Zuì jìn tiān qì liáng shuǎng , bù lěng bú rè , hěn shū fu ." }
         ]
     },
     {
@@ -408,7 +408,7 @@ export const LESSONS: Lesson[] = [
             { term: "趴在地上", pinyin: "pā zài dì shang" },
             { term: "加快速度", pinyin: "jiā kuài sù dù" },
             { term: "惊奇不已", pinyin: "jīng qí bù yǐ" },
-            { term: "三岁的表妹竟然会背几十首唐诗，我们都惊奇不已。", pinyin: "Sān suì de biǎo mèi jìng rán huì bèi jǐ shí shǒu táng shī, wǒ men dōu jīng qí bù yǐ." }
+            { term: "三岁的表妹竟然会背几十首唐诗，我们都惊奇不已。", pinyin: "Sān suì de biǎo mèi jìng rán huì bèi jǐ shí shǒu táng shī , wǒ men dōu jīng qí bù yǐ ." }
         ]
     }
 ];

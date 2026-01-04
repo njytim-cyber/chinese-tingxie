@@ -559,6 +559,38 @@ body {
         width: 200px;
         font-size: 1rem;
     }
+
+    .hud-controls {
+        gap: 6px;
+        /* Tighten gap */
+    }
+
+    .game-btn {
+        padding: 10px 14px;
+        /* Smaller padding */
+        font-size: 1rem;
+    }
+
+    .menu-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+
+    .hud-right {
+        gap: 5px;
+    }
+
+    .streak-badge {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+
+    /* Ensure reveal content wraps if needed */
+    #reveal-term {
+        max-width: 90vw;
+        word-wrap: break-word;
+    }
 }
 
 /* --- Version Tag --- */
