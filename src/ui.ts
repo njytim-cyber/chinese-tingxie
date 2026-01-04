@@ -659,7 +659,7 @@ export class UIManager {
     }
 
     /**
-     * Hide game controls
+     * Hide game controls and clear game-specific UI elements
      */
     hideControls(): void {
         if (this.domCache.controlsArea) {
@@ -667,6 +667,21 @@ export class UIManager {
         }
         if (this.domCache.hudControls) {
             this.domCache.hudControls.style.display = 'none';
+        }
+
+        // Clear pinyin display
+        if (this.domCache.pinyinDisplay) {
+            this.domCache.pinyinDisplay.textContent = '';
+            this.domCache.pinyinDisplay.classList.remove('visible');
+        }
+        document.querySelectorAll('.char-pinyin-label').forEach(label => {
+            label.classList.remove('visible');
+        });
+
+        // Clear feedback overlay
+        if (this.domCache.feedbackOverlay) {
+            this.domCache.feedbackOverlay.style.opacity = '0';
+            this.domCache.feedbackOverlay.innerText = '';
         }
     }
 
