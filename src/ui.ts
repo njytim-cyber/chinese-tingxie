@@ -705,6 +705,100 @@ export class UIManager {
     getWritingArea(): HTMLElement | null {
         return this.domCache.writingArea;
     }
+
+    /**
+     * Show dictation passage selection
+     */
+    showDictationSelect(
+        onPassageSelect: (passage: { id: string; title: string; text: string; blanks: number[]; hint?: string }) => void
+    ): void {
+        // Hide any existing overlays
+        this.setHudTransparent(true);
+        this.clearWritingArea();
+
+        const writingArea = this.domCache.writingArea;
+        if (!writingArea) return;
+
+        writingArea.innerHTML = `
+            <div class="lesson-select-container">
+                <h2 class="select-title">默写练习</h2>
+                <div class="dictation-passage-list" id="dictation-passage-list">
+                    <p style="color: #64748b;">加载中...</p>
+                </div>
+            </div>
+        `;
+
+        // Load passages
+        fetch('/dictation.json')
+            .then(res => res.json())
+            .then(data => {
+                const list = document.getElementById('dictation-passage-list');
+                if (!list) return;
+
+                list.innerHTML = '';
+                data.passages.forEach((passage: { id: string; title: string; text: string; blanks: number[]; hint?: string }) => {
+                    const item = document.createElement('button');
+                    item.className = 'lesson-card dictation-passage-card';
+                    item.innerHTML = `
+                        <div class="lesson-title">${passage.title}</div>
+                        <div class="lesson-hint">${passage.hint || ''}</div>
+                        <div class="lesson-stats">${passage.blanks.length} 个空格</div>
+                    `;
+                    item.addEventListener('click', () => onPassageSelect(passage));
+                    list.appendChild(item);
+                });
+            })
+            .catch(err => {
+                console.error('Failed to load dictation passages:', err);
+                const list = document.getElementById('dictation-passage-list');
+                if (list) list.innerHTML = '<p style="color: #ef4444;">加载失败</p>';
+            });
+    }
+
+    /**
+     * Show dictation result
+     */
+    showDictationResult(score: number, total: number, onContinue: () => void): void {
+        const percentage = Math.round((score / total) * 100);
+        const isGood = percentage >= 70;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'feedback-overlay';
+        overlay.innerHTML = `
+            <div class="session-complete">
+                <h2 style="color: ${isGood ? 'var(--success)' : 'var(--danger)'}">
+                    ${isGood ? '🎉 太棒了!' : '😅 继续加油!'}
+                </h2>
+                <div class="session-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">${score}/${total}</span>
+                        <span class="stat-label">正确</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${percentage}%</span>
+                        <span class="stat-label">准确率</span>
+                    </div>
+                </div>
+                <button class="start-btn" id="dictation-continue-btn">继续</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        if (isGood) {
+            SoundFX.success();
+            spawnParticles(window.innerWidth / 2, window.innerHeight / 2);
+        } else {
+            SoundFX.wrong();
+        }
+
+        const continueBtn = document.getElementById('dictation-continue-btn');
+        if (continueBtn) {
+            continueBtn.addEventListener('click', () => {
+                overlay.remove();
+                onContinue();
+            });
+        }
+    }
 }
 
 /**

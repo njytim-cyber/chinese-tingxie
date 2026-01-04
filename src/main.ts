@@ -92,6 +92,19 @@ function init(): void {
             });
         }
 
+        // Dictation mode button
+        const dictationBtn = document.getElementById('dictation-btn');
+        if (dictationBtn) {
+            dictationBtn.addEventListener('click', () => {
+                const overlay = document.getElementById('start-overlay');
+                if (overlay) overlay.remove();
+
+                unlockAudio();
+                Game.init(false);
+                Game.showDictationSelect();
+            });
+        }
+
         // Set up game control buttons
         const menuBtn = document.getElementById('menu-btn');
         if (menuBtn) menuBtn.addEventListener('click', () => Game.handleBackNavigation());

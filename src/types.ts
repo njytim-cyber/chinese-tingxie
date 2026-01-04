@@ -45,7 +45,7 @@ export interface InputHandler {
 /**
  * Game view types
  */
-export type GameView = 'lesson-select' | 'practice-select' | 'progress' | 'game';
+export type GameView = 'lesson-select' | 'practice-select' | 'progress' | 'game' | 'dictation-select' | 'dictation';
 
 /**
  * Progress dot status

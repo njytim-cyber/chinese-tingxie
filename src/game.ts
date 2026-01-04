@@ -333,6 +333,38 @@ export const Game = {
     showAchievements(): void {
         ui.showAchievements();
     },
+
+    /**
+     * Show dictation passage selection
+     */
+    showDictationSelect(): void {
+        state.currentView = 'dictation-select';
+        ui.showDictationSelect(
+            (passage) => this.startDictation(passage)
+        );
+    },
+
+    /**
+     * Start dictation with selected passage
+     */
+    startDictation(passage: import('./dictation').DictationPassage): void {
+        state.currentView = 'dictation';
+        const container = document.getElementById('writing-area');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        // Dynamically import and create dictation manager
+        import('./dictation').then(({ DictationManager }) => {
+            const dictation = new DictationManager();
+            dictation.onComplete = (score, total) => {
+                ui.showDictationResult(score, total, () => {
+                    this.showDictationSelect();
+                });
+            };
+            dictation.init(passage, container);
+        });
+    },
 };
 
 /**
