@@ -665,6 +665,9 @@ export class UIManager {
         if (this.domCache.controlsArea) {
             this.domCache.controlsArea.style.display = 'none';
         }
+        if (this.domCache.hudControls) {
+            this.domCache.hudControls.style.display = 'none';
+        }
     }
 
     /**

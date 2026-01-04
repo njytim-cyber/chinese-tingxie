@@ -182,8 +182,18 @@ export class HanziWriterInput implements InputHandler {
             this.currentCharIndex++;
             this.updateCarouselView();
         } else {
-            // On last character - submit/complete the word
-            this.notifyComplete();
+            // On last character - only complete if all chars are written
+            if (this.completedChars === this.validCharIndices.length) {
+                this.notifyComplete();
+            } else {
+                // Not all chars written - shake to indicate incomplete
+                const activeBox = document.querySelector('.char-slot.active');
+                if (activeBox) {
+                    activeBox.classList.remove('shake');
+                    void (activeBox as HTMLElement).offsetWidth;
+                    activeBox.classList.add('shake');
+                }
+            }
         }
     }
 
