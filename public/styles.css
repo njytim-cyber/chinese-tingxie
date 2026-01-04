@@ -23,6 +23,10 @@ body {
     touch-action: manipulation;
     -webkit-touch-callout: none;
     -webkit-text-size-adjust: 100%;
+    overflow: hidden;
+    /* Prevent scrolling */
+    height: 100dvh;
+    /* Use dynamic viewport height */
 }
 
 /* --- Start Screen Overlay --- */

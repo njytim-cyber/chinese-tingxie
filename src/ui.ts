@@ -60,7 +60,6 @@ export class UIManager {
                     <div class="toggle-options">
                         <button class="toggle-btn active" data-count="5">5词</button>
                         <button class="toggle-btn" data-count="10">10词</button>
-                        <button class="toggle-btn" data-count="15">15词</button>
                         <button class="toggle-btn" data-count="0">全部</button>
                     </div>
                 </div>
@@ -457,7 +456,7 @@ export class UIManager {
         panel.className = 'menu-panel';
 
         const title = document.createElement('h2');
-        title.innerText = '⏸ 暂停';
+        title.innerText = '暂停';
         panel.appendChild(title);
 
         const buttons = document.createElement('div');
@@ -782,39 +781,77 @@ export class UIManager {
 
         const overlay = document.createElement('div');
         overlay.className = 'feedback-overlay';
-        overlay.innerHTML = `
-            <div class="session-complete">
-                <h2 style="color: ${isGood ? 'var(--success)' : 'var(--danger)'}">
-                    ${isGood ? '🎉 太棒了!' : '😅 继续加油!'}
-                </h2>
-                <div class="session-stats">
-                    <div class="stat-item">
-                        <span class="stat-value">${score}/${total}</span>
-                        <span class="stat-label">正确</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-value">${percentage}%</span>
-                        <span class="stat-label">准确率</span>
-                    </div>
+        overlay.style.opacity = '1'; // Ensure visible
+
+        const content = document.createElement('div');
+        content.className = 'session-complete';
+        content.innerHTML = `
+            <h2 style="color: ${isGood ? 'var(--success)' : 'var(--danger)'}">
+                ${isGood ? '🎉 太棒了!' : '😅 继续加油!'}
+            </h2>
+            <div class="session-stats">
+                <div class="stat-item">
+                    <span class="stat-value">${score}/${total}</span>
+                    <span class="stat-label">总分</span>
                 </div>
-                <button class="start-btn" id="dictation-continue-btn">继续</button>
+                <div class="stat-item">
+                    <span class="stat-value">${percentage}%</span>
+                    <span class="stat-label">准确率</span>
+                </div>
             </div>
         `;
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'session-actions';
+
+        const continueBtn = document.createElement('button');
+        continueBtn.className = 'start-btn';
+        continueBtn.textContent = '继续';
+        continueBtn.onclick = () => {
+            overlay.remove();
+            onContinue();
+        };
+
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'game-btn share-btn';
+        shareBtn.style.background = 'linear-gradient(to bottom, #8b5cf6, #7c3aed)';
+        shareBtn.style.marginTop = '10px';
+        shareBtn.innerHTML = '📤 分享成绩';
+        shareBtn.onclick = () => {
+            const text = `✨ 星空听写 (默写练习)\n得分: ${score}/${total} (${percentage}%)\n\n快来挑战吧！`;
+            if (navigator.share) {
+                navigator.share({
+                    title: '星空听写成绩',
+                    text: text,
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                navigator.clipboard.writeText(text + ' ' + window.location.href).then(() => {
+                    this.showFeedback('已复制到剪贴板！', '#38bdf8');
+                });
+            }
+        };
+
+        actionsDiv.appendChild(continueBtn);
+        actionsDiv.appendChild(shareBtn);
+        content.appendChild(actionsDiv);
+        overlay.appendChild(content);
+
         document.body.appendChild(overlay);
 
         if (isGood) {
             SoundFX.success();
-            spawnParticles(window.innerWidth / 2, window.innerHeight / 2);
+            // Particles
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    spawnParticles(
+                        window.innerWidth / 2 + (Math.random() - 0.5) * 200,
+                        window.innerHeight / 2 + (Math.random() - 0.5) * 200
+                    );
+                }, i * 150);
+            }
         } else {
             SoundFX.wrong();
-        }
-
-        const continueBtn = document.getElementById('dictation-continue-btn');
-        if (continueBtn) {
-            continueBtn.addEventListener('click', () => {
-                overlay.remove();
-                onContinue();
-            });
         }
     }
 }

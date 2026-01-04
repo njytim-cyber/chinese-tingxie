@@ -686,6 +686,25 @@ export class DictationManager {
         if (!footer) return;
 
         footer.innerHTML = '';
+
+        // Score Display
+        let currentScore = 0;
+        let currentMax = 0;
+        this.chunks.forEach((chunk, index) => {
+            if (index < this.currentChunkIndex) {
+                currentScore += chunk.score;
+                currentMax += 2;
+            }
+        });
+
+        const scoreEl = document.createElement('div');
+        scoreEl.className = 'dictation-footer-score';
+        scoreEl.textContent = `得分: ${currentScore}/${currentMax}`;
+        scoreEl.style.marginRight = '15px';
+        scoreEl.style.fontWeight = 'bold';
+        scoreEl.style.color = 'var(--primary)';
+        footer.appendChild(scoreEl);
+
         const bar = document.createElement('div');
         bar.className = 'dictation-progress-bar';
 
