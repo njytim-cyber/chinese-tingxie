@@ -11,6 +11,7 @@ export interface DictationPassage {
     title: string;
     text: string;
     blanks: number[];  // Character indices that are blanks
+    isFullDictation?: boolean;
     hint?: string;
 }
 
@@ -54,16 +55,46 @@ export class DictationManager {
         this.currentBlankIndex = 0;
 
         // Build character boxes
-        this.charBoxes = passage.text.split('').map((char, index) => ({
-            char,
-            isBlank: passage.blanks.includes(index),
-            userInput: '',
-            isCorrect: null,
-            index
-        }));
+        const isFull = !!passage.isFullDictation;
+        const punctuationRegex = /[，。！？、：；“”‘’（）《》]/;
+
+        this.charBoxes = passage.text.split('').map((char, index) => {
+            // In full dictation, everything is a blank except punctuation
+            // In partial dictation, only specified indices are blanks
+            const isPunctuation = punctuationRegex.test(char);
+            const isBlank = isFull ? !isPunctuation : passage.blanks.includes(index);
+
+            return {
+                char,
+                isBlank,
+                userInput: '',
+                isCorrect: null,
+                index
+            };
+        });
 
         this.render();
         this.focusCurrentBlank();
+
+        // Auto-play audio for full dictation
+        if (isFull) {
+            setTimeout(() => this.playAudio(), 500);
+        }
+    }
+
+    /**
+     * Play passage audio
+     */
+    playAudio(): void {
+        if (!this.passage) return;
+
+        // Cancel any current speech
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(this.passage.text);
+        utterance.lang = 'zh-CN';
+        utterance.rate = 0.8; // Slightly slower for dictation
+        window.speechSynthesis.speak(utterance);
     }
 
     /**
@@ -75,11 +106,27 @@ export class DictationManager {
         this.container.innerHTML = '';
         this.container.className = 'dictation-container';
 
-        // Title
+        // Title & Audio Control
+        const header = document.createElement('div');
+        header.style.display = 'flex';
+        header.style.alignItems = 'center';
+        header.style.gap = '10px';
+        header.style.marginBottom = '20px';
+
         const title = document.createElement('h2');
         title.className = 'dictation-title';
+        title.style.margin = '0';
         title.textContent = `默写: ${this.passage.title}`;
-        this.container.appendChild(title);
+        header.appendChild(title);
+
+        const audioBtn = document.createElement('button');
+        audioBtn.className = 'game-btn btn-audio';
+        audioBtn.textContent = '🔊';
+        audioBtn.title = '播放读音';
+        audioBtn.onclick = () => this.playAudio();
+        header.appendChild(audioBtn);
+
+        this.container.appendChild(header);
 
         // Progress indicator
         const progress = document.createElement('div');
@@ -110,6 +157,10 @@ export class DictationManager {
                 const blankIdx = this.getBlankIndexAt(idx);
                 if (blankIdx === this.currentBlankIndex) {
                     boxEl.classList.add('active');
+                    // Scroll into view if needed
+                    setTimeout(() => {
+                        boxEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    }, 0);
                 }
 
                 boxEl.addEventListener('click', () => {
@@ -135,6 +186,11 @@ export class DictationManager {
         this.inputField.inputMode = 'text';
         this.inputField.addEventListener('input', (e) => this.handleInput(e));
         this.inputField.addEventListener('keydown', (e) => this.handleKeydown(e));
+        this.inputField.addEventListener('blur', () => {
+            // Keep focus on mobile to avoid keyboard closing
+            // but only if we are still active
+            // setTimeout(() => this.inputField?.focus(), 10);
+        });
         this.container.appendChild(this.inputField);
 
         // Control buttons
