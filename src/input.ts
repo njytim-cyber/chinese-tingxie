@@ -181,6 +181,9 @@ export class HanziWriterInput implements InputHandler {
         if (this.currentCharIndex < this.validCharIndices.length - 1) {
             this.currentCharIndex++;
             this.updateCarouselView();
+        } else {
+            // On last character - submit/complete the word
+            this.notifyComplete();
         }
     }
 
@@ -211,8 +214,15 @@ export class HanziWriterInput implements InputHandler {
 
         if (nextBtn) {
             const isLast = this.currentCharIndex === this.validCharIndices.length - 1;
-            // Don't show submit here - word completes automatically
-            nextBtn.style.visibility = isLast ? 'hidden' : 'visible';
+            // On last character, show submit button; otherwise, show next arrow
+            if (isLast) {
+                nextBtn.textContent = '✓';
+                nextBtn.classList.add('submit-btn');
+            } else {
+                nextBtn.textContent = '❯';
+                nextBtn.classList.remove('submit-btn');
+            }
+            nextBtn.style.visibility = 'visible';
         }
 
         // Update progress
