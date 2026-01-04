@@ -1977,10 +1977,9 @@ body {
 
 @media (max-width: 600px) {
     body {
-        overflow: hidden !important;
-        position: fixed;
-        width: 100%;
-        height: 100%;
+        overflow-x: hidden;
+        /* Removed position:fixed to allow child scrolling */
+        min-height: 100dvh;
     }
 
     .focus-view {
@@ -1990,7 +1989,11 @@ body {
         justify-content: flex-start;
         padding-top: 10px;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        /* iOS smooth scrolling */
         overscroll-behavior: contain;
+        touch-action: pan-y;
+        /* Allow vertical touch scrolling */
     }
 
     .focus-chunk-container {
