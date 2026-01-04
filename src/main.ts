@@ -115,6 +115,9 @@ function init(): void {
         const hintBtn = document.getElementById('btn-hint');
         if (hintBtn) hintBtn.addEventListener('click', () => Game.useHint());
 
+        const revealBtn = document.getElementById('btn-reveal');
+        if (revealBtn) revealBtn.addEventListener('click', () => Game.revealPhrase());
+
         const skipBtn = document.getElementById('btn-skip');
         if (skipBtn) skipBtn.addEventListener('click', () => Game.skipLevel());
 

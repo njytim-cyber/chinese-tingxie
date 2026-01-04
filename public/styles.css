@@ -2096,3 +2096,128 @@ body {
     background: var(--primary);
     box-shadow: 0 0 5px var(--primary);
 }
+
+/* --- Reveal Phrase Button --- */
+.btn-reveal {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+    color: #22d3ee;
+}
+
+.btn-reveal:hover {
+    background: rgba(34, 211, 238, 0.2);
+    border-color: rgba(34, 211, 238, 0.3);
+}
+
+/* --- Reveal Modal --- */
+.reveal-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fade-in 0.2s ease;
+    cursor: pointer;
+}
+
+.reveal-modal-content {
+    text-align: center;
+    padding: 40px;
+    animation: pop 0.3s ease;
+}
+
+.reveal-term {
+    font-size: 4rem;
+    color: var(--primary);
+    margin-bottom: 20px;
+    text-shadow: 0 0 30px rgba(56, 189, 248, 0.5);
+}
+
+.reveal-pinyin {
+    font-size: 2rem;
+    color: var(--gold);
+    font-family: system-ui, -apple-system, sans-serif;
+    margin-bottom: 30px;
+}
+
+.reveal-hint {
+    color: #64748b;
+    font-size: 1rem;
+}
+
+/* --- Spelling Carousel (Dictation-Style) --- */
+.spelling-carousel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.spelling-nav-btn {
+    background: var(--card-bg);
+    border: 2px solid #334155;
+    color: white;
+    font-size: 1.5rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.spelling-nav-btn:hover {
+    border-color: var(--primary);
+    background: #334155;
+}
+
+.spelling-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.spelling-nav-btn.submit-btn {
+    background: var(--success);
+    border-color: #16a34a;
+}
+
+/* Hide non-active character boxes in spelling mode */
+.char-box.spelling-hidden {
+    display: none !important;
+}
+
+/* Active spelling char styling */
+.char-box.spelling-active {
+    display: flex !important;
+}
+
+/* Spelling progress indicator */
+.spelling-progress {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+    .reveal-term {
+        font-size: 3rem;
+    }
+
+    .reveal-pinyin {
+        font-size: 1.5rem;
+    }
+
+    .spelling-nav-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+    }
+}

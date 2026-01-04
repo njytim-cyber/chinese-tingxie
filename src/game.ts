@@ -413,6 +413,33 @@ export const Game = {
             }
         });
     },
+
+    /**
+     * Reveal phrase modal - shows term and pinyin
+     */
+    revealPhrase(): void {
+        if (!state.currentWord) return;
+
+        const modal = document.getElementById('reveal-modal');
+        const termEl = document.getElementById('reveal-term');
+        const pinyinEl = document.getElementById('reveal-pinyin');
+
+        if (!modal || !termEl || !pinyinEl) return;
+
+        termEl.textContent = state.currentWord.term;
+        pinyinEl.textContent = state.currentWord.pinyin;
+        modal.style.display = 'flex';
+
+        // Dismiss on click or keypress
+        const dismiss = () => {
+            modal.style.display = 'none';
+            modal.removeEventListener('click', dismiss);
+            document.removeEventListener('keydown', dismiss);
+        };
+
+        modal.addEventListener('click', dismiss);
+        document.addEventListener('keydown', dismiss);
+    },
 };
 
 /**

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>星空听写</title>
     <meta name="description" content="练习汉字听写。通过互动描红学习词汇。">
-    <meta name="version" content="1.19.0">
+    <meta name="version" content="1.20.0">
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#38bdf8">
@@ -29,7 +29,7 @@
     <div id="start-overlay">
         <h1 class="start-title">星空听写</h1>
         <p class="start-subtitle">银河听写练习</p>
-        <p class="version-tag">v1.19.0</p>
+        <p class="version-tag">v1.20.0</p>
 
         <input type="text" id="player-name" class="name-input" placeholder="你的名字" maxlength="20">
 
@@ -56,6 +56,7 @@
                 <button class="game-btn btn-skip compact-btn" id="btn-skip" title="跳过">⏭</button>
                 <button class="game-btn btn-audio compact-btn" id="btn-audio" title="听读音">🔊</button>
                 <button class="game-btn btn-hint compact-btn" id="btn-hint" title="提示">💡</button>
+                <button class="game-btn btn-reveal compact-btn" id="btn-reveal" title="显示词语">👁️</button>
 
                 <!-- Stats -->
                 <div class="score-box">
@@ -116,6 +117,14 @@
             });
         }
     </script>
+    <!-- Reveal Modal -->
+    <div id="reveal-modal" class="reveal-modal" style="display: none;">
+        <div class="reveal-modal-content">
+            <div id="reveal-term" class="reveal-term"></div>
+            <div id="reveal-pinyin" class="reveal-pinyin"></div>
+            <div class="reveal-hint">点击任意位置关闭</div>
+        </div>
+    </div>
     <div id="footer-progress" class="footer-progress"></div>
 </body>
 
