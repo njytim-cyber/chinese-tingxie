@@ -135,6 +135,8 @@ export class DictationManager {
         if (isFull) {
             setTimeout(() => this.playAudio(), 500);
         }
+
+        this.renderFooterProgress(); // Initial footer render
     }
 
     /**
@@ -511,6 +513,7 @@ export class DictationManager {
             this.currentChunkIndex++;
             this.mobileCharIndex = 0; // Reset mobile index
             this.render();
+            this.renderFooterProgress(); // Update footer
         } else {
             this.showResults();
         }
@@ -584,6 +587,33 @@ export class DictationManager {
         this.container = null;
         this.passage = null;
         this.charBoxes = [];
+        // Clear footer
+        const footer = document.getElementById('footer-progress');
+        if (footer) footer.innerHTML = '';
+    }
+
+    private renderFooterProgress(): void {
+        const footer = document.getElementById('footer-progress');
+        if (!footer) return;
+
+        footer.innerHTML = '';
+        const bar = document.createElement('div');
+        bar.className = 'dictation-progress-bar';
+
+        this.chunks.forEach((_, index) => {
+            const segment = document.createElement('div');
+            segment.className = 'dictation-progress-segment';
+
+            if (index < this.currentChunkIndex) {
+                segment.classList.add('completed');
+            } else if (index === this.currentChunkIndex) {
+                segment.classList.add('current');
+            }
+
+            bar.appendChild(segment);
+        });
+
+        footer.appendChild(bar);
     }
 }
 

@@ -1865,16 +1865,20 @@ body {
 }
 
 .focus-context {
-    font-size: 1rem;
-    line-height: 1.5;
+    font-size: 1.5rem;
+    /* Increased size */
+    font-weight: 500;
+    line-height: 1.4;
     letter-spacing: 0.1em;
     text-align: center;
     color: var(--gold);
-    min-height: 1.5rem;
-    margin-bottom: 10px;
+    min-height: 2rem;
+    margin-bottom: 5px;
+    /* Reduced margin to fit */
     display: flex;
     justify-content: center;
     gap: 4px;
+    align-items: center;
 }
 
 .focus-chunk-container {
@@ -2058,4 +2062,32 @@ body {
     .focus-controls {
         margin-bottom: 20px;
     }
+}
+
+/* Dictation Footer Progress */
+.dictation-progress-bar {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+    max-width: 300px;
+    height: 6px;
+    align-items: center;
+    justify-content: center;
+}
+
+.dictation-progress-segment {
+    flex: 1;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+.dictation-progress-segment.completed {
+    background: var(--success);
+}
+
+.dictation-progress-segment.current {
+    background: var(--primary);
+    box-shadow: 0 0 5px var(--primary);
 }
