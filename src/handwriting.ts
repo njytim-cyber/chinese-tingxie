@@ -1,15 +1,25 @@
 /**
  * Handwriting Input Module
- * Canvas-based freeform writing with phrase candidate selection
+ * Canvas-based freeform writing with HanziLookup character recognition
  * 
- * This is a simpler approach for advanced students:
- * - User writes on canvas (practice without guidance)
- * - User self-selects from phrase candidates what they wrote
- * - System matches selection to expected answer
+ * Flow:
+ * 1. User writes on canvas
+ * 2. System recognizes characters using HanziLookupJS
+ * 3. Candidates ranked by similarity to recognized text
+ * 4. User selects from ranked options
  */
 
 import type { PracticeWord } from './data';
 import type { InputHandler, InputResult } from './types';
+
+// Declare HanziLookup as global (loaded via CDN)
+declare const HanziLookup: {
+    init: (name: string, url: string, callback: (success: boolean) => void) => void;
+    AnalyzedCharacter: new (strokes: number[][][]) => unknown;
+    Matcher: new (name: string) => {
+        match: (char: unknown, count: number, callback: (matches: { character: string; score: number }[]) => void) => void;
+    };
+};
 
 /**
  * Point on the canvas
@@ -26,9 +36,57 @@ interface Stroke {
     points: Point[];
 }
 
+// Track if HanziLookup is initialized
+let hanziLookupReady = false;
+let hanziLookupInitializing = false;
+
 /**
- * Handwriting-based input handler
- * User writes freely, then selects from phrase candidates
+ * Initialize HanziLookup (called once)
+ */
+function initHanziLookup(): Promise<boolean> {
+    return new Promise((resolve) => {
+        if (hanziLookupReady) {
+            resolve(true);
+            return;
+        }
+        if (hanziLookupInitializing) {
+            // Wait for existing initialization
+            const checkReady = setInterval(() => {
+                if (hanziLookupReady) {
+                    clearInterval(checkReady);
+                    resolve(true);
+                }
+            }, 100);
+            return;
+        }
+
+        hanziLookupInitializing = true;
+
+        // Check if HanziLookup is available
+        if (typeof HanziLookup === 'undefined') {
+            console.warn('HanziLookup not loaded - falling back to basic mode');
+            resolve(false);
+            return;
+        }
+
+        // Load MMAH character data
+        HanziLookup.init(
+            'mmah',
+            'https://cdn.jsdelivr.net/gh/gugray/HanziLookupJS@master/dist/mmah.json',
+            (success) => {
+                hanziLookupReady = success;
+                hanziLookupInitializing = false;
+                if (!success) {
+                    console.warn('Failed to load HanziLookup data');
+                }
+                resolve(success);
+            }
+        );
+    });
+}
+
+/**
+ * Handwriting-based input handler with character recognition
  */
 export class HandwritingInput implements InputHandler {
     private canvas: HTMLCanvasElement | null = null;
@@ -37,9 +95,9 @@ export class HandwritingInput implements InputHandler {
     private currentStroke: Stroke | null = null;
     private isDrawing = false;
     private currentWord: PracticeWord | null = null;
-
     private candidateContainer: HTMLElement | null = null;
     private lessonPhrases: PracticeWord[] = [];
+    private recognizedText = '';
 
     onComplete: ((result: InputResult) => void) | null = null;
     onCharComplete: ((index: number) => void) | null = null;
@@ -59,8 +117,11 @@ export class HandwritingInput implements InputHandler {
         this.destroy();
 
         this.currentWord = word;
-
         this.strokes = [];
+        this.recognizedText = '';
+
+        // Initialize HanziLookup in background
+        initHanziLookup();
 
         // Create wrapper
         const wrapper = document.createElement('div');
@@ -104,7 +165,7 @@ export class HandwritingInput implements InputHandler {
         const doneBtn = document.createElement('button');
         doneBtn.className = 'game-btn handwriting-done-btn';
         doneBtn.textContent = '✓ 完成';
-        doneBtn.addEventListener('click', () => this.showCandidates());
+        doneBtn.addEventListener('click', () => this.recognizeAndShowCandidates());
 
         controls.appendChild(clearBtn);
         controls.appendChild(doneBtn);
@@ -143,30 +204,24 @@ export class HandwritingInput implements InputHandler {
         this.currentWord = null;
         this.strokes = [];
         this.currentStroke = null;
+        this.recognizedText = '';
     }
 
     /**
-     * Show hint - for handwriting, show first character
+     * Show hint - shows candidates
      */
     showHint(): void {
         if (this.currentWord && this.candidateContainer) {
-            // Show candidates as hint
-            this.showCandidates();
+            this.recognizeAndShowCandidates();
         }
     }
 
-    /**
-     * Check if hint was used (candidates shown before completion)
-     */
     wasHintUsed(): boolean {
-        return false; // In handwriting mode, showing candidates is the normal flow
+        return false;
     }
 
-    /**
-     * Get mistake count
-     */
     getMistakeCount(): number {
-        return 0; // Handwriting mode doesn't track stroke mistakes
+        return 0;
     }
 
     /**
@@ -187,7 +242,6 @@ export class HandwritingInput implements InputHandler {
             this.ctx.moveTo(x, y);
         }
 
-        // Capture pointer for better tracking
         this.canvas.setPointerCapture(e.pointerId);
     }
 
@@ -234,24 +288,152 @@ export class HandwritingInput implements InputHandler {
 
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.strokes = [];
+        this.recognizedText = '';
 
-        // Hide candidates if shown
         if (this.candidateContainer) {
             this.candidateContainer.style.display = 'none';
         }
     }
 
     /**
-     * Generate and show phrase candidates
+     * Recognize drawn characters and show ranked candidates
      */
-    private showCandidates(): void {
+    private async recognizeAndShowCandidates(): Promise<void> {
         if (!this.candidateContainer || !this.currentWord) return;
 
-        // Get candidates from lesson phrases
-        const candidates = this.generateCandidates();
-
-        this.candidateContainer.innerHTML = '<div class="candidates-title">选择你写的词语:</div>';
+        // Show loading state
+        this.candidateContainer.innerHTML = '<div class="candidates-title">识别中...</div>';
         this.candidateContainer.style.display = 'block';
+
+        // Try to recognize characters
+        if (hanziLookupReady && this.strokes.length > 0) {
+            try {
+                this.recognizedText = await this.recognizeCharacters();
+            } catch (e) {
+                console.warn('Recognition failed:', e);
+                this.recognizedText = '';
+            }
+        }
+
+        // Generate and show ranked candidates
+        const candidates = this.generateRankedCandidates();
+        this.showCandidates(candidates);
+    }
+
+    /**
+     * Recognize characters from strokes using HanziLookup
+     */
+    private recognizeCharacters(): Promise<string> {
+        return new Promise((resolve) => {
+            if (!this.currentWord || this.strokes.length === 0) {
+                resolve('');
+                return;
+            }
+
+            // Convert strokes to HanziLookup format: number[][][]
+            // Each stroke is array of points, each point is [x, y]
+            const hlStrokes: number[][][] = this.strokes.map(stroke =>
+                stroke.points.map(p => [p.x, p.y])
+            );
+
+            // Try to recognize the whole thing as one character first
+            // For multi-character phrases, we'll match against full phrases
+            try {
+                const analyzedChar = new HanziLookup.AnalyzedCharacter(hlStrokes);
+                const matcher = new HanziLookup.Matcher('mmah');
+
+                matcher.match(analyzedChar, 5, (matches) => {
+                    if (matches && matches.length > 0) {
+                        // Return the best match
+                        resolve(matches[0].character);
+                    } else {
+                        resolve('');
+                    }
+                });
+            } catch (e) {
+                console.warn('HanziLookup error:', e);
+                resolve('');
+            }
+        });
+    }
+
+    /**
+     * Calculate similarity between two strings
+     * Uses character overlap scoring
+     */
+    private calculateSimilarity(recognized: string, candidate: string): number {
+        if (!recognized || recognized.length === 0) return 0;
+
+        let score = 0;
+        const recognizedChars = recognized.split('');
+        const candidateChars = candidate.split('');
+
+        // Check for matching characters
+        for (const char of recognizedChars) {
+            if (candidateChars.includes(char)) {
+                score += 1;
+            }
+        }
+
+        // Bonus for exact match
+        if (recognized === candidate) {
+            score += 10;
+        }
+
+        // Bonus for same length
+        if (recognizedChars.length === candidateChars.length) {
+            score += 0.5;
+        }
+
+        return score;
+    }
+
+    /**
+     * Generate candidates ranked by similarity to recognized text
+     */
+    private generateRankedCandidates(): PracticeWord[] {
+        if (!this.currentWord) return [];
+
+        // Always include current word
+        const allCandidates = [...this.lessonPhrases];
+
+        // If we have recognized text, rank by similarity
+        if (this.recognizedText) {
+            allCandidates.sort((a, b) => {
+                const scoreA = this.calculateSimilarity(this.recognizedText, a.term);
+                const scoreB = this.calculateSimilarity(this.recognizedText, b.term);
+                return scoreB - scoreA; // Higher score first
+            });
+        } else {
+            // No recognition - shuffle
+            allCandidates.sort(() => Math.random() - 0.5);
+        }
+
+        // Ensure correct answer is included (if not already in top 5)
+        const topCandidates = allCandidates.slice(0, 5);
+        const correctIncluded = topCandidates.some(c => c.term === this.currentWord!.term);
+
+        if (!correctIncluded) {
+            // Replace last candidate with correct answer
+            topCandidates[4] = this.currentWord;
+            // Re-shuffle so correct isn't always last
+            topCandidates.sort(() => Math.random() - 0.5);
+        }
+
+        return topCandidates;
+    }
+
+    /**
+     * Display candidates
+     */
+    private showCandidates(candidates: PracticeWord[]): void {
+        if (!this.candidateContainer) return;
+
+        const titleText = this.recognizedText
+            ? `识别到: "${this.recognizedText}" - 选择正确的词语:`
+            : '选择你写的词语:';
+
+        this.candidateContainer.innerHTML = `<div class="candidates-title">${titleText}</div>`;
 
         candidates.forEach(phrase => {
             const btn = document.createElement('button');
@@ -260,28 +442,6 @@ export class HandwritingInput implements InputHandler {
             btn.addEventListener('click', () => this.selectCandidate(phrase));
             this.candidateContainer!.appendChild(btn);
         });
-    }
-
-    /**
-     * Generate phrase candidates from lesson vocabulary
-     * Always includes the correct answer + random others
-     */
-    private generateCandidates(): PracticeWord[] {
-        if (!this.currentWord) return [];
-
-        const candidates: PracticeWord[] = [this.currentWord];
-
-        // Get other phrases from lesson (excluding current)
-        const otherPhrases = this.lessonPhrases.filter(
-            p => p.term !== this.currentWord!.term
-        );
-
-        // Shuffle and take up to 4 more
-        const shuffled = otherPhrases.sort(() => Math.random() - 0.5);
-        candidates.push(...shuffled.slice(0, 4));
-
-        // Shuffle final list so correct answer isn't always first
-        return candidates.sort(() => Math.random() - 0.5);
     }
 
     /**
