@@ -1,6 +1,6 @@
 /**
- * Netlify Function: Google Cloud Vision API Proxy
- * Recognizes handwritten Chinese text from canvas images
+ * Netlify Function: Gemini Vision API for Handwriting Recognition
+ * Returns top 5 possible interpretations of handwritten Chinese
  * 
  * Environment variable required: GOOGLE_CLOUD_API_KEY
  */
@@ -34,25 +34,35 @@ exports.handler = async (event) => {
             };
         }
 
-        // Call Google Cloud Vision API
-        const visionUrl = `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`;
+        // Call Gemini API for handwriting recognition
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
         const requestBody = {
-            requests: [{
-                image: {
-                    content: image // base64 encoded image (without data:image/png;base64, prefix)
-                },
-                features: [{
-                    type: 'DOCUMENT_TEXT_DETECTION',
-                    maxResults: 5
-                }],
-                imageContext: {
-                    languageHints: ['zh-Hans', 'zh-Hant'] // Simplified and Traditional Chinese
-                }
-            }]
+            contents: [{
+                parts: [
+                    {
+                        text: `You are a Chinese handwriting recognition expert. Look at this handwritten Chinese text and provide your top 5 best guesses for what was written. The handwriting may be imperfect.
+
+Return ONLY a JSON array with exactly 5 Chinese phrases/words that could match this handwriting, ordered from most likely to least likely. No explanations, just the JSON array.
+
+Example response format:
+["天气预报", "天氣预報", "大气预报", "天气须报", "天气预极"]`
+                    },
+                    {
+                        inlineData: {
+                            mimeType: "image/png",
+                            data: image
+                        }
+                    }
+                ]
+            }],
+            generationConfig: {
+                temperature: 0.2,
+                maxOutputTokens: 200
+            }
         };
 
-        const response = await fetch(visionUrl, {
+        const response = await fetch(geminiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -63,19 +73,38 @@ exports.handler = async (event) => {
         const data = await response.json();
 
         if (!response.ok) {
-            console.error('Vision API error:', data);
+            console.error('Gemini API error:', data);
             return {
                 statusCode: response.status,
-                body: JSON.stringify({ error: data.error?.message || 'Vision API error' })
+                body: JSON.stringify({ error: data.error?.message || 'Gemini API error' })
             };
         }
 
-        // Extract recognized text
-        const textAnnotations = data.responses?.[0]?.textAnnotations || [];
-        const fullText = textAnnotations[0]?.description || '';
+        // Extract the text response
+        const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+        console.log('Gemini raw response:', textResponse);
 
-        // Get individual text blocks as alternatives
-        const alternatives = textAnnotations.slice(1, 6).map(a => a.description);
+        // Parse the JSON array from response
+        let candidates = [];
+        try {
+            // Extract JSON array from response (handle markdown code blocks)
+            const jsonMatch = textResponse.match(/\[[\s\S]*?\]/);
+            if (jsonMatch) {
+                candidates = JSON.parse(jsonMatch[0]);
+            }
+        } catch (e) {
+            console.error('Failed to parse Gemini response:', e);
+            // Try to extract Chinese characters as fallback
+            const chineseMatch = textResponse.match(/[\u4e00-\u9fff]+/g);
+            if (chineseMatch) {
+                candidates = chineseMatch.slice(0, 5);
+            }
+        }
+
+        // Ensure we have at least something
+        if (!Array.isArray(candidates) || candidates.length === 0) {
+            candidates = ['(无法识别)'];
+        }
 
         return {
             statusCode: 200,
@@ -84,9 +113,9 @@ exports.handler = async (event) => {
                 'Access-Control-Allow-Origin': '*'
             },
             body: JSON.stringify({
-                text: fullText.trim().replace(/\s+/g, ''), // Remove whitespace
-                alternatives: alternatives.filter(Boolean),
-                raw: textAnnotations.slice(0, 10) // For debugging
+                text: candidates[0] || '',
+                alternatives: candidates.slice(1, 5),
+                candidates: candidates.slice(0, 5)
             })
         };
 
