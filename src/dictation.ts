@@ -60,6 +60,10 @@ export class DictationManager {
 
     onComplete: ((score: number, total: number) => void) | null = null;
 
+    getPassage(): DictationPassage | null {
+        return this.passage;
+    }
+
     /**
      * Initialize dictation with a passage
      */
