@@ -1,25 +1,24 @@
 /**
  * Handwriting Input Module
- * Canvas-based freeform writing with HanziLookup character recognition
+ * Canvas-based freeform writing with Google Cloud Vision OCR
  * 
  * Flow:
  * 1. User writes on canvas
- * 2. System recognizes characters using HanziLookupJS
- * 3. Candidates ranked by similarity to recognized text
- * 4. User selects from ranked options
+ * 2. Canvas exported as image, sent to Vision API (via Netlify Function)
+ * 3. Top 5 OCR recognition results shown as candidates
+ * 4. User selects the phrase they wrote
  */
 
 import type { PracticeWord } from './data';
 import type { InputHandler, InputResult } from './types';
 
-// Declare HanziLookup as global (loaded via CDN)
-declare const HanziLookup: {
-    init: (name: string, url: string, callback: (success: boolean) => void) => void;
-    AnalyzedCharacter: new (strokes: number[][][]) => unknown;
-    Matcher: new (name: string) => {
-        match: (char: unknown, count: number, callback: (matches: { character: string; score: number }[]) => void) => void;
-    };
-};
+/**
+ * OCR recognition result
+ */
+interface OCRResult {
+    text: string;
+    alternatives: string[];
+}
 
 /**
  * Point on the canvas
@@ -36,57 +35,8 @@ interface Stroke {
     points: Point[];
 }
 
-// Track if HanziLookup is initialized
-let hanziLookupReady = false;
-let hanziLookupInitializing = false;
-
 /**
- * Initialize HanziLookup (called once)
- */
-function initHanziLookup(): Promise<boolean> {
-    return new Promise((resolve) => {
-        if (hanziLookupReady) {
-            resolve(true);
-            return;
-        }
-        if (hanziLookupInitializing) {
-            // Wait for existing initialization
-            const checkReady = setInterval(() => {
-                if (hanziLookupReady) {
-                    clearInterval(checkReady);
-                    resolve(true);
-                }
-            }, 100);
-            return;
-        }
-
-        hanziLookupInitializing = true;
-
-        // Check if HanziLookup is available
-        if (typeof HanziLookup === 'undefined') {
-            console.warn('HanziLookup not loaded - falling back to basic mode');
-            resolve(false);
-            return;
-        }
-
-        // Load MMAH character data
-        HanziLookup.init(
-            'mmah',
-            'https://cdn.jsdelivr.net/gh/gugray/HanziLookupJS@master/dist/mmah.json',
-            (success) => {
-                hanziLookupReady = success;
-                hanziLookupInitializing = false;
-                if (!success) {
-                    console.warn('Failed to load HanziLookup data');
-                }
-                resolve(success);
-            }
-        );
-    });
-}
-
-/**
- * Handwriting-based input handler with character recognition
+ * Handwriting-based input handler with Vision API OCR
  */
 export class HandwritingInput implements InputHandler {
     private canvas: HTMLCanvasElement | null = null;
@@ -96,18 +46,17 @@ export class HandwritingInput implements InputHandler {
     private isDrawing = false;
     private currentWord: PracticeWord | null = null;
     private candidateContainer: HTMLElement | null = null;
-    private lessonPhrases: PracticeWord[] = [];
-    private recognizedText = '';
+    private ocrResults: string[] = [];
 
     onComplete: ((result: InputResult) => void) | null = null;
     onCharComplete: ((index: number) => void) | null = null;
     onMistake: ((index: number) => void) | null = null;
 
     /**
-     * Set the lesson phrases for candidate generation
+     * Set lesson phrases (not used in OCR mode, but required by interface)
      */
-    setLessonPhrases(phrases: PracticeWord[]): void {
-        this.lessonPhrases = phrases;
+    setLessonPhrases(_phrases: PracticeWord[]): void {
+        // Not used in OCR mode - candidates come from recognition
     }
 
     /**
@@ -118,10 +67,7 @@ export class HandwritingInput implements InputHandler {
 
         this.currentWord = word;
         this.strokes = [];
-        this.recognizedText = '';
-
-        // Initialize HanziLookup in background
-        initHanziLookup();
+        this.ocrResults = [];
 
         // Create wrapper
         const wrapper = document.createElement('div');
@@ -139,7 +85,11 @@ export class HandwritingInput implements InputHandler {
         this.ctx = this.canvas.getContext('2d');
 
         if (this.ctx) {
-            this.ctx.strokeStyle = '#38bdf8';
+            // White background for OCR (important!)
+            this.ctx.fillStyle = '#ffffff';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+            this.ctx.strokeStyle = '#000000'; // Black strokes for OCR
             this.ctx.lineWidth = 4;
             this.ctx.lineCap = 'round';
             this.ctx.lineJoin = 'round';
@@ -204,7 +154,7 @@ export class HandwritingInput implements InputHandler {
         this.currentWord = null;
         this.strokes = [];
         this.currentStroke = null;
-        this.recognizedText = '';
+        this.ocrResults = [];
     }
 
     /**
@@ -286,9 +236,12 @@ export class HandwritingInput implements InputHandler {
     private clearCanvas(): void {
         if (!this.ctx || !this.canvas) return;
 
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // White background
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
         this.strokes = [];
-        this.recognizedText = '';
+        this.ocrResults = [];
 
         if (this.candidateContainer) {
             this.candidateContainer.style.display = 'none';
@@ -296,233 +249,90 @@ export class HandwritingInput implements InputHandler {
     }
 
     /**
-     * Recognize drawn characters and show ranked candidates
+     * Call Vision API and show OCR results as candidates
      */
     private async recognizeAndShowCandidates(): Promise<void> {
-        if (!this.candidateContainer || !this.currentWord) return;
+        if (!this.candidateContainer || !this.currentWord || !this.canvas) return;
 
         // Show loading state
         this.candidateContainer.innerHTML = '<div class="candidates-title">识别中...</div>';
         this.candidateContainer.style.display = 'block';
 
-        // Try to recognize characters
-        if (hanziLookupReady && this.strokes.length > 0) {
-            try {
-                this.recognizedText = await this.recognizeCharacters();
-            } catch (e) {
-                console.warn('Recognition failed:', e);
-                this.recognizedText = '';
-            }
-        }
+        try {
+            // Get canvas as base64 image
+            const dataUrl = this.canvas.toDataURL('image/png');
+            const base64Image = dataUrl.replace(/^data:image\/png;base64,/, '');
 
-        // Generate and show ranked candidates
-        const candidates = this.generateRankedCandidates();
-        this.showCandidates(candidates);
-    }
-
-    /**
-     * Recognize characters from strokes using HanziLookup
-     * Segments strokes by horizontal position to handle multi-character phrases
-     */
-    private async recognizeCharacters(): Promise<string> {
-        if (!this.currentWord || this.strokes.length === 0) {
-            return '';
-        }
-
-        // Segment strokes into character groups based on X position
-        const charGroups = this.segmentStrokesIntoCharacters();
-
-        console.log(`[HandwritingRecog] Segmented ${this.strokes.length} strokes into ${charGroups.length} character groups`);
-
-        // Recognize each character group
-        const recognizedChars: string[] = [];
-
-        for (const group of charGroups) {
-            try {
-                const char = await this.recognizeSingleCharacter(group);
-                if (char) {
-                    recognizedChars.push(char);
-                    console.log(`[HandwritingRecog] Recognized: ${char}`);
-                }
-            } catch (e) {
-                console.warn('[HandwritingRecog] Error recognizing character:', e);
-            }
-        }
-
-        const result = recognizedChars.join('');
-        console.log(`[HandwritingRecog] Full recognition result: "${result}"`);
-        return result;
-    }
-
-    /**
-     * Segment strokes into groups representing individual characters
-     * Uses horizontal clustering based on stroke center X positions
-     */
-    private segmentStrokesIntoCharacters(): Stroke[][] {
-        if (this.strokes.length === 0) return [];
-        if (!this.currentWord) return [this.strokes];
-
-        const expectedCharCount = this.currentWord.term.length;
-
-        // Calculate center X for each stroke
-        const strokeData = this.strokes.map((stroke, index) => {
-            let sumX = 0;
-            for (const p of stroke.points) {
-                sumX += p.x;
-            }
-            return {
-                index,
-                stroke,
-                centerX: sumX / stroke.points.length
-            };
-        });
-
-        // Sort by X position (left to right)
-        strokeData.sort((a, b) => a.centerX - b.centerX);
-
-        // Divide strokes into equal groups based on expected character count
-        const groups: Stroke[][] = [];
-        const groupSize = Math.ceil(strokeData.length / expectedCharCount);
-
-        for (let i = 0; i < expectedCharCount; i++) {
-            const start = i * groupSize;
-            const end = Math.min(start + groupSize, strokeData.length);
-            const groupStrokes = strokeData.slice(start, end).map(d => d.stroke);
-            if (groupStrokes.length > 0) {
-                groups.push(groupStrokes);
-            }
-        }
-
-        return groups;
-    }
-
-    /**
-     * Recognize a single character from a group of strokes
-     */
-    private recognizeSingleCharacter(strokes: Stroke[]): Promise<string> {
-        return new Promise((resolve) => {
-            if (strokes.length === 0) {
-                resolve('');
-                return;
-            }
-
-            // Convert to HanziLookup format
-            const hlStrokes: number[][][] = strokes.map(stroke =>
-                stroke.points.map(p => [p.x, p.y])
-            );
-
-            try {
-                const analyzedChar = new HanziLookup.AnalyzedCharacter(hlStrokes);
-                const matcher = new HanziLookup.Matcher('mmah');
-
-                matcher.match(analyzedChar, 3, (matches) => {
-                    if (matches && matches.length > 0) {
-                        resolve(matches[0].character);
-                    } else {
-                        resolve('');
-                    }
-                });
-            } catch (e) {
-                console.warn('[HandwritingRecog] Single char recognition error:', e);
-                resolve('');
-            }
-        });
-    }
-
-    /**
-     * Calculate similarity between two strings
-     * Uses character overlap scoring
-     */
-    private calculateSimilarity(recognized: string, candidate: string): number {
-        if (!recognized || recognized.length === 0) return 0;
-
-        let score = 0;
-        const recognizedChars = recognized.split('');
-        const candidateChars = candidate.split('');
-
-        // Check for matching characters
-        for (const char of recognizedChars) {
-            if (candidateChars.includes(char)) {
-                score += 1;
-            }
-        }
-
-        // Bonus for exact match
-        if (recognized === candidate) {
-            score += 10;
-        }
-
-        // Bonus for same length
-        if (recognizedChars.length === candidateChars.length) {
-            score += 0.5;
-        }
-
-        return score;
-    }
-
-    /**
-     * Generate candidates ranked by similarity to recognized text
-     */
-    private generateRankedCandidates(): PracticeWord[] {
-        if (!this.currentWord) return [];
-
-        // Always include current word
-        const allCandidates = [...this.lessonPhrases];
-
-        // If we have recognized text, rank by similarity
-        if (this.recognizedText) {
-            allCandidates.sort((a, b) => {
-                const scoreA = this.calculateSimilarity(this.recognizedText, a.term);
-                const scoreB = this.calculateSimilarity(this.recognizedText, b.term);
-                return scoreB - scoreA; // Higher score first
+            // Call Vision API via Netlify Function
+            const response = await fetch('/.netlify/functions/vision-ocr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: base64Image })
             });
-        } else {
-            // No recognition - shuffle
-            allCandidates.sort(() => Math.random() - 0.5);
+
+            if (!response.ok) {
+                throw new Error(`OCR failed: ${response.status}`);
+            }
+
+            const result: OCRResult = await response.json();
+            console.log('[Vision OCR] Result:', result);
+
+            // Build candidates from OCR results
+            this.ocrResults = [result.text, ...result.alternatives].filter(Boolean);
+
+            if (this.ocrResults.length === 0) {
+                this.ocrResults = ['(无法识别)'];
+            }
+
+            this.showCandidates();
+
+        } catch (error) {
+            console.error('[Vision OCR] Error:', error);
+            this.candidateContainer.innerHTML = `<div class="candidates-title">识别失败: ${error}</div>`;
+
+            // Fall back to showing just the correct answer
+            this.ocrResults = [this.currentWord.term];
+            this.showCandidates();
         }
-
-        // Ensure correct answer is included (if not already in top 5)
-        const topCandidates = allCandidates.slice(0, 5);
-        const correctIncluded = topCandidates.some(c => c.term === this.currentWord!.term);
-
-        if (!correctIncluded) {
-            // Replace last candidate with correct answer
-            topCandidates[4] = this.currentWord;
-            // Re-shuffle so correct isn't always last
-            topCandidates.sort(() => Math.random() - 0.5);
-        }
-
-        return topCandidates;
     }
 
     /**
-     * Display candidates
+     * Display OCR candidates
      */
-    private showCandidates(candidates: PracticeWord[]): void {
-        if (!this.candidateContainer) return;
+    private showCandidates(): void {
+        if (!this.candidateContainer || !this.currentWord) return;
 
-        const titleText = this.recognizedText
-            ? `识别到: "${this.recognizedText}" - 选择正确的词语:`
-            : '选择你写的词语:';
+        const topResult = this.ocrResults[0] || '';
+        this.candidateContainer.innerHTML = `<div class="candidates-title">识别结果 (前5个匹配):</div>`;
 
-        this.candidateContainer.innerHTML = `<div class="candidates-title">${titleText}</div>`;
-
-        candidates.forEach(phrase => {
+        // Show top 5 OCR results
+        this.ocrResults.slice(0, 5).forEach((text, index) => {
             const btn = document.createElement('button');
             btn.className = 'candidate-item';
-            btn.innerHTML = `<span class="candidate-term">${phrase.term}</span><span class="candidate-pinyin">${phrase.pinyin}</span>`;
-            btn.addEventListener('click', () => this.selectCandidate(phrase));
+            btn.innerHTML = `<span class="candidate-term">${text}</span><span class="candidate-rank">#${index + 1}</span>`;
+            btn.addEventListener('click', () => this.selectCandidate(text));
             this.candidateContainer!.appendChild(btn);
         });
+
+        // Always show correct answer if not in results
+        if (!this.ocrResults.includes(this.currentWord.term)) {
+            const correctBtn = document.createElement('button');
+            correctBtn.className = 'candidate-item candidate-correct-answer';
+            correctBtn.innerHTML = `<span class="candidate-term">${this.currentWord.term}</span><span class="candidate-rank">正确答案</span>`;
+            correctBtn.addEventListener('click', () => this.selectCandidate(this.currentWord!.term));
+            this.candidateContainer.appendChild(correctBtn);
+        }
     }
 
     /**
      * Handle candidate selection
      */
-    private selectCandidate(phrase: PracticeWord): void {
+    private selectCandidate(text: string): void {
         if (!this.currentWord) return;
 
-        const isCorrect = phrase.term === this.currentWord.term;
+        const isCorrect = text === this.currentWord.term;
 
         // Visual feedback on buttons
         const buttons = this.candidateContainer?.querySelectorAll('.candidate-item');
@@ -530,7 +340,7 @@ export class HandwritingInput implements InputHandler {
             const term = btn.querySelector('.candidate-term')?.textContent;
             if (term === this.currentWord!.term) {
                 btn.classList.add('correct');
-            } else if (term === phrase.term && !isCorrect) {
+            } else if (term === text && !isCorrect) {
                 btn.classList.add('wrong');
             }
             (btn as HTMLButtonElement).disabled = true;
@@ -540,7 +350,7 @@ export class HandwritingInput implements InputHandler {
         setTimeout(() => {
             if (this.onComplete) {
                 this.onComplete({
-                    input: phrase.term,
+                    input: text,
                     success: isCorrect,
                     mistakeCount: isCorrect ? 0 : 1,
                     hintUsed: false,
