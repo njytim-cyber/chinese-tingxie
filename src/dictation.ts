@@ -55,14 +55,13 @@ export class DictationManager {
         this.currentBlankIndex = 0;
 
         // Build character boxes
+        // Build character boxes
         const isFull = !!passage.isFullDictation;
-        const punctuationRegex = /[，。！？、：；“”‘’（）《》]/;
 
         this.charBoxes = passage.text.split('').map((char, index) => {
-            // In full dictation, everything is a blank except punctuation
+            // In full dictation, everything is a blank (user writes entire passage)
             // In partial dictation, only specified indices are blanks
-            const isPunctuation = punctuationRegex.test(char);
-            const isBlank = isFull ? !isPunctuation : passage.blanks.includes(index);
+            const isBlank = isFull ? true : passage.blanks.includes(index);
 
             return {
                 char,
@@ -245,13 +244,25 @@ export class DictationManager {
         const input = (e.target as HTMLInputElement).value;
         if (!input) return;
 
-        // Get the last character entered
-        const char = input.slice(-1);
+        // Normalize punctuation (English -> Chinese)
+        const punctMap: Record<string, string> = {
+            ',': '，',
+            '.': '。',
+            '?': '？',
+            '!': '！',
+            ':': '：',
+            ';': '；',
+            '(': '（',
+            ')': '）'
+        };
+
+        const lastChar = input.slice(-1);
+        const mappedChar = punctMap[lastChar] || lastChar;
 
         // Fill current blank
         const charIndex = this.getCurrentBlankCharIndex();
         if (charIndex >= 0) {
-            this.charBoxes[charIndex].userInput = char;
+            this.charBoxes[charIndex].userInput = mappedChar;
         }
 
         // Move to next blank
