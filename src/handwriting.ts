@@ -322,36 +322,108 @@ export class HandwritingInput implements InputHandler {
 
     /**
      * Recognize characters from strokes using HanziLookup
+     * Segments strokes by horizontal position to handle multi-character phrases
      */
-    private recognizeCharacters(): Promise<string> {
+    private async recognizeCharacters(): Promise<string> {
+        if (!this.currentWord || this.strokes.length === 0) {
+            return '';
+        }
+
+        // Segment strokes into character groups based on X position
+        const charGroups = this.segmentStrokesIntoCharacters();
+
+        console.log(`[HandwritingRecog] Segmented ${this.strokes.length} strokes into ${charGroups.length} character groups`);
+
+        // Recognize each character group
+        const recognizedChars: string[] = [];
+
+        for (const group of charGroups) {
+            try {
+                const char = await this.recognizeSingleCharacter(group);
+                if (char) {
+                    recognizedChars.push(char);
+                    console.log(`[HandwritingRecog] Recognized: ${char}`);
+                }
+            } catch (e) {
+                console.warn('[HandwritingRecog] Error recognizing character:', e);
+            }
+        }
+
+        const result = recognizedChars.join('');
+        console.log(`[HandwritingRecog] Full recognition result: "${result}"`);
+        return result;
+    }
+
+    /**
+     * Segment strokes into groups representing individual characters
+     * Uses horizontal clustering based on stroke center X positions
+     */
+    private segmentStrokesIntoCharacters(): Stroke[][] {
+        if (this.strokes.length === 0) return [];
+        if (!this.currentWord) return [this.strokes];
+
+        const expectedCharCount = this.currentWord.term.length;
+
+        // Calculate center X for each stroke
+        const strokeData = this.strokes.map((stroke, index) => {
+            let sumX = 0;
+            for (const p of stroke.points) {
+                sumX += p.x;
+            }
+            return {
+                index,
+                stroke,
+                centerX: sumX / stroke.points.length
+            };
+        });
+
+        // Sort by X position (left to right)
+        strokeData.sort((a, b) => a.centerX - b.centerX);
+
+        // Divide strokes into equal groups based on expected character count
+        const groups: Stroke[][] = [];
+        const groupSize = Math.ceil(strokeData.length / expectedCharCount);
+
+        for (let i = 0; i < expectedCharCount; i++) {
+            const start = i * groupSize;
+            const end = Math.min(start + groupSize, strokeData.length);
+            const groupStrokes = strokeData.slice(start, end).map(d => d.stroke);
+            if (groupStrokes.length > 0) {
+                groups.push(groupStrokes);
+            }
+        }
+
+        return groups;
+    }
+
+    /**
+     * Recognize a single character from a group of strokes
+     */
+    private recognizeSingleCharacter(strokes: Stroke[]): Promise<string> {
         return new Promise((resolve) => {
-            if (!this.currentWord || this.strokes.length === 0) {
+            if (strokes.length === 0) {
                 resolve('');
                 return;
             }
 
-            // Convert strokes to HanziLookup format: number[][][]
-            // Each stroke is array of points, each point is [x, y]
-            const hlStrokes: number[][][] = this.strokes.map(stroke =>
+            // Convert to HanziLookup format
+            const hlStrokes: number[][][] = strokes.map(stroke =>
                 stroke.points.map(p => [p.x, p.y])
             );
 
-            // Try to recognize the whole thing as one character first
-            // For multi-character phrases, we'll match against full phrases
             try {
                 const analyzedChar = new HanziLookup.AnalyzedCharacter(hlStrokes);
                 const matcher = new HanziLookup.Matcher('mmah');
 
-                matcher.match(analyzedChar, 5, (matches) => {
+                matcher.match(analyzedChar, 3, (matches) => {
                     if (matches && matches.length > 0) {
-                        // Return the best match
                         resolve(matches[0].character);
                     } else {
                         resolve('');
                     }
                 });
             } catch (e) {
-                console.warn('HanziLookup error:', e);
+                console.warn('[HandwritingRecog] Single char recognition error:', e);
                 resolve('');
             }
         });
