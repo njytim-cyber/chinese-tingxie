@@ -175,25 +175,12 @@ export class HanziWriterInput implements InputHandler {
     }
 
     /**
-     * Navigate to next character or complete if last
+     * Navigate to next character
      */
     private nextChar(): void {
         if (this.currentCharIndex < this.validCharIndices.length - 1) {
             this.currentCharIndex++;
             this.updateCarouselView();
-        } else {
-            // On last character - only complete if all chars are written
-            if (this.completedChars === this.validCharIndices.length) {
-                this.notifyComplete();
-            } else {
-                // Not all chars written - shake to indicate incomplete
-                const activeBox = document.querySelector('.char-slot.active');
-                if (activeBox) {
-                    activeBox.classList.remove('shake');
-                    void (activeBox as HTMLElement).offsetWidth;
-                    activeBox.classList.add('shake');
-                }
-            }
         }
     }
 
@@ -224,15 +211,8 @@ export class HanziWriterInput implements InputHandler {
 
         if (nextBtn) {
             const isLast = this.currentCharIndex === this.validCharIndices.length - 1;
-            // On last character, show submit button; otherwise, show next arrow
-            if (isLast) {
-                nextBtn.textContent = '✓';
-                nextBtn.classList.add('submit-btn');
-            } else {
-                nextBtn.textContent = '❯';
-                nextBtn.classList.remove('submit-btn');
-            }
-            nextBtn.style.visibility = 'visible';
+            // Hide next button on last character (auto-complete handles it)
+            nextBtn.style.visibility = isLast ? 'hidden' : 'visible';
         }
 
         // Update progress
@@ -323,10 +303,10 @@ export class HanziWriterInput implements InputHandler {
             setTimeout(() => {
                 this.currentCharIndex++;
                 this.updateCarouselView();
-            }, 400);
+            }, 600); // Slightly longer delay to see the success animation
         } else if (this.completedChars === this.validCharIndices.length) {
-            // All done
-            setTimeout(() => this.notifyComplete(), 400);
+            // All done - auto complete on last char
+            setTimeout(() => this.notifyComplete(), 600);
         }
 
         this.updateCarouselView();

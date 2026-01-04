@@ -439,6 +439,12 @@ export const Game = {
         pinyinEl.textContent = state.currentWord.pinyin;
         modal.style.display = 'flex';
 
+        // Mark as revealed (penalty)
+        state.hintUsed = true;
+        // Also force a mistake count to ensure it's not marked as perfect/green
+        if (state.mistakesMade === 0) state.mistakesMade = 999;
+        state.isRevealed = true;
+
         // Dismiss on click or keypress
         const dismiss = () => {
             modal.style.display = 'none';
@@ -570,7 +576,13 @@ function handleWordSuccess(result?: { mistakeCount: number; hintUsed: boolean })
 
     // Calculate quality for SM-2 (0-5)
     let quality: number;
-    if (hintUsed) {
+
+    // Check if revealed first (highest penalty)
+    if ((state as any).isRevealed) {
+        quality = 1; // Incorrect response; the correct one remembered
+        // Reset flag
+        (state as any).isRevealed = false;
+    } else if (hintUsed) {
         quality = 2; // Failed - used hint
     } else {
         if (mistakeCount === 0) {

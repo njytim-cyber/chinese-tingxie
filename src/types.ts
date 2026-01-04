@@ -77,6 +77,7 @@ export interface GameState {
         mistakeCount: number;
         hintUsed: boolean;
     }[];
+    isRevealed?: boolean;
 }
 
 /**
