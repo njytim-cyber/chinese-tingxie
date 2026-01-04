@@ -258,6 +258,15 @@ export class DictationManager {
 
             for (let i = chunkState.start; i < chunkState.end; i++) {
                 const box = this.charBoxes[i];
+
+                // Skip punctuation entirely - mark as correct and don't render
+                const punctuationRegex = /[，。！？、：；""''（）《》]/;
+                if (punctuationRegex.test(box.char)) {
+                    box.isCorrect = true;
+                    box.userInput = box.char;
+                    continue; // Skip rendering this character
+                }
+
                 const boxEl = document.createElement('div');
                 boxEl.className = 'dictation-char-box';
                 // Mark initial active char for mobile

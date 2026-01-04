@@ -1989,6 +1989,8 @@ body {
         flex-direction: column;
         justify-content: flex-start;
         padding-top: 10px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
     }
 
     .focus-chunk-container {
@@ -2049,10 +2051,10 @@ body {
     }
 
     .focus-context {
-        font-size: 0.9rem;
+        font-size: 1.5rem;
         padding: 5px;
-        min-height: 30px;
-        margin-bottom: 10px;
+        min-height: 40px;
+        margin-bottom: 20px;
     }
 
     .focus-header {

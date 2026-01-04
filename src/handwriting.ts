@@ -304,7 +304,8 @@ export class HandwritingInput implements InputHandler {
     private showCandidates(): void {
         if (!this.candidateContainer || !this.currentWord) return;
 
-        const topResult = this.ocrResults[0] || '';
+        const topResult = this.ocrResults[0] || ''; // Keep for potential future use
+        void topResult; // Suppress unused warning
         this.candidateContainer.innerHTML = `<div class="candidates-title">识别结果 (前5个匹配):</div>`;
 
         // Show top 5 OCR results

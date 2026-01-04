@@ -38,6 +38,11 @@ Edit `src/game.ts` for dynamic UI. Key methods:
 - `showFeedback()` - Success/error messages
 
 ## Verify
+41: // turbo
+42: 1. Run dev server:
+
+## See Also
+- [Mobile UX Guidelines](mobile-ux-guidelines.md) for touch and responsiveness rules.
 // turbo
 1. Run dev server:
    ```bash
