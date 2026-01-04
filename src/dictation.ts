@@ -229,11 +229,13 @@ export class DictationManager {
             // Hidden by default, shown via CSS on mobile
 
             const prevBtn = document.createElement('button');
+            prevBtn.id = 'mobile-prev-btn'; // ID for selection
             prevBtn.className = 'mobile-nav-btn';
             prevBtn.textContent = '❮';
             prevBtn.onclick = () => this.prevMobileChar();
 
             const nextBtn = document.createElement('button');
+            nextBtn.id = 'mobile-next-btn'; // ID for selection
             nextBtn.className = 'mobile-nav-btn';
             nextBtn.textContent = '❯';
             nextBtn.onclick = () => this.nextMobileChar();
@@ -357,12 +359,39 @@ export class DictationManager {
         if (this.mobileCharIndex < len - 1) {
             this.mobileCharIndex++;
             this.updateMobileView();
+        } else {
+            // On last char, next button acts as Submit
+            this.nextChunk();
         }
     }
 
     private updateMobileView(): void {
         const container = document.querySelector('.focus-chunk-container');
         if (!container) return;
+
+        // Smart Navigation Logic
+        const prevBtn = document.getElementById('mobile-prev-btn');
+        const nextBtn = document.getElementById('mobile-next-btn');
+        const chunk = this.chunks[this.currentChunkIndex];
+        const len = chunk.end - chunk.start;
+
+        if (prevBtn) {
+            // Hide prev button at start
+            prevBtn.style.visibility = this.mobileCharIndex === 0 ? 'hidden' : 'visible';
+        }
+
+        if (nextBtn) {
+            // Transform next button at end
+            if (this.mobileCharIndex === len - 1) {
+                nextBtn.innerHTML = '✓'; // Submit icon
+                nextBtn.style.background = 'var(--success)';
+                nextBtn.style.borderColor = '#16a34a';
+            } else {
+                nextBtn.innerHTML = '❯';
+                nextBtn.style.background = ''; // Reset to default (via CSS class)
+                nextBtn.style.borderColor = '';
+            }
+        }
 
         const boxes = container.querySelectorAll('.dictation-char-box');
         boxes.forEach((box, index) => {
