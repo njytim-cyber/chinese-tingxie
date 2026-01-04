@@ -1908,3 +1908,27 @@ body {
     font-size: 2rem;
 }
 
+
+/* Corrected Focus Box (Match Spelling Mode) */
+.focus-box {
+    background: var(--card-bg) !important;
+    border: 3px solid #334155 !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+    border-radius: 16px !important;
+}
+.focus-box.active {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.3) !important;
+    transform: none !important;
+}
+.char-pinyin {
+    color: var(--gold) !important;
+    font-size: 1.2rem !important;
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+    margin-top: 8px;
+    font-weight: normal;
+}
+.focus-view .dictation-grid {
+    gap: 20px;
+}
+

@@ -46,7 +46,6 @@ export class DictationManager {
     private container: HTMLElement | null = null;
     private passage: DictationPassage | null = null;
     private charBoxes: CharBox[] = [];
-    private currentBlankIndex = 0;
 
     // Chunking state
     private chunks: { start: number; end: number; text: string; pinyin: string[] }[] = [];
@@ -124,8 +123,6 @@ export class DictationManager {
                 index
             };
         });
-
-
 
         this.render();
 
@@ -215,7 +212,7 @@ export class DictationManager {
 
             const chunkContainer = document.createElement('div');
             chunkContainer.className = 'focus-chunk-container';
-            chunkContainer.style.background = 'white';
+            chunkContainer.style.background = 'white'; // Keep container white/clean
             chunkContainer.style.padding = '15px';
             chunkContainer.style.borderRadius = '16px';
             chunkContainer.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
@@ -233,56 +230,51 @@ export class DictationManager {
             for (let i = chunkState.start; i < chunkState.end; i++) {
                 const box = this.charBoxes[i];
                 const boxEl = document.createElement('div');
-                boxEl.className = 'dictation-char-box focus-box';
-                // Adjust size for drawing
+                boxEl.className = 'dictation-char-box';
+                // Remove fixed size/ratio on wrapper to allow flexible Pinyin
                 boxEl.style.width = '100%';
-                boxEl.style.aspectRatio = '0.7'; // Taller for pinyin
                 boxEl.style.display = 'flex';
                 boxEl.style.flexDirection = 'column';
                 boxEl.style.alignItems = 'center';
                 boxEl.style.justifyContent = 'center';
-                boxEl.style.border = '2px solid #e2e8f0';
-                boxEl.style.borderRadius = '8px';
-                boxEl.style.position = 'relative'; // For writer positioning
+                boxEl.style.position = 'relative';
 
-                // Pinyin
-                const pinyin = chunkState.pinyin[i - chunkState.start] || '';
-                const pinyinEl = document.createElement('div');
-                pinyinEl.className = 'char-pinyin';
-                pinyinEl.textContent = pinyin;
-                pinyinEl.style.fontSize = '0.9rem';
-                pinyinEl.style.color = '#94a3b8';
-                pinyinEl.style.marginTop = '4px';
-                pinyinEl.style.height = '20px';
-                boxEl.appendChild(pinyinEl);
-
-                // Content / Writer Container
+                // Content / Writer Container (FIRST)
                 const contentEl = document.createElement('div');
                 // Unique ID for HanziWriter
                 const writerId = `dictation-char-${i}`;
                 contentEl.id = writerId;
-                contentEl.className = 'char-content';
+                contentEl.className = 'char-content focus-box'; // Style HERE
                 contentEl.style.width = '100%';
-                contentEl.style.flex = '1';
+                contentEl.style.aspectRatio = '1'; // Square box
                 contentEl.style.position = 'relative';
 
-                // We won't use textContent for blanks, we use HanziWriter
                 if (!box.isBlank) {
-                    // Pre-filled (punctuation or non-blank)
+                    // Pre-filled (punctuation or given)
                     contentEl.textContent = box.char;
                     contentEl.style.display = 'flex';
                     contentEl.style.alignItems = 'center';
                     contentEl.style.justifyContent = 'center';
                     contentEl.style.fontSize = '2rem';
-                    contentEl.style.color = '#64748b';
-                    boxEl.classList.add('given');
-                    boxEl.style.background = '#e2e8f0';
+                    contentEl.style.color = '#94a3b8';
+                    contentEl.style.background = '#e2e8f0'; // Given visual
+                    contentEl.style.border = '3px solid #cbd5e1'; // Explicit subtle border
+                    contentEl.style.borderRadius = '16px';
+                    contentEl.classList.remove('focus-box'); // Remove glow focus for given chars
                 } else {
-                    // Blank - Writer destination
                     boxEl.classList.add('blank');
                 }
 
                 boxEl.appendChild(contentEl);
+
+                // Pinyin (SECOND)
+                const pinyin = chunkState.pinyin[i - chunkState.start] || '';
+                const pinyinEl = document.createElement('div');
+                pinyinEl.className = 'char-pinyin';
+                pinyinEl.textContent = pinyin;
+                if (!pinyin) pinyinEl.innerHTML = '&nbsp;';
+
+                boxEl.appendChild(pinyinEl);
                 grid.appendChild(boxEl);
             }
             chunkContainer.appendChild(grid);
@@ -304,7 +296,6 @@ export class DictationManager {
             checkBtn.style.fontSize = '1.1rem';
 
             // Auto-enable if chunk is fully correct (HanziWriter handles internal state)
-            // But we need to listen to corrections
             checkBtn.onclick = () => this.nextChunk();
             controls.appendChild(checkBtn);
 
@@ -340,14 +331,12 @@ export class DictationManager {
             if (!el) continue;
 
             // Determine if we should create a writer
-            // If it's punctuation, we skip writer creation (it's already text)
-            // If it's a character, we create writer
             const isPunctuation = punctuationRegex.test(box.char);
 
             if (box.isBlank && !isPunctuation) {
                 // Determine dimensions based on container
                 const width = el.clientWidth || 60;
-                const size = Math.min(width, 100);
+                const size = Math.min(width, 240); // Max size constraint
 
                 const writer = HanziWriter.create(writerId, box.char, {
                     width: size,
@@ -357,7 +346,7 @@ export class DictationManager {
                     strokeColor: '#38bdf8',
                     radicalColor: '#f472b6',
                     outlineColor: '#334155',
-                    drawingWidth: 10, // Adjusted for smaller box
+                    drawingWidth: 10, // Standard width
                     showCharacter: false,
                     drawingFadeDuration: 300,
                 });
@@ -375,8 +364,7 @@ export class DictationManager {
                     onComplete: () => {
                         box.isCorrect = true;
                         box.userInput = box.char; // Mark as done
-                        // Auto-advance visual focus if we add it later
-                        this.canAdvance();
+                        // Auto-advance logic if needed
                     }
                 });
 
@@ -390,29 +378,16 @@ export class DictationManager {
                 el.style.display = 'flex';
                 el.style.alignItems = 'center';
                 el.style.justifyContent = 'center';
-            }
-        }
-    }
-
-    /**
-     * Check if we can advance
-     */
-    private canAdvance(): void {
-        const chunk = this.chunks[this.currentChunkIndex];
-        const allCorrect = this.charBoxes.slice(chunk.start, chunk.end).every(b => b.isCorrect);
-
-        const btn = document.querySelector('.dictation-check-btn') as HTMLButtonElement;
-        if (btn) {
-            if (allCorrect) {
-                btn.classList.add('pulse'); // Visual cue
+                // Explicit punctuation styling
+                el.style.border = '3px solid #cbd5e1';
+                el.style.borderRadius = '16px';
+                el.style.background = '#e2e8f0';
+                el.classList.remove('focus-box');
             }
         }
     }
 
     private destroyWriters(): void {
-        // HanziWriter doesn't have a simple destroy on the instance,
-        // but removing the DOM element usually clears it.
-        // We clear the array.
         this.writers = [];
     }
 
@@ -421,7 +396,7 @@ export class DictationManager {
         const allCorrect = this.charBoxes.slice(chunk.start, chunk.end).every(b => b.isCorrect);
 
         if (!allCorrect) {
-            // Shake effect or feedback
+            // Shake effect
             const container = document.querySelector('.focus-chunk-container');
             container?.classList.add('shake');
             setTimeout(() => container?.classList.remove('shake'), 400);
@@ -453,10 +428,6 @@ export class DictationManager {
 
     private showHint(): void {
         const chunk = this.chunks[this.currentChunkIndex];
-        // Find first incomplete writer
-        // Mapping writers to boxes is tricky since we store writers in array
-        // But we iterate simply.
-        // Let's iterate boxes in chunk.
 
         let writerIndex = 0;
         for (let i = chunk.start; i < chunk.end; i++) {
@@ -464,14 +435,8 @@ export class DictationManager {
             const punctuationRegex = /[，。！？、：；“”‘’（）《》]/;
             if (!punctuationRegex.test(box.char) && box.isBlank) {
                 if (!box.isCorrect) {
-                    // Found the writer
                     const writer = this.writers[writerIndex];
                     if (writer) {
-                        // We can't access quiz state easily to know stroke index
-                        // But we can trigger a hint animate
-                        // writer.animateCharacter(); // Too easy?
-                        // writer.outline(); // Show outline briefly
-                        // Better: show outline
                         writer.hideOutline();
                         writer.showOutline({ duration: 1000 });
                     }
