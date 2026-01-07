@@ -337,10 +337,6 @@ export function createDefaultInputHandler(): InputHandler {
 /**
  * Input mode type
  */
-export type InputMode = 'stroke' | 'handwriting';
+export type InputMode = 'stroke';
 
-/**
- * Create an input handler based on mode
- */
-export { HandwritingInput } from './handwriting';
 

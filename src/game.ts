@@ -14,11 +14,11 @@ import {
 import { SoundFX, speakWord } from './audio';
 import { spawnParticles } from './particles';
 import { UIManager, getRandomPraise } from './ui';
-import { HanziWriterInput, type InputMode, HandwritingInput } from './input';
+import { HanziWriterInput } from './input';
 import { initDOMCache, type GameState, type DOMCache, type InputHandler } from './types';
 
 const PLAYER_NAME_KEY = 'tingxie_player_name';
-const INPUT_MODE_KEY = 'tingxie_input_mode';
+// const INPUT_MODE_KEY = 'tingxie_input_mode';
 
 // DOM cache for performance
 let domCache: DOMCache;
@@ -33,7 +33,7 @@ let inputHandler: InputHandler;
 let dictationManager: import('./dictation').DictationManager | null = null;
 
 // Current input mode
-let inputMode: InputMode = 'stroke';
+// let inputMode: InputMode = 'stroke';
 
 // Game state
 const state: GameState = {
@@ -55,31 +55,12 @@ const state: GameState = {
     sessionResults: [],
 };
 
-/**
- * Get saved input mode from localStorage
- */
-function getSavedInputMode(): InputMode {
-    // Force handwriting mode by default now
-    return 'handwriting';
-    // const saved = localStorage.getItem(INPUT_MODE_KEY);
-    // return (saved === 'handwriting') ? 'handwriting' : 'stroke';
-}
 
-/**
- * Save input mode to localStorage
- */
-function saveInputMode(mode: InputMode): void {
-    localStorage.setItem(INPUT_MODE_KEY, mode);
-}
 
 /**
  * Create input handler based on current mode
  */
 function createInputHandler(): InputHandler {
-    if (inputMode === 'handwriting') {
-        const handler = new HandwritingInput();
-        return handler;
-    }
     return new HanziWriterInput();
 }
 
@@ -93,8 +74,7 @@ export const Game = {
     init(showUI = true): void {
         loadData();
 
-        // Load saved input mode
-        inputMode = getSavedInputMode();
+
 
         // Initialize DOM cache
         domCache = initDOMCache();
@@ -141,23 +121,17 @@ export const Game = {
     },
 
     /**
-     * Get current input mode
-     */
-    getInputMode(): InputMode {
-        return inputMode;
+    * Get current input mode
+    */
+    getInputMode(): string {
+        return 'stroke';
     },
 
     /**
-     * Set input mode
+     * Set input mode - Deprecated
      */
-    setInputMode(mode: InputMode): void {
-        inputMode = mode;
-        saveInputMode(mode);
-        // Recreate input handler with new mode
-        inputHandler = createInputHandler();
-        inputHandler.onCharComplete = handleCharComplete;
-        inputHandler.onMistake = handleMistake;
-        inputHandler.onComplete = handleInputComplete;
+    setInputMode(_mode: string): void {
+        // No-op
     },
 
     /**
@@ -192,10 +166,7 @@ export const Game = {
         state.sessionResults = [];
         state.currentView = 'game';
 
-        // Set lesson phrases for handwriting mode candidate generation
-        if (inputHandler instanceof HandwritingInput) {
-            inputHandler.setLessonPhrases(words);
-        }
+
 
         // Show controls
         ui.showControls();
@@ -254,10 +225,7 @@ export const Game = {
             state.sessionStreak = 0;
             state.currentView = 'game';
 
-            // Set lesson phrases for handwriting mode
-            if (inputHandler instanceof HandwritingInput) {
-                inputHandler.setLessonPhrases(state.practiceWords);
-            }
+
 
             // Ensure valid state before UI updates
             if (!state.practiceWords || state.practiceWords.length === 0) {

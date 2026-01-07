@@ -2,6 +2,82 @@
     "passages": [
         {
             "id": "1",
+            "title": "害人之心",
+            "text": "俗话说：害人之心不可有，防人之心不可无。经过这件事，家明和妈妈再也不敢轻易相信陌生人了。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于谨慎待人的道理",
+            "chunks": [
+                "俗话说：",
+                "害人之心不可有，",
+                "防人之心不可无。",
+                "经过这件事，",
+                "家明和妈妈",
+                "再也不敢",
+                "轻易相信陌生人了。"
+            ],
+            "chunkPinyins": [
+                "sú huà shuō ：",
+                "hài rén zhī xīn bù kě yǒu ，",
+                "fáng rén zhī xīn bù kě wú 。",
+                "jīng guò zhè jiàn shì ，",
+                "jiā míng hé mā ma",
+                "zài yě bù gǎn",
+                "qīng yì xiāng xìn mò shēng rén le 。"
+            ]
+        },
+        {
+            "id": "2",
+            "title": "炎热下午",
+            "text": "这一天下午，天上一丝云彩也没有，强烈的阳光照射下来，把大地烤得滚烫滚烫。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "描述炎热天气",
+            "chunks": [
+                "这一天下午，",
+                "天上一丝云彩也没有，",
+                "强烈的阳光",
+                "照射下来，",
+                "把大地",
+                "烤得滚烫滚烫。"
+            ],
+            "chunkPinyins": [
+                "zhè yī tiān xià wǔ ，",
+                "tiān shàng yī sī yún cǎi yě méi yǒu ，",
+                "qiáng liè de yáng guāng",
+                "zhào shè xià lái ，",
+                "bǎ dà dì",
+                "kǎo de gǔn tàng gǔn tàng 。"
+            ]
+        },
+        {
+            "id": "3",
+            "title": "拾金不昧",
+            "text": "德士司机拾金不昧，让家明一家人对这个热带小岛印象更加美好，这真是一次愉快的旅行。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于诚实的德士司机",
+            "chunks": [
+                "德士司机",
+                "拾金不昧，",
+                "让家明一家人",
+                "对这个热带小岛",
+                "印象更加美好，",
+                "这真是",
+                "一次愉快的旅行。"
+            ],
+            "chunkPinyins": [
+                "dé shì sī jī",
+                "shí jīn bú mèi ，",
+                "ràng jiā míng yī jiā rén",
+                "duì zhè ge rè dài xiǎo dǎo",
+                "yìn xiàng gèng jiā měi hǎo ，",
+                "zhè zhēn shì",
+                "yī cì yú kuài de lǚ xíng 。"
+            ]
+        },
+        {
+            "id": "4",
             "title": "邻居和睦",
             "text": "如果每个人都能像丽玲一样为他人着想，邻居之间就会更加和睦，我们的社会也会更加和谐。",
             "blanks": [],
@@ -24,6 +100,344 @@
                 "jiù huì gèng jiā hé mù ，",
                 "wǒ men de shè huì",
                 "yě huì gèng jiā hé xié 。"
+            ]
+        },
+        {
+            "id": "5",
+            "title": "见义勇为",
+            "text": "好公民应该见义勇为，可欣觉得自己做了一件应该做的事，她感到十分自豪。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于见义勇为的公民",
+            "chunks": [
+                "好公民",
+                "应该见义勇为，",
+                "可欣觉得",
+                "自己做了",
+                "一件应该做的事，",
+                "她感到十分自豪。"
+            ],
+            "chunkPinyins": [
+                "hǎo gōng mín",
+                "yīng gāi jiàn yì yǒng wéi ，",
+                "kě xīn jué de",
+                "zì jǐ zuò le",
+                "yī jiàn yīng gāi zuò de shì ，",
+                "tā gǎn dào shí fēn zì háo 。"
+            ]
+        },
+        {
+            "id": "6",
+            "title": "冷静处理",
+            "text": "家美年纪不大，遇到紧急的事情，却能冷静下来，及时处理，她是我们需要学习的好榜样。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于冷静处理紧急事情",
+            "chunks": [
+                "家美年纪不大，",
+                "遇到紧急的事情，",
+                "却能冷静下来，",
+                "及时处理，",
+                "她是我们",
+                "需要学习的好榜样。"
+            ],
+            "chunkPinyins": [
+                "jiā měi nián jì bù dà ，",
+                "yù dào jǐn jí de shì qíng ，",
+                "què néng lěng jìng xià lái ，",
+                "jí shí chǔ lǐ ，",
+                "tā shì wǒ men",
+                "xū yào xué xí de hǎo bǎng yàng 。"
+            ]
+        },
+        {
+            "id": "7",
+            "title": "朋友友爱",
+            "text": "家伟和明华都认识到自己的错误，互相说了对不起。他们明白了朋友之间要友爱要宽容，发生不愉快的事时，应该心平气和地去解决。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于朋友之间的友爱宽容",
+            "chunks": [
+                "家伟和明华",
+                "都认识到自己的错误，",
+                "互相说了对不起。",
+                "他们明白了",
+                "朋友之间",
+                "要友爱要宽容，",
+                "发生不愉快的事时，",
+                "应该心平气和地去解决。"
+            ],
+            "chunkPinyins": [
+                "jiā wěi hé míng huá",
+                "dōu rèn shí dào zì jǐ de cuò wù ，",
+                "hù xiāng shuō le duì bù qǐ 。",
+                "tā men míng bái le",
+                "péng yǒu zhī jiān",
+                "yào yǒu ài yào kuān róng ，",
+                "fā shēng bù yú kuài de shì shí ，",
+                "yīng gāi xīn píng qì hé de qù jiě jué 。"
+            ]
+        },
+        {
+            "id": "8",
+            "title": "高楼抛物",
+            "text": "虽然家明没有生命危险，可是这次的意外让他受到了惊吓，至今心有余悸。希望高楼抛物的人能够改过，不再重蹈覆辙。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于高楼抛物的危险",
+            "chunks": [
+                "虽然家明",
+                "没有生命危险，",
+                "可是这次的意外",
+                "让他受到了惊吓，",
+                "至今心有余悸。",
+                "希望高楼抛物的人",
+                "能够改过，",
+                "不再重蹈覆辙。"
+            ],
+            "chunkPinyins": [
+                "suī rán jiā míng",
+                "méi yǒu shēng mìng wéi xiǎn ，",
+                "kě shì zhè cì de yì wài",
+                "ràng tā shòu dào le jīng xià ，",
+                "zhì jīn xīn yǒu yú jì 。",
+                "xī wàng gāo lóu pāo wù de rén",
+                "néng gòu gǎi guò ，",
+                "bú zài chóng dǎo fù zhé 。"
+            ]
+        },
+        {
+            "id": "9",
+            "title": "沉迷手机",
+            "text": "沉迷手机对我们有很多不好的影响，因此，我们千万不要沉迷手机。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于不要沉迷手机",
+            "chunks": [
+                "沉迷手机",
+                "对我们有",
+                "很多不好的影响，",
+                "因此，",
+                "我们千万",
+                "不要沉迷手机。"
+            ],
+            "chunkPinyins": [
+                "chén mí shǒu jī",
+                "duì wǒ men yǒu",
+                "hěn duō bù hǎo de yǐng xiǎng ，",
+                "yīn cǐ ，",
+                "wǒ men qiān wàn",
+                "bú yào chén mí shǒu jī 。"
+            ]
+        },
+        {
+            "id": "10",
+            "title": "电视迷",
+            "text": "家明是个电视迷，电视好像他的命根子。他每天一回家就看电视，常常看到很晚才匆匆忙忙地去做功课。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于沉迷电视的坏习惯",
+            "chunks": [
+                "家明是个电视迷，",
+                "电视好像他的命根子。",
+                "他每天一回家",
+                "就看电视，",
+                "常常看到很晚",
+                "才匆匆忙忙地",
+                "去做功课。"
+            ],
+            "chunkPinyins": [
+                "jiā míng shì gè diàn shì mí ，",
+                "diàn shì hǎo xiàng tā de mìng gēn zi 。",
+                "tā měi tiān yī huí jiā",
+                "jiù kàn diàn shì ，",
+                "cháng cháng kàn dào hěn wǎn",
+                "cái cōng cōng máng máng de",
+                "qù zuò gōng kè 。"
+            ]
+        },
+        {
+            "id": "11",
+            "title": "助人为乐",
+            "text": "俗话说\"助人为快乐之本。\"伟光帮助了外国游客，也得到了称赞，他心里好像吃了蜜糖一样。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于帮助他人的快乐",
+            "chunks": [
+                "俗话说",
+                "\"助人为快乐之本。\"",
+                "伟光帮助了",
+                "外国游客，",
+                "也得到了称赞，",
+                "他心里",
+                "好像吃了蜜糖一样。"
+            ],
+            "chunkPinyins": [
+                "sú huà shuō",
+                "\" zhù rén wéi kuài lè zhī běn 。\"",
+                "wěi guāng bāng zhù le",
+                "wài guó yóu kè ，",
+                "yě dé dào le chēng zàn ，",
+                "tā xīn lǐ",
+                "hǎo xiàng chī le mì táng yí yàng 。"
+            ]
+        },
+        {
+            "id": "12",
+            "title": "妒忌不可",
+            "text": "这件事让林华明白了，妒忌总会让人做出不光彩的事，伤害他人，妒忌同学是要不得的。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于妒忌的教训",
+            "chunks": [
+                "这件事",
+                "让林华明白了，",
+                "妒忌总会让人",
+                "做出不光彩的事，",
+                "伤害他人，",
+                "妒忌同学",
+                "是要不得的。"
+            ],
+            "chunkPinyins": [
+                "zhè jiàn shì",
+                "ràng lín huá míng bái le ，",
+                "dù jì zǒng huì ràng rén",
+                "zuò chū bù guāng cǎi de shì ，",
+                "shāng hài tā rén ，",
+                "dù jì tóng xué",
+                "shì yào bù dé de 。"
+            ]
+        },
+        {
+            "id": "13",
+            "title": "爱护动物",
+            "text": "美芳有爱心，帮助受伤的小动物，是我们学习的好榜样。我们要像她一样，做个爱护动物的好孩子。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于爱护小动物",
+            "chunks": [
+                "美芳有爱心，",
+                "帮助受伤的小动物，",
+                "是我们学习的好榜样。",
+                "我们要像她一样，",
+                "做个爱护动物的好孩子。"
+            ],
+            "chunkPinyins": [
+                "měi fāng yǒu ài xīn ，",
+                "bāng zhù shòu shāng de xiǎo dòng wù ，",
+                "shì wǒ men xué xí de hǎo bǎng yàng 。",
+                "wǒ men yào xiàng tā yí yàng ，",
+                "zuò gè ài hù dòng wù de hǎo hái zi 。"
+            ]
+        },
+        {
+            "id": "14",
+            "title": "友谊第一",
+            "text": "文乐虽然没有夺冠，但是他一点儿也不后悔。文乐认为这是体育精神的体现，所谓\"友谊第一，比赛第二\"，他的做法也给志明带来温暖。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于体育精神和友谊",
+            "chunks": [
+                "文乐虽然没有夺冠，",
+                "但是他一点儿也不后悔。",
+                "文乐认为",
+                "这是体育精神的体现，",
+                "所谓\"友谊第一，比赛第二\"，",
+                "他的做法",
+                "也给志明带来温暖。"
+            ],
+            "chunkPinyins": [
+                "wén lè suī rán méi yǒu duó guàn ，",
+                "dàn shì tā yī diǎn er yě bù hòu huǐ 。",
+                "wén lè rèn wéi",
+                "zhè shì tǐ yù jīng shén de tǐ xiàn ，",
+                "suǒ wèi \" yǒu yì dì yī ， bǐ sài dì èr \" ，",
+                "tā de zuò fǎ",
+                "yě gěi zhì míng dài lái wēn nuǎn 。"
+            ]
+        },
+        {
+            "id": "15",
+            "title": "交还钱包",
+            "text": "家伟把钱包交还失主后，如释重负。他决心牢记老师和父母的教导，任何时候，都要做一个拾金不昧的人。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于拾金不昧的决心",
+            "chunks": [
+                "家伟把钱包",
+                "交还失主后，",
+                "如释重负。",
+                "他决心牢记",
+                "老师和父母的教导，",
+                "任何时候，",
+                "都要做一个",
+                "拾金不昧的人。"
+            ],
+            "chunkPinyins": [
+                "jiā wěi bǎ qián bāo",
+                "jiāo huán shī zhǔ hòu ，",
+                "rú shì zhòng fù 。",
+                "tā jué xīn láo jì",
+                "lǎo shī hé fù mǔ de jiào dǎo ，",
+                "rèn hé shí hòu ，",
+                "dōu yào zuò yī gè",
+                "shí jīn bú mèi de rén 。"
+            ]
+        },
+        {
+            "id": "16",
+            "title": "爱护校园",
+            "text": "爱护校园，人人有责。子华和明杰觉得自己只是做了一件小事，但这充分体现出他们爱护校园的美好品德，为同学们树立了榜样。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于爱护校园的品德",
+            "chunks": [
+                "爱护校园，人人有责。",
+                "子华和明杰觉得",
+                "自己只是做了一件小事，",
+                "但这充分体现出",
+                "他们爱护校园的美好品德，",
+                "为同学们树立了榜样。"
+            ],
+            "chunkPinyins": [
+                "ài hù xiào yuán ， rén rén yǒu zé 。",
+                "zǐ huá hé míng jié jué de",
+                "zì jǐ zhǐ shì zuò le yī jiàn xiǎo shì ，",
+                "dàn zhè chōng fèn tǐ xiàn chū",
+                "tā men ài hù xiào yuán de měi hǎo pǐn dé ，",
+                "wèi tóng xué men shù lì le bǎng yàng 。"
+            ]
+        },
+        {
+            "id": "17",
+            "title": "忍让退让",
+            "text": "俗话说：忍一时风平浪静，退一步海阔天空。这件事让学文和明光都得到了教训，明光懂得了玩耍时要当心，学文明白了做事不能冲动。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "关于忍让和不冲动的道理",
+            "chunks": [
+                "俗话说：",
+                "忍一时风平浪静，",
+                "退一步海阔天空。",
+                "这件事让",
+                "学文和明光",
+                "都得到了教训，",
+                "明光懂得了",
+                "玩耍时要当心，",
+                "学文明白了",
+                "做事不能冲动。"
+            ],
+            "chunkPinyins": [
+                "sú huà shuō ：",
+                "rěn yī shí fēng píng làng jìng ，",
+                "tuì yī bù hǎi kuò tiān kōng 。",
+                "zhè jiàn shì ràng",
+                "xué wén hé míng guāng",
+                "dōu dé dào le jiào xùn ，",
+                "míng guāng dǒng dé le",
+                "wán shuǎ shí yào dāng xīn ，",
+                "xué wén míng bái le",
+                "zuò shì bù néng chōng dòng 。"
             ]
         }
     ]
