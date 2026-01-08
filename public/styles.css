@@ -3251,10 +3251,16 @@ body {
 
 
 /* Archives View Adjustments */
+/* Archives View Adjustments */
 .progress-view {
-    padding-top: 80px;
-    /* Space for HUD */
-    padding-bottom: 40px;
+    padding-top: 40px;
+    /* Reduced space */
+    padding-bottom: 20px;
+}
+
+/* Ensure local back button is hidden */
+.progress-header .nav-back-btn {
+    display: none !important;
 }
 
 /* Hide specific HUD elements in archives mode */
