@@ -381,13 +381,26 @@ export const Game = {
                 skipBtn.style.display = 'none';
             }
 
-            // Wire up audio button for dictation
+            // Wire up audio button for dictation (play/pause toggle)
             const audioBtn = document.getElementById('btn-audio');
             if (audioBtn) {
-                audioBtn.innerHTML = '🔊';
-                audioBtn.title = '播放短语';
+                // Start with pause icon since audio auto-plays
+                audioBtn.innerHTML = '⏸';
+                audioBtn.title = '暂停/播放';
+
                 audioBtn.onclick = () => {
-                    dictation.playAudio();
+                    if (window.speechSynthesis.speaking) {
+                        if (window.speechSynthesis.paused) {
+                            window.speechSynthesis.resume();
+                            audioBtn.innerHTML = '⏸';
+                        } else {
+                            window.speechSynthesis.pause();
+                            audioBtn.innerHTML = '▶';
+                        }
+                    } else {
+                        dictation.playAudio();
+                        audioBtn.innerHTML = '⏸';
+                    }
                 };
             }
 
@@ -399,11 +412,33 @@ export const Game = {
                 };
             }
 
-            // Wire up reveal button for dictation
+            // Wire up reveal button for dictation (directly show modal)
             const revealBtn = document.getElementById('btn-reveal');
             if (revealBtn) {
                 revealBtn.onclick = () => {
-                    Game.revealPhrase();
+                    const modal = document.getElementById('reveal-modal');
+                    const termEl = document.getElementById('reveal-term');
+                    const pinyinEl = document.getElementById('reveal-pinyin');
+
+                    if (!modal || !termEl || !pinyinEl) return;
+
+                    const passageData = dictation.getPassage();
+                    if (!passageData) return;
+
+                    // Notify manager for score penalty
+                    dictation.notifyReveal();
+
+                    // Show modal with passage text
+                    termEl.innerHTML = `<div style="text-align: left; font-size: 1.2rem; line-height: 1.6;">${passageData.text}</div>`;
+                    pinyinEl.textContent = '';
+                    modal.style.display = 'flex';
+
+                    // Dismiss on click
+                    const dismiss = () => {
+                        modal.style.display = 'none';
+                        modal.removeEventListener('click', dismiss);
+                    };
+                    modal.addEventListener('click', dismiss);
                 };
             }
 
@@ -437,9 +472,10 @@ export const Game = {
             };
             dictation.init(passage, container);
 
-            // Auto-play audio on init for full dictation
+            // Auto-play audio on init for full dictation (button shows pause)
             if (passage.isFullDictation) {
                 dictation.playAudio();
+                // Button already set to ⏸ above
             }
         });
     },

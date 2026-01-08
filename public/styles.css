@@ -3158,3 +3158,49 @@ body {
     font-size: 1.2rem;
     color: var(--gold);
 }
+
+/* Reveal Modal */
+.reveal-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.reveal-modal-content {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 30px 40px;
+    max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    border: 2px solid #334155;
+}
+
+.reveal-term {
+    font-size: 2rem;
+    color: white;
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.reveal-pinyin {
+    font-size: 1.2rem;
+    color: var(--primary);
+    margin-bottom: 20px;
+}
+
+.reveal-hint {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 15px;
+}

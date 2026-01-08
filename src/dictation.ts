@@ -564,8 +564,8 @@ export class DictationManager {
                     if (i === activeCharIndex) {
                         const w = this.writers[writerIdx];
                         if (w) {
-                            w.hideOutline();
-                            w.showOutline({ duration: 1000 });
+                            // Show next stroke hint instead of full outline
+                            (w as any).highlightStroke?.(0);
                         }
                         return;
                     }
@@ -583,8 +583,8 @@ export class DictationManager {
                 if (!box.isCorrect) {
                     const writer = this.writers[writerIndex];
                     if (writer) {
-                        writer.hideOutline();
-                        writer.showOutline({ duration: 1000 });
+                        // Show next stroke hint instead of full outline
+                        (writer as any).highlightStroke?.(0);
                     }
                     return;
                 }
