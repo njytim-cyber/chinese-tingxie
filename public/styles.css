@@ -3255,8 +3255,14 @@ body {
 .progress-view {
     flex: 1;
     width: 100%;
+    height: 100%;
+    /* Force fill height */
     padding: 0 20px 20px 20px !important;
-    /* Top 0, others 20 */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start !important;
+    /* Force top alignment */
+    margin-top: 0 !important;
 }
 
 /* Ensure local back button is hidden */
