@@ -315,7 +315,7 @@ export class UIManager {
         if (this.currentDailyStatsIndex >= this.lastDailyStats.length) this.currentDailyStatsIndex = 0;
 
         const currentStat = this.lastDailyStats[this.currentDailyStatsIndex];
-        const dayLabel = currentStat.date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+        const dayLabel = currentStat.date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
 
         // Navigation arrows visibility
         const showPrev = this.currentDailyStatsIndex < this.lastDailyStats.length - 1;
@@ -326,7 +326,7 @@ export class UIManager {
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <button class="summary-nav-btn" data-dir="prev" style="opacity: ${showPrev ? 1 : 0.3}; pointer-events: ${showPrev ? 'auto' : 'none'}; background:none; border:none; color:white; font-size:1.2rem; padding: 10px;">❮</button>
                     <div style="text-align: center;">
-                        <div style="font-size: 0.9rem; color: #94a3b8;">📅 ${dayLabel}</div>
+                        <div style="font-size: 0.9rem; color: #94a3b8;">🗓️ ${dayLabel}</div>
                     </div>
                     <button class="summary-nav-btn" data-dir="next" style="opacity: ${showNext ? 1 : 0.3}; pointer-events: ${showNext ? 'auto' : 'none'}; background:none; border:none; color:white; font-size:1.2rem; padding: 10px;">❯</button>
                 </div>
@@ -455,48 +455,8 @@ export class UIManager {
         this.lastDailyStats = dailyStats;
         // logs are reverse chrono. Map insertion preserves order. So Index 0 is newest day.
 
-        // Ensure index is valid
-        if (this.currentDailyStatsIndex >= dailyStats.length) this.currentDailyStatsIndex = 0;
-
-        const currentStat = dailyStats[this.currentDailyStatsIndex];
-        const dayLabel = currentStat.date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
-
-        // Navigation arrows visibility
-        const showPrev = this.currentDailyStatsIndex < dailyStats.length - 1;
-        const showNext = this.currentDailyStatsIndex > 0;
-
-        const summaryCard = `
-            <div id="daily-summary-card" class="daily-summary-card" style="background: linear-gradient(135deg, #1e293b, #0f172a); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); position: relative; touch-action: pan-x;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <button class="summary-nav-btn" data-dir="prev" style="opacity: ${showPrev ? 1 : 0.3}; pointer-events: ${showPrev ? 'auto' : 'none'}; background:none; border:none; color:white; font-size:1.2rem;">❮</button>
-                    <div style="text-align: center;">
-                        <div style="font-size: 0.9rem; color: #94a3b8;">📅 ${dayLabel}</div>
-                    </div>
-                    <button class="summary-nav-btn" data-dir="next" style="opacity: ${showNext ? 1 : 0.3}; pointer-events: ${showNext ? 'auto' : 'none'}; background:none; border:none; color:white; font-size:1.2rem;">❯</button>
-                </div>
-                
-                <div style="display: flex; justify-content: space-around; text-align: center;">
-                    <div>
-                        <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">${currentStat.spelling}</div>
-                        <div style="font-size: 0.8rem; color: #64748b;">拼写练习</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 1.5rem; font-weight: bold; color: #8b5cf6;">${currentStat.dictation}</div>
-                        <div style="font-size: 0.8rem; color: #64748b;">默写练习</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 1.5rem; font-weight: bold; color: #eab308;">${Math.round(currentStat.duration / 60)}</div>
-                        <div style="font-size: 0.8rem; color: #64748b;">分钟时长</div>
-                    </div>
-                </div>
-                
-                <div style="position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; gap: 4px;">
-                    ${dailyStats.map((_, i) => `
-                        <div style="width: 6px; height: 6px; border-radius: 50%; background: ${i === this.currentDailyStatsIndex ? 'var(--primary)' : 'rgba(255,255,255,0.2)'};"></div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
+        // Use helper to generate summary card
+        const summaryCard = this.renderDailySummaryHTML();
 
         return `
             ${summaryCard}
