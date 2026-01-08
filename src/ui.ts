@@ -136,13 +136,15 @@ export class UIManager {
         const masteryColors = ['#64748b', '#ef4444', '#f97316', '#eab308', '#22c55e', '#38bdf8'];
 
         this.setHudTransparent(true);
-        if (this.domCache.hudControls) this.domCache.hudControls.style.display = 'none';
+        if (this.domCache.hudControls) {
+            this.domCache.hudControls.style.display = 'flex';
+            this.domCache.hudControls.classList.add('archives-mode');
+        }
 
         // --- Render the main structure ---
         container.innerHTML = `
             <div class="progress-view">
                 <div class="progress-header">
-                    <button class="nav-back-btn" onclick="location.reload()">❮</button>
                     <h2 class="progress-title">档案</h2>
                 </div>
 
@@ -220,6 +222,9 @@ export class UIManager {
                 const content = document.getElementById(tabId);
                 if (content) {
                     content.style.display = 'block';
+                    if ((tab as HTMLElement).dataset.tab === 'activity') {
+                        this.setupDailySummaryHandlers();
+                    }
                     // Trigger animation
                     content.style.opacity = '0';
                     content.style.transform = 'translateY(10px)';
@@ -291,11 +296,128 @@ export class UIManager {
         `;
     }
 
+    private currentDailyStatsIndex = 0;
+    private lastDailyStats: { date: Date, spelling: number, dictation: number, duration: number }[] = [];
+
+    /**
+     * Render daily summary card HTML
+     */
+    private renderDailySummaryHTML(): string {
+        if (!this.lastDailyStats || this.lastDailyStats.length === 0) return '';
+
+        // Safety check index
+        if (this.currentDailyStatsIndex >= this.lastDailyStats.length) this.currentDailyStatsIndex = 0;
+
+        const currentStat = this.lastDailyStats[this.currentDailyStatsIndex];
+        const dayLabel = currentStat.date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+
+        // Navigation arrows visibility
+        const showPrev = this.currentDailyStatsIndex < this.lastDailyStats.length - 1;
+        const showNext = this.currentDailyStatsIndex > 0;
+
+        return `
+            <div id="daily-summary-card" class="daily-summary-card" style="background: linear-gradient(135deg, #1e293b, #0f172a); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); position: relative; touch-action: pan-x;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <button class="summary-nav-btn" data-dir="prev" style="opacity: ${showPrev ? 1 : 0.3}; pointer-events: ${showPrev ? 'auto' : 'none'}; background:none; border:none; color:white; font-size:1.2rem; padding: 10px;">❮</button>
+                    <div style="text-align: center;">
+                        <div style="font-size: 0.9rem; color: #94a3b8;">📅 ${dayLabel}</div>
+                    </div>
+                    <button class="summary-nav-btn" data-dir="next" style="opacity: ${showNext ? 1 : 0.3}; pointer-events: ${showNext ? 'auto' : 'none'}; background:none; border:none; color:white; font-size:1.2rem; padding: 10px;">❯</button>
+                </div>
+                
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                    <div style="flex: 1;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">${currentStat.spelling}</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">拼写练习</div>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #8b5cf6;">${currentStat.dictation}</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">默写练习</div>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #eab308;">${Math.round(currentStat.duration / 60)}</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">分钟时长</div>
+                    </div>
+                </div>
+                
+                <div style="position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; gap: 4px;">
+                    ${this.lastDailyStats.map((_, i) => `
+                        <div style="width: 6px; height: 6px; border-radius: 50%; background: ${i === this.currentDailyStatsIndex ? 'var(--primary)' : 'rgba(255,255,255,0.2)'};"></div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Update the daily summary view in place
+     */
+    private updateDailySummaryView(): void {
+        const card = document.getElementById('daily-summary-card');
+        if (card) {
+            card.outerHTML = this.renderDailySummaryHTML();
+            this.setupDailySummaryHandlers();
+        }
+    }
+
+    /**
+     * Setup handlers for daily summary card (swipe and click)
+     */
+    private setupDailySummaryHandlers(): void {
+        const card = document.getElementById('daily-summary-card');
+        if (!card) return;
+
+        // Click handlers for arrows
+        card.querySelectorAll('.summary-nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const dir = (btn as HTMLElement).dataset.dir;
+                if (dir === 'prev' && this.currentDailyStatsIndex < this.lastDailyStats.length - 1) {
+                    this.currentDailyStatsIndex++;
+                    this.updateDailySummaryView();
+                } else if (dir === 'next' && this.currentDailyStatsIndex > 0) {
+                    this.currentDailyStatsIndex--;
+                    this.updateDailySummaryView();
+                }
+            });
+        });
+
+        // Swipe handlers
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        card.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        card.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        const handleSwipe = () => {
+            const threshold = 50;
+            if (touchEndX < touchStartX - threshold) {
+                // Swiped Left -> Next (Newer day, index decreases)
+                if (this.currentDailyStatsIndex > 0) {
+                    this.currentDailyStatsIndex--;
+                    this.updateDailySummaryView();
+                }
+            } else if (touchEndX > touchStartX + threshold) {
+                // Swiped Right -> Prev (Older day, index increases)
+                if (this.currentDailyStatsIndex < this.lastDailyStats.length - 1) {
+                    this.currentDailyStatsIndex++;
+                    this.updateDailySummaryView();
+                }
+            }
+        };
+    }
+
     /**
      * Render activity logs
      */
     private renderActivityLogs(): string {
-        const logs = getAttemptLogs().reverse();
+        const logs = getAttemptLogs().reverse(); // Newest first
         if (logs.length === 0) {
             return `
                 <div class="empty-state" style="text-align: center; padding: 40px; color: #94a3b8;">
@@ -305,7 +427,73 @@ export class UIManager {
             `;
         }
 
+        // Aggregate logs by day
+        const dailyStatsMap = new Map<string, { date: Date, spelling: number, dictation: number, duration: number }>();
+
+        logs.forEach(log => {
+            const date = new Date(log.timestamp);
+            const key = date.toLocaleDateString();
+            if (!dailyStatsMap.has(key)) {
+                dailyStatsMap.set(key, { date, spelling: 0, dictation: 0, duration: 0 });
+            }
+            const stat = dailyStatsMap.get(key)!;
+            if (log.mode === 'dictation') {
+                stat.dictation++;
+            } else {
+                stat.spelling++;
+            }
+            stat.duration += log.duration;
+        });
+
+        const dailyStats = Array.from(dailyStatsMap.values()); // Order is already likely reverse cron due to map insertion, but let's verify
+        this.lastDailyStats = dailyStats;
+        // logs are reverse chrono. Map insertion preserves order. So Index 0 is newest day.
+
+        // Ensure index is valid
+        if (this.currentDailyStatsIndex >= dailyStats.length) this.currentDailyStatsIndex = 0;
+
+        const currentStat = dailyStats[this.currentDailyStatsIndex];
+        const dayLabel = currentStat.date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+
+        // Navigation arrows visibility
+        const showPrev = this.currentDailyStatsIndex < dailyStats.length - 1;
+        const showNext = this.currentDailyStatsIndex > 0;
+
+        const summaryCard = `
+            <div id="daily-summary-card" class="daily-summary-card" style="background: linear-gradient(135deg, #1e293b, #0f172a); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); position: relative; touch-action: pan-x;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <button class="summary-nav-btn" data-dir="prev" style="opacity: ${showPrev ? 1 : 0.3}; pointer-events: ${showPrev ? 'auto' : 'none'}; background:none; border:none; color:white; font-size:1.2rem;">❮</button>
+                    <div style="text-align: center;">
+                        <div style="font-size: 0.9rem; color: #94a3b8;">📅 ${dayLabel}</div>
+                    </div>
+                    <button class="summary-nav-btn" data-dir="next" style="opacity: ${showNext ? 1 : 0.3}; pointer-events: ${showNext ? 'auto' : 'none'}; background:none; border:none; color:white; font-size:1.2rem;">❯</button>
+                </div>
+                
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">${currentStat.spelling}</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">拼写练习</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #8b5cf6;">${currentStat.dictation}</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">默写练习</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #eab308;">${Math.round(currentStat.duration / 60)}</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">分钟时长</div>
+                    </div>
+                </div>
+                
+                <div style="position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; gap: 4px;">
+                    ${dailyStats.map((_, i) => `
+                        <div style="width: 6px; height: 6px; border-radius: 50%; background: ${i === this.currentDailyStatsIndex ? 'var(--primary)' : 'rgba(255,255,255,0.2)'};"></div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
         return `
+            ${summaryCard}
             <div class="activity-log-list" style="display: flex; flex-direction: column; gap: 15px;">
                 ${logs.map(log => {
             const date = new Date(log.timestamp);
@@ -314,7 +502,7 @@ export class UIManager {
             const maxScore = log.mode === 'dictation' ? log.totalPhrases * 2 : log.totalPhrases;
             const percent = maxScore > 0 ? Math.round((log.totalScore / maxScore) * 100) : 0;
 
-            const modeLabel = log.mode === 'dictation' ? '听写' : '拼写';
+            const modeLabel = log.mode === 'dictation' ? '默写' : '听写';
             const modeColor = log.mode === 'dictation' ? '#8b5cf6' : '#3b82f6';
             const scoreColor = percent >= 80 ? '#22c55e' : (percent >= 60 ? '#f59e0b' : '#ef4444');
 
@@ -819,6 +1007,9 @@ export class UIManager {
      */
     showControls(): void {
         document.body.classList.add('noscroll'); // Disable scrolling in game
+        if (this.domCache.hudControls) {
+            this.domCache.hudControls.classList.remove('archives-mode');
+        }
         if (this.domCache.controlsArea) {
             this.domCache.controlsArea.style.display = 'flex';
         }
@@ -993,6 +1184,8 @@ export class UIManager {
 
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'session-actions';
+        actionsDiv.style.flexDirection = 'column';
+        actionsDiv.style.gap = '15px';
 
         const continueBtn = document.createElement('button');
         continueBtn.className = 'start-btn';
@@ -1005,8 +1198,8 @@ export class UIManager {
         const shareBtn = document.createElement('button');
         shareBtn.className = 'game-btn share-btn';
         shareBtn.style.background = 'linear-gradient(to bottom, #8b5cf6, #7c3aed)';
-        shareBtn.style.marginTop = '10px';
-        shareBtn.innerHTML = '📤 分享成绩';
+        shareBtn.style.width = '100%';
+        shareBtn.innerHTML = '🎉 分享成绩';
         shareBtn.onclick = () => {
             const text = `✨ 星空听写 (默写练习)\n得分: ${score}/${total} (${percentage}%)\n\n快来挑战吧！`;
             if (navigator.share) {
