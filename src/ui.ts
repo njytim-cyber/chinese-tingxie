@@ -327,7 +327,7 @@ export class UIManager {
                     <button class="summary-nav-btn" data-dir="prev" style="opacity: ${showPrev ? 1 : 0.3}; pointer-events: ${showPrev ? 'auto' : 'none'}; background:none; border:none; color:white; font-size:1.2rem; padding: 10px;">❮</button>
                     <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                         <div style="font-size: 0.9rem; color: #94a3b8;">🗓️ ${dayLabel}</div>
-                        <button class="summary-share-btn" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white; font-size:0.9rem; padding:0; transition: all 0.2s;" title="分享">📤</button>
+                        <button class="summary-share-btn" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white; font-size:1rem; padding:0; transition: all 0.2s;" title="分享">🔗</button>
                     </div>
                     <button class="summary-nav-btn" data-dir="next" style="opacity: ${showNext ? 1 : 0.3}; pointer-events: ${showNext ? 'auto' : 'none'}; background:none; border:none; color:white; font-size:1.2rem; padding: 10px;">❯</button>
                 </div>
