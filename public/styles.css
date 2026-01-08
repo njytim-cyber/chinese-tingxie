@@ -3205,17 +3205,40 @@ body {
     margin-top: 15px;
 }
 
-/* Session Length Toggle - Horizontal Buttons */
+/* Session Length Toggle */
 .session-length-toggle {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    padding: 15px;
+    padding: 12px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: 8px 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: transparent;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toggle-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    font-weight: bold;
+}
+
+.lesson-select {
+    padding-top: 0 !important;
 }
 
 .session-length-toggle .toggle-label {
@@ -3225,33 +3248,7 @@ body {
     margin-bottom: 5px;
 }
 
-.session-length-toggle .toggle-btn {
-    padding: 10px 20px;
-    border: 2px solid #334155;
-    background: var(--card-bg);
-    color: white;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.95rem;
-    min-width: 70px;
-}
 
-.session-length-toggle .toggle-btn:hover {
-    border-color: var(--primary);
-}
-
-.session-length-toggle .toggle-btn.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #0f172a;
-    font-weight: bold;
-}
-
-/* Compact lesson select layout */
-.lesson-select {
-    padding-top: 10px !important;
-}
 
 /* Archives View Adjustments */
 .progress-view {

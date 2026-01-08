@@ -53,9 +53,11 @@ export class UIManager {
                 
                 <div class="session-length-toggle">
                     <span class="toggle-label">每次练习:</span>
-                    <button class="toggle-btn ${selectedLimit === 5 ? 'active' : ''}" data-limit="5">5词</button>
-                    <button class="toggle-btn ${selectedLimit === 10 ? 'active' : ''}" data-limit="10">10词</button>
-                    <button class="toggle-btn ${selectedLimit === 20 ? 'active' : ''}" data-limit="20">全部</button>
+                    <div class="toggle-options" style="display: flex; gap: 10px; width: 100%; justify-content: center;">
+                        <button class="toggle-btn ${selectedLimit === 5 ? 'active' : ''}" data-limit="5">5词</button>
+                        <button class="toggle-btn ${selectedLimit === 10 ? 'active' : ''}" data-limit="10">10词</button>
+                        <button class="toggle-btn ${selectedLimit === 20 ? 'active' : ''}" data-limit="20">全部</button>
+                    </div>
                 </div>
 
                 <div class="lesson-grid">
