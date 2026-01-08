@@ -3281,3 +3281,13 @@ body {
     margin-top: 0 !important;
     margin-bottom: 15px !important;
 }
+/* Full screen mode to prevent centering */
+.character-container.full-screen-mode {
+    flex: 1;
+    margin: 0 !important;
+    padding: 0 !important;
+    justify-content: flex-start !important;
+    width: 100%;
+    max-width: none !important;
+    height: 100%;
+}

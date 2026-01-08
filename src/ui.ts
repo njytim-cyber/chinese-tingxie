@@ -40,6 +40,8 @@ export class UIManager {
     ): void {
         const container = this.domCache.writingArea;
         if (!container) return;
+        container.classList.remove('full-screen-mode');
+
 
         const lessons = getLessons();
         const currentLesson = getCurrentLesson();
@@ -129,6 +131,8 @@ export class UIManager {
     showProgress(): void {
         const container = this.domCache.writingArea;
         if (!container) return;
+        container.classList.add('full-screen-mode');
+
 
         const lessons = getLessons();
         const achievements = getAchievements();
@@ -564,6 +568,8 @@ export class UIManager {
     ): void {
         const container = this.domCache.writingArea;
         if (!container) return;
+        container.classList.remove('full-screen-mode');
+
 
         const lessons = getLessons();
 
