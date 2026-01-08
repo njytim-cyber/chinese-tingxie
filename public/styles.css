@@ -3208,7 +3208,8 @@ body {
 /* Session Length Toggle */
 .session-length-toggle {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
+    /* Robust for old/new HTML */
     align-items: center;
     justify-content: center;
     gap: 10px;
