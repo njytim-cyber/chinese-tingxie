@@ -325,8 +325,9 @@ export class UIManager {
             <div id="daily-summary-card" class="daily-summary-card" style="background: linear-gradient(135deg, #1e293b, #0f172a); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); position: relative; touch-action: pan-x;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <button class="summary-nav-btn" data-dir="prev" style="opacity: ${showPrev ? 1 : 0.3}; pointer-events: ${showPrev ? 'auto' : 'none'}; background:none; border:none; color:white; font-size:1.2rem; padding: 10px;">❮</button>
-                    <div style="text-align: center;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
                         <div style="font-size: 0.9rem; color: #94a3b8;">🗓️ ${dayLabel}</div>
+                        <button class="summary-share-btn" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white; font-size:0.9rem; padding:0; transition: all 0.2s;" title="分享">📤</button>
                     </div>
                     <button class="summary-nav-btn" data-dir="next" style="opacity: ${showNext ? 1 : 0.3}; pointer-events: ${showNext ? 'auto' : 'none'}; background:none; border:none; color:white; font-size:1.2rem; padding: 10px;">❯</button>
                 </div>
@@ -372,6 +373,25 @@ export class UIManager {
     private setupDailySummaryHandlers(): void {
         const card = document.getElementById('daily-summary-card');
         if (!card) return;
+
+        // Share handler
+        const shareBtn = card.querySelector('.summary-share-btn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                if (!this.lastDailyStats || this.lastDailyStats.length === 0) return;
+
+                const stat = this.lastDailyStats[this.currentDailyStatsIndex];
+                const dateStr = stat.date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
+                const text = `星空听写 - ${dateStr} 练习日报\n拼写: ${stat.spelling} | 默写: ${stat.dictation}\n总时长: ${Math.round(stat.duration / 60)}分钟`;
+
+                if ((navigator as any).share) {
+                    (navigator as any).share({ title: '星空听写日报', text: text }).catch(() => { });
+                } else {
+                    navigator.clipboard.writeText(text).then(() => this.showFeedback('已复制', '#4ade80')).catch(() => this.showFeedback('无法复制', '#ef4444'));
+                }
+            });
+        }
 
         // Click handlers for arrows
         card.querySelectorAll('.summary-nav-btn').forEach(btn => {

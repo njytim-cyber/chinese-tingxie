@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tingxie-v1.21.17';
+const CACHE_NAME = 'tingxie-v1.21.18';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
