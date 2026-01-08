@@ -3253,9 +3253,10 @@ body {
 /* Archives View Adjustments */
 /* Archives View Adjustments */
 .progress-view {
-    padding-top: 40px;
-    /* Reduced space */
-    padding-bottom: 20px;
+    flex: 1;
+    width: 100%;
+    padding: 0 20px 20px 20px !important;
+    /* Top 0, others 20 */
 }
 
 /* Ensure local back button is hidden */
