@@ -103,7 +103,7 @@ export const SoundFX = {
  * @param text - Text to speak
  * @param slow - Whether to speak slowly (for learning)
  */
-export function speakWord(text: string, slow = false): void {
+export function speakWord(text: string, slow = false, onEnd?: () => void): void {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
 
@@ -118,6 +118,10 @@ export function speakWord(text: string, slow = false): void {
     u.rate = slow ? 0.6 : 0.75;
     u.pitch = 1.0;
     u.volume = 1.0;
+
+    if (onEnd) {
+        u.onend = onEnd;
+    }
 
     window.speechSynthesis.speak(u);
 }

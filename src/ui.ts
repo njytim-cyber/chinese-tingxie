@@ -8,6 +8,7 @@ import { spawnParticles } from './particles';
 import {
     getLessons, getCurrentLesson, getLessonProgress, getWordState,
     getStats, getLevel, getLevelProgress, getAchievements,
+    getAttemptLogs,
     type Achievement
 } from './data';
 import type { DOMCache, ProgressDotStatus } from './types';
@@ -148,6 +149,7 @@ export class UIManager {
                 <div class="progress-tabs">
                     <button class="tab-btn active" data-tab="progress">📊 学习进度</button>
                     <button class="tab-btn" data-tab="achievements">🏆 成就徽章</button>
+                    <button class="tab-btn" data-tab="activity">📜 练习记录</button>
                 </div>
 
                 <!-- Tab Content: Progress -->
@@ -195,6 +197,11 @@ export class UIManager {
                     <div class="ach-summary" style="text-align: center; margin-top: 20px; color: #94a3b8;">
                         已解锁 ${achievements.filter(a => a.unlocked).length} / ${achievements.length} 个成就
                     </div>
+                </div>
+
+                <!-- Tab Content: Activity Logs -->
+                <div class="tab-content" id="tab-activity" style="display: none;">
+                    ${this.renderActivityLogs()}
                 </div>
             </div>
         `;
@@ -282,6 +289,81 @@ export class UIManager {
                 </div>
             </div>
         `;
+    }
+
+    /**
+     * Render activity logs
+     */
+    private renderActivityLogs(): string {
+        const logs = getAttemptLogs().reverse();
+        if (logs.length === 0) {
+            return `
+                <div class="empty-state" style="text-align: center; padding: 40px; color: #94a3b8;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">📜</div>
+                    暂无练习记录
+                </div>
+            `;
+        }
+
+        return `
+            <div class="activity-log-list" style="display: flex; flex-direction: column; gap: 15px;">
+                ${logs.map(log => {
+            const date = new Date(log.timestamp);
+            const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const maxScore = log.mode === 'dictation' ? log.totalPhrases * 2 : log.totalPhrases;
+            const percent = maxScore > 0 ? Math.round((log.totalScore / maxScore) * 100) : 0;
+
+            const modeLabel = log.mode === 'dictation' ? '听写' : '拼写';
+            const modeColor = log.mode === 'dictation' ? '#8b5cf6' : '#3b82f6';
+            const scoreColor = percent >= 80 ? '#22c55e' : (percent >= 60 ? '#f59e0b' : '#ef4444');
+
+            return `
+                        <div class="activity-log-item" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                            <div class="log-header" style="display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span class="log-mode" style="background:${modeColor}; color: white; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold;">${modeLabel}</span>
+                                    <span class="log-title" style="font-weight: bold;">${log.lessonTitle}</span>
+                                </div>
+                                <span class="log-date" style="color: #94a3b8; font-size: 0.85rem;">${dateStr}</span>
+                            </div>
+                            <div class="log-details" style="display: flex; justify-content: space-between; font-size: 0.95rem;">
+                                <span class="log-score" style="color: ${scoreColor}; font-weight: bold;">得分: ${log.totalScore}/${maxScore} (${percent}%)</span>
+                                <span class="log-duration" style="color: #cbd5e1;">⏱ ${Math.floor(log.duration / 60)}分${(log.duration % 60).toString().padStart(2, '0')}秒</span>
+                            </div>
+                        </div>
+                    `;
+        }).join('')}
+            </div>
+        `;
+    }
+
+    /**
+     * Show reveal modal
+     */
+    showRevealModal(text: string, pinyin: string): void {
+        const modal = document.getElementById('reveal-modal');
+        const termEl = document.getElementById('reveal-term');
+        const pinyinEl = document.getElementById('reveal-pinyin');
+
+        if (!modal || !termEl || !pinyinEl) return;
+
+        // Toggle
+        if (modal.style.display === 'flex') {
+            modal.style.display = 'none';
+            return;
+        }
+
+        termEl.textContent = text;
+        pinyinEl.textContent = pinyin;
+        modal.style.display = 'flex';
+
+        // Close on click
+        const close = () => {
+            modal.style.display = 'none';
+            modal.removeEventListener('click', close);
+        };
+        modal.addEventListener('click', close);
     }
 
     /**

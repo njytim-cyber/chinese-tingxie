@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>星空听写</title>
     <meta name="description" content="练习汉字听写。通过互动描红学习词汇。">
-    <meta name="version" content="1.21.13">
+    <meta name="version" content="1.21.14">
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#38bdf8">
@@ -29,13 +29,18 @@
     <div id="start-overlay" role="dialog" aria-labelledby="start-title">
         <h1 class="start-title" id="start-title">星空听写</h1>
         <p class="start-subtitle">银河听写练习</p>
-        <p class="version-tag">v1.21.13</p>
+        <p class="version-tag">v1.21.14</p>
 
         <input type="text" id="player-name" class="name-input" placeholder="你的名字" maxlength="20" aria-label="输入你的名字">
 
-        <button id="start-btn" class="start-btn" aria-label="开始听写练习">听写练习</button>
-        <button id="dictation-btn" class="dictation-btn" aria-label="开始默写练习">默写练习</button>
-        <button id="review-btn" class="review-btn" aria-label="查看学习进度">查看进度</button>
+        <!-- Home Stats (New) -->
+        <div id="home-stats" class="home-stats" style="display: none; margin-bottom: 20px; text-align: center;">
+            <!-- Content populated by JS -->
+        </div>
+
+        <button id="start-btn" class="start-btn main-menu-btn" aria-label="开始听写练习">听写练习</button>
+        <button id="dictation-btn" class="dictation-btn main-menu-btn" aria-label="开始默写练习">默写练习</button>
+        <button id="review-btn" class="review-btn main-menu-btn" aria-label="查看学习进度">查看进度</button>
 
         <div class="instructions-box" role="note">
             <p>🔊 听词语 → ✍️ 写汉字 → ⭐ 升级！</p>

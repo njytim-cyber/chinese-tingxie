@@ -87,17 +87,25 @@ body {
 .start-btn {
     background: linear-gradient(to bottom, #4ade80, #22c55e);
     border: none;
+    /* Reset standard border */
     border-bottom: 6px solid #15803d;
     color: white;
-    font-family: inherit;
-    font-size: 2.5rem;
-    padding: 20px 60px;
+    /* font-family: inherit; - Handled by class */
+    /* font-size, padding - Handled by class or overridden here to match */
+    font-size: 1.8rem;
+    padding: 15px 0;
+    width: 280px;
+    margin-bottom: 15px;
+
     border-radius: 20px;
     cursor: pointer;
     transition: transform 0.1s;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     box-shadow: 0 10px 25px rgba(74, 222, 128, 0.4);
-    margin-bottom: 20px;
+    /* margin-bottom handles spacing */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .start-btn:active {
@@ -277,6 +285,12 @@ body {
     gap: 10px;
 }
 
+.char-content {
+    touch-action: none;
+    cursor: crosshair;
+    user-select: none;
+}
+
 /* Pinyin label below box */
 .char-pinyin-label {
     font-size: 1.6rem;
@@ -413,46 +427,88 @@ body {
     border-color: rgba(249, 115, 22, 0.3);
 }
 
-.review-btn {
-    background: linear-gradient(to bottom, #38bdf8, #0ea5e9);
-    border: none;
-    border-bottom: 6px solid #0284c7;
-    color: white;
-    font-family: inherit;
-    font-size: 1.5rem;
-    padding: 15px 40px;
+/* Unify Main Menu Buttons */
+.main-menu-btn {
+    width: 280px;
+    /* Fixed width for consistency */
+    font-size: 1.8rem;
+    /* Consistent font size */
+    padding: 15px 0;
+    /* Consistent padding */
+    margin-bottom: 15px;
+    /* Consistent spacing */
     border-radius: 20px;
     cursor: pointer;
-    transition: transform 0.1s;
+    transition: transform 0.1s, box-shadow 0.1s;
+    font-family: inherit;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    box-shadow: 0 10px 25px rgba(56, 189, 248, 0.4);
-    margin-bottom: 20px;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.review-btn:active {
-    transform: translateY(6px);
-    border-bottom-width: 0;
+.main-menu-btn:active {
+    transform: translateY(4px);
+    border-bottom-width: 0 !important;
+    /* Override specific border-bottoms if needed, or handle in specific classes */
+}
+
+/* Specific button colors */
+.start-btn {
+    background: linear-gradient(to bottom, #4ade80, #22c55e);
+    border-bottom: 6px solid #15803d;
+    color: white;
+    /* Overrides */
+    font-size: 1.8rem;
+    padding: 15px 0;
+    width: 280px;
+    margin-bottom: 15px;
+    box-shadow: 0 10px 25px rgba(74, 222, 128, 0.4);
+}
+
+.review-btn {
+    background: linear-gradient(to bottom, #38bdf8, #0ea5e9);
+    border-bottom: 6px solid #0284c7;
+    color: white;
+    box-shadow: 0 10px 25px rgba(56, 189, 248, 0.4);
 }
 
 .dictation-btn {
     background: linear-gradient(to bottom, #8b5cf6, #7c3aed);
-    border: none;
     border-bottom: 6px solid #6d28d9;
     color: white;
-    font-family: inherit;
-    font-size: 1.5rem;
-    padding: 15px 40px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: transform 0.1s;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
-    margin-bottom: 20px;
 }
 
-.dictation-btn:active {
-    transform: translateY(6px);
-    border-bottom-width: 0;
+/* Home Stats Styles */
+.home-stats {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    background: rgba(30, 41, 59, 0.8);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #334155;
+    backdrop-filter: blur(4px);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.stat-val {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--gold);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #94a3b8;
 }
 
 /* --- Level Progress Bar --- */
@@ -2759,6 +2815,7 @@ body {
     background: rgba(249, 115, 22, 0.25) !important;
     border-color: rgba(249, 115, 22, 0.4) !important;
 }
+
 /* --- Activity Dashboard --- */
 .dashboard-overlay {
     position: fixed;
@@ -2914,7 +2971,8 @@ body {
     margin-bottom: 25px;
 }
 
-.chart-section h3, .history-section h3 {
+.chart-section h3,
+.history-section h3 {
     margin: 0 0 15px 0;
     color: #cbd5e1;
     font-size: 1.1rem;
@@ -3052,3 +3110,51 @@ body {
     background: rgba(56, 189, 248, 0.1);
 }
 
+/* Spelling Carousel (used by both spelling and dictation modes) */
+.spelling-carousel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    width: 100%;
+}
+
+.spelling-nav-btn {
+    background: var(--card-bg);
+    border: 2px solid #334155;
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spelling-nav-btn:hover {
+    border-color: var(--primary);
+    background: #334155;
+}
+
+.spelling-chars-container {
+    display: flex;
+    justify-content: center;
+}
+
+.spelling-active {
+    display: flex !important;
+}
+
+.spelling-hidden {
+    display: none !important;
+}
+
+.spelling-progress {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 1.2rem;
+    color: var(--gold);
+}

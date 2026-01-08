@@ -366,34 +366,80 @@ export const Game = {
 
         container.innerHTML = '';
 
+        // Show HUD controls (reuse existing header)
+        ui.showControls();
+        ui.setHudTransparent(false);
+
         // Dynamically import and create dictation manager
         import('./dictation').then(({ DictationManager }) => {
-            const dictation = new DictationManager();
+            const dictation = new DictationManager(ui);
             dictationManager = dictation; // Assign to global for access
 
-            // Hide skip button in dictation mode (redundant with audio toggle)
+            // Hide skip button in dictation mode (not applicable)
             const skipBtn = document.getElementById('btn-skip');
             if (skipBtn) {
                 skipBtn.style.display = 'none';
             }
 
-            // Use audio button as Play/Pause toggle
+            // Wire up audio button for dictation
             const audioBtn = document.getElementById('btn-audio');
             if (audioBtn) {
-                audioBtn.innerHTML = '▶'; // Initial state (stopped)
-                audioBtn.title = '播放/暂停';
+                audioBtn.innerHTML = '🔊';
+                audioBtn.title = '播放短语';
+                audioBtn.onclick = () => {
+                    dictation.playAudio();
+                };
             }
 
+            // Wire up hint button for dictation
+            const hintBtn = document.getElementById('btn-hint');
+            if (hintBtn) {
+                hintBtn.onclick = () => {
+                    dictation.showHint();
+                };
+            }
+
+            // Wire up reveal button for dictation
+            const revealBtn = document.getElementById('btn-reveal');
+            if (revealBtn) {
+                revealBtn.onclick = () => {
+                    Game.revealPhrase();
+                };
+            }
+
+            state.sessionStartTime = Date.now(); // Track start time
+
             dictation.onComplete = (score, total) => {
+                // Log attempt
+                const chunks = dictation.chunks || [];
+                const phrases = chunks.map(c => ({
+                    term: c.text,
+                    correct: c.score > 0,
+                    mistakeCount: c.revealUsed ? 2 : (c.hintUsed ? 1 : 0),
+                    hintUsed: c.hintUsed || c.revealUsed
+                }));
+
+                const attempt: AttemptLog = {
+                    timestamp: new Date().toISOString(),
+                    lessonId: parseInt(passage.id) || 0,
+                    lessonTitle: passage.title,
+                    mode: 'dictation',
+                    phrases: phrases,
+                    totalScore: score,
+                    totalPhrases: chunks.length,
+                    duration: Math.round((Date.now() - (state.sessionStartTime || Date.now())) / 1000)
+                };
+                logAttempt(attempt);
+
                 ui.showDictationResult(score, total, () => {
                     this.showDictationSelect();
                 });
             };
             dictation.init(passage, container);
 
-            // Sync button state if auto-play is on (init calls playAudio)
+            // Auto-play audio on init for full dictation
             if (passage.isFullDictation) {
-                if (audioBtn) audioBtn.innerHTML = '⏸';
+                dictation.playAudio();
             }
         });
     },

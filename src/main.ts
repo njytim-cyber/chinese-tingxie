@@ -5,13 +5,14 @@
 import { initVoices, unlockAudio } from './audio';
 import { initParticles } from './particles';
 import { Game } from './game';
-import { saveDataSync } from './data';
+import { saveDataSync, getStats, getLessons, getAttemptLogs } from './data';
 
 /**
  * Start the game (called from start button)
  */
 export function startGame(): void {
     try {
+        // ... (keep existing)
         // Save player name
         const nameInput = document.getElementById('player-name') as HTMLInputElement | null;
         if (nameInput && nameInput.value.trim()) {
@@ -47,13 +48,64 @@ export function startGame(): void {
  * Initialize application
  */
 function init(): void {
-    console.log('Initializing app (v1.21.12)...');
+    console.log('Initializing app (v1.21.13)...');
     try {
         // Initialize voices
         initVoices();
 
         // Initialize particle system
         initParticles();
+
+        // Show Stats on Main Menu
+        const statsEl = document.getElementById('home-stats');
+        if (statsEl) {
+            const stats = getStats();
+            // Calculate completion based on stats
+            const logs = getAttemptLogs();
+            const dictationsDone = logs.filter(l => l.mode === 'dictation').length;
+
+            // Calculate total words
+            const lessons = getLessons();
+            let totalWords = 0;
+            lessons.forEach(l => totalWords += l.phrases.length);
+
+            // Fetch total dictations (approximate or fetch)
+            // We can try to fetch, or hardcode if we know. 
+            // Since we are in init, let's fetch lightly
+            fetch('/dictation.json')
+                .then(res => res.json())
+                .then(data => {
+                    const totalDictations = data.passages ? data.passages.length : 17;
+
+                    if (!statsEl) return;
+                    statsEl.style.display = 'flex'; // Ensure visible!
+                    statsEl.innerHTML = `
+                        <div class="stat-item">
+                            <span class="stat-val">📚 ${stats.wordsLearned} / ${totalWords}</span>
+                            <span class="stat-label">学会词语</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-val">✏️ ${dictationsDone} / ${totalDictations}</span>
+                            <span class="stat-label">完成默写</span>
+                        </div>
+                    `;
+                })
+                .catch(() => {
+                    // Fallback if fetch fails
+                    if (!statsEl) return;
+                    statsEl.style.display = 'flex'; // Ensure visible!
+                    statsEl.innerHTML = `
+                        <div class="stat-item">
+                            <span class="stat-val">📚 ${stats.wordsLearned} / ${totalWords}</span>
+                            <span class="stat-label">学会词语</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-val">✏️ ${dictationsDone}</span>
+                            <span class="stat-label">完成默写</span>
+                        </div>
+                    `;
+                });
+        }
 
         // Load saved player name into input
         const savedName = Game.getPlayerName();

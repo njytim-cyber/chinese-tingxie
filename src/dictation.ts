@@ -1,3 +1,4 @@
+
 /**
  * Dictation Module (默写)
  * Fill-in-the-blank dictation from memory
@@ -5,6 +6,7 @@
 
 import HanziWriter from 'hanzi-writer';
 import { SoundFX } from './audio';
+import type { UIManager } from './ui';
 
 /**
  * Dictation passage data structure
@@ -47,8 +49,12 @@ export class DictationManager {
     private passage: DictationPassage | null = null;
     private charBoxes: CharBox[] = [];
 
+    constructor(_ui: UIManager) {
+        // UI manager passed for future use (e.g., reveal modal)
+    }
+
     // Chunking state
-    private chunks: {
+    public chunks: {
         start: number;
         end: number;
         text: string;
@@ -59,8 +65,8 @@ export class DictationManager {
     }[] = [];
     private currentChunkIndex = 0;
 
-    // Mobile Carousel State
-    private mobileCharIndex = 0;
+    // Single-char carousel state
+    private currentCharIndex = 0;
 
     // HanziWriter instances for current chunk
     private writers: HanziWriter[] = [];
@@ -79,7 +85,7 @@ export class DictationManager {
         this.passage = passage;
         this.container = container;
         this.currentChunkIndex = 0;
-        this.mobileCharIndex = 0;
+        this.currentCharIndex = 0;
         this.writers = [];
 
         // Process chunks
@@ -206,7 +212,7 @@ export class DictationManager {
     }
 
     /**
-     * Render the dictation UI (Focus View)
+     * Render the dictation UI (Single-char carousel like spelling mode)
      */
     private render(): void {
         if (!this.container || !this.passage || !this.chunks.length) return;
@@ -215,257 +221,177 @@ export class DictationManager {
         this.destroyWriters();
 
         this.container.innerHTML = '';
-        this.container.className = 'dictation-container focus-view';
+        this.container.className = 'dictation-container';
 
-        // 1. Top Bar
-        const header = document.createElement('div');
-        header.className = 'focus-header';
-        header.style.display = 'flex';
-        header.style.justifyContent = 'space-between';
-        header.style.alignItems = 'center';
-        header.style.marginBottom = '15px';
+        // 1. Completed Phrases Display (shows verified phrases above)
+        const completedArea = document.createElement('div');
+        completedArea.className = 'dictation-completed-phrases';
+        completedArea.style.textAlign = 'center';
+        completedArea.style.fontSize = '1.5rem';
+        completedArea.style.color = '#94a3b8';
+        completedArea.style.marginBottom = '20px';
+        completedArea.style.padding = '10px';
+        completedArea.style.minHeight = '2rem';
 
-        // Instructions
-        const instructions = document.createElement('div');
-        instructions.className = 'dictation-instructions';
-        instructions.innerText = '🎧 听写：点击播放，写出汉字';
-        instructions.style.color = '#cbd5e1';
-        instructions.style.fontSize = '0.9rem';
-        instructions.style.marginBottom = '10px';
-        instructions.style.textAlign = 'center';
-
-        // Append instructions after header (will append header first)
-        // Wait, header is not appended yet in original code?
-        // Let's check matching lines. The original code creates header, then progress, then appends progress TO header.
-
-        const progress = document.createElement('div');
-        progress.className = 'focus-progress';
-        const filled = this.charBoxes.filter(b => b.isCorrect).length;
-        const total = this.charBoxes.filter(b => b.isBlank).length;
-        progress.innerHTML = `<span class="progress-count" style="font-weight:bold;color:var(--primary)">${filled}/${total}</span>`;
-        header.appendChild(progress);
-
-        // 2. Context Area
-        const contextArea = document.createElement('div');
-        contextArea.className = 'focus-context';
-        // Styled via CSS for "small font above big squares"
-        // keeping DOM structure simple
-
-        let contextText = "";
+        // Build completed text from previous chunks
+        let completedText = '';
         for (let i = 0; i < this.currentChunkIndex; i++) {
             const chunk = this.chunks[i];
-            for (let j = chunk.start; j < chunk.end; j++) {
-                const box = this.charBoxes[j];
-                contextText += (box.isCorrect || !box.isBlank) ? box.char : '_';
-            }
+            completedText += chunk.text;
         }
-        if (contextText) {
-            contextArea.textContent = contextText;
-            this.container.appendChild(contextArea);
+        if (completedText) {
+            completedArea.textContent = completedText;
+            completedArea.style.color = 'var(--success)';
         }
+        this.container.appendChild(completedArea);
 
-        // 3. Active Chunk
+        // 2. Current Chunk - Single Character Carousel (reuse spelling structure)
         if (this.currentChunkIndex < this.chunks.length) {
             const chunkState = this.chunks[this.currentChunkIndex];
 
-            const chunkContainer = document.createElement('div');
-            chunkContainer.className = 'focus-chunk-container';
-            // chunkContainer.style.background = 'white'; // REMOVED per valid request
-            chunkContainer.style.padding = '15px';
-            chunkContainer.style.borderRadius = '16px';
-            chunkContainer.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
-
-            // Mobile Navigation Container (Arrows)
-            const mobileNav = document.createElement('div');
-            mobileNav.className = 'mobile-nav-container';
-            // Hidden by default, shown via CSS on mobile
-
-            const prevBtn = document.createElement('button');
-            prevBtn.id = 'mobile-prev-btn'; // ID for selection
-            prevBtn.className = 'mobile-nav-btn';
-            prevBtn.textContent = '❮';
-            prevBtn.onclick = () => this.prevMobileChar();
-
-            const nextBtn = document.createElement('button');
-            nextBtn.id = 'mobile-next-btn'; // ID for selection
-            nextBtn.className = 'mobile-nav-btn';
-            nextBtn.textContent = '❯';
-            nextBtn.onclick = () => this.nextMobileChar();
-
-            mobileNav.appendChild(prevBtn);
-            // Grid inserted here
-
-            const grid = document.createElement('div');
-            grid.className = 'dictation-grid focus-grid';
-            mobileNav.appendChild(grid); // Wrap grid in nav for mobile layout
-
-            mobileNav.appendChild(nextBtn);
-            chunkContainer.appendChild(mobileNav);
-
-            const chunkLen = chunkState.end - chunkState.start;
-            const cols = Math.min(Math.max(chunkLen, 4), 8); // Adjust layout
-            grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-
+            // Build valid char indices for this chunk (skip punctuation)
+            const validIndices: number[] = [];
+            const punctuationRegex = /[，。！？、：；""''（）《》]/;
             for (let i = chunkState.start; i < chunkState.end; i++) {
                 const box = this.charBoxes[i];
-
-                // Skip punctuation entirely - mark as correct and don't render
-                const punctuationRegex = /[，。！？、：；""''（）《》]/;
-                if (punctuationRegex.test(box.char)) {
+                if (!punctuationRegex.test(box.char)) {
+                    validIndices.push(i);
+                } else {
+                    // Auto-complete punctuation
                     box.isCorrect = true;
                     box.userInput = box.char;
-                    continue; // Skip rendering this character
                 }
-
-                const boxEl = document.createElement('div');
-                boxEl.className = 'dictation-char-box';
-                // Mark initial active char for mobile
-                if (i - chunkState.start === this.mobileCharIndex) {
-                    boxEl.classList.add('active-mobile-char');
-                } else {
-                    boxEl.classList.add('mobile-hidden');
-                }
-
-                boxEl.style.width = '100%';
-                boxEl.style.display = 'flex';
-                boxEl.style.flexDirection = 'column';
-                boxEl.style.alignItems = 'center';
-                boxEl.style.justifyContent = 'center';
-                boxEl.style.position = 'relative';
-
-                // Content / Writer Container
-                const contentEl = document.createElement('div');
-                const writerId = `dictation-char-${i}`;
-                contentEl.id = writerId;
-                contentEl.className = 'char-content focus-box';
-                contentEl.style.width = '100%';
-                contentEl.style.aspectRatio = '1';
-                contentEl.style.position = 'relative';
-
-                if (!box.isBlank) {
-                    contentEl.textContent = box.char;
-                    contentEl.style.display = 'flex';
-                    contentEl.style.alignItems = 'center';
-                    contentEl.style.justifyContent = 'center';
-                    contentEl.style.fontSize = '2rem';
-                    contentEl.style.color = '#94a3b8';
-                    contentEl.style.background = '#e2e8f0';
-                    contentEl.style.border = '3px solid #cbd5e1';
-                    contentEl.style.borderRadius = '16px';
-                    contentEl.classList.remove('focus-box');
-                } else {
-                    boxEl.classList.add('blank');
-                }
-
-                boxEl.appendChild(contentEl);
-
-                // Pinyin
-                const pinyin = chunkState.pinyin[i - chunkState.start] || '';
-                const pinyinEl = document.createElement('div');
-                pinyinEl.className = 'char-pinyin';
-                pinyinEl.textContent = pinyin;
-                if (!pinyin) pinyinEl.innerHTML = '&nbsp;';
-
-                boxEl.appendChild(pinyinEl);
-                grid.appendChild(boxEl);
             }
-            this.container.appendChild(header);
-            this.container.appendChild(instructions); // Add instructions
-            this.container.appendChild(chunkContainer);
+            this.validCharIndices = validIndices;
 
-            // Controls
-            const controls = document.createElement('div');
-            controls.className = 'dictation-controls focus-controls';
-            controls.style.marginTop = '20px';
-            controls.style.display = 'flex';
-            controls.style.justifyContent = 'center';
-            controls.style.gap = '15px';
+            // Carousel wrapper (reuse spelling-carousel class)
+            const carousel = document.createElement('div');
+            carousel.className = 'spelling-carousel';
 
-            const checkBtn = document.createElement('button');
-            checkBtn.className = 'game-btn dictation-check-btn';
-            const isLastChunk = this.currentChunkIndex === this.chunks.length - 1;
-            checkBtn.textContent = isLastChunk ? '✓ 完成' : '✓ 下一步';
-            checkBtn.style.padding = '12px 30px';
-            checkBtn.style.fontSize = '1.1rem';
+            // Prev button
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'spelling-nav-btn';
+            prevBtn.id = 'dictation-prev-btn';
+            prevBtn.textContent = '❮';
+            prevBtn.onclick = () => this.prevChar();
+            carousel.appendChild(prevBtn);
 
-            checkBtn.onclick = () => this.nextChunk();
-            controls.appendChild(checkBtn);
+            // Single char container
+            const charContainer = document.createElement('div');
+            charContainer.className = 'spelling-chars-container';
+            charContainer.style.display = 'flex';
+            charContainer.style.justifyContent = 'center';
 
-            const hintBtn = document.createElement('button');
-            hintBtn.className = 'game-btn dictation-hint-btn';
-            hintBtn.textContent = '💡 提示';
-            hintBtn.style.padding = '12px 20px';
-            hintBtn.onclick = () => this.showHint();
-            controls.appendChild(hintBtn);
+            // Create char boxes (all hidden except current)
+            validIndices.forEach((globalIdx, localIdx) => {
+                const isActive = localIdx === this.currentCharIndex;
 
-            this.container.appendChild(controls);
+                const charBox = document.createElement('div');
+                charBox.className = isActive ? 'char-box spelling-active' : 'char-box spelling-hidden';
+                charBox.id = `dictation-box-${globalIdx}`;
 
-            // Initialize writers AFTER DOM is ready
+                const slot = document.createElement('div');
+                slot.id = `dictation-char-${globalIdx}`;
+                slot.className = isActive ? 'char-slot active' : 'char-slot';
+                slot.style.width = '240px';
+                slot.style.height = '240px';
+
+                const pinyinLabel = document.createElement('div');
+                pinyinLabel.className = 'char-pinyin-label';
+                pinyinLabel.textContent = chunkState.pinyin[globalIdx - chunkState.start] || '';
+
+                charBox.appendChild(slot);
+                charBox.appendChild(pinyinLabel);
+                charContainer.appendChild(charBox);
+            });
+
+            carousel.appendChild(charContainer);
+
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'spelling-nav-btn';
+            nextBtn.id = 'dictation-next-btn';
+            nextBtn.textContent = '❯';
+            nextBtn.onclick = () => this.nextChar();
+            carousel.appendChild(nextBtn);
+
+            this.container.appendChild(carousel);
+
+            // Progress indicator
+            const progressEl = document.createElement('div');
+            progressEl.className = 'spelling-progress';
+            progressEl.id = 'dictation-progress';
+            const completed = validIndices.filter(i => this.charBoxes[i].isCorrect).length;
+            progressEl.textContent = `${completed}/${validIndices.length}`;
+            this.container.appendChild(progressEl);
+
+            // Initialize writers after DOM insertion
             setTimeout(() => {
                 this.initWritersForChunk();
-                this.updateMobileView(); // Correctly init mobile view
-            }, 10);
+                this.updateCarouselView();
+            }, 50);
         }
     }
 
-    // Mobile Navigation Methods
-    private prevMobileChar(): void {
-        if (this.mobileCharIndex > 0) {
-            this.mobileCharIndex--;
-            this.updateMobileView();
+    // Valid char indices for current chunk (non-punctuation)
+    private validCharIndices: number[] = [];
+
+    /**
+     * Navigate to previous character
+     */
+    private prevChar(): void {
+        if (this.currentCharIndex > 0) {
+            this.currentCharIndex--;
+            this.updateCarouselView();
         }
     }
 
-    private nextMobileChar(): void {
-        const chunk = this.chunks[this.currentChunkIndex];
-        const len = chunk.end - chunk.start;
-        if (this.mobileCharIndex < len - 1) {
-            this.mobileCharIndex++;
-            this.updateMobileView();
-        } else {
-            // On last char, next button acts as Submit
-            this.nextChunk();
+    /**
+     * Navigate to next character
+     */
+    private nextChar(): void {
+        if (this.currentCharIndex < this.validCharIndices.length - 1) {
+            this.currentCharIndex++;
+            this.updateCarouselView();
         }
     }
 
-    private updateMobileView(): void {
-        const container = document.querySelector('.focus-chunk-container');
-        if (!container) return;
+    /**
+     * Update carousel view to show current character
+     */
+    private updateCarouselView(): void {
+        const boxes = document.querySelectorAll('.spelling-chars-container .char-box');
+        boxes.forEach((box, i) => {
+            if (i === this.currentCharIndex) {
+                box.classList.remove('spelling-hidden');
+                box.classList.add('spelling-active');
+                box.querySelector('.char-slot')?.classList.add('active');
+            } else {
+                box.classList.add('spelling-hidden');
+                box.classList.remove('spelling-active');
+                box.querySelector('.char-slot')?.classList.remove('active');
+            }
+        });
 
-        // Smart Navigation Logic
-        const prevBtn = document.getElementById('mobile-prev-btn');
-        const nextBtn = document.getElementById('mobile-next-btn');
-        const chunk = this.chunks[this.currentChunkIndex];
-        const len = chunk.end - chunk.start;
+        // Update nav buttons
+        const prevBtn = document.getElementById('dictation-prev-btn');
+        const nextBtn = document.getElementById('dictation-next-btn');
 
         if (prevBtn) {
-            // Hide prev button at start
-            prevBtn.style.visibility = this.mobileCharIndex === 0 ? 'hidden' : 'visible';
+            prevBtn.style.visibility = this.currentCharIndex === 0 ? 'hidden' : 'visible';
         }
 
         if (nextBtn) {
-            // Transform next button at end
-            if (this.mobileCharIndex === len - 1) {
-                nextBtn.innerHTML = '✓'; // Submit icon
-                nextBtn.style.background = 'var(--success)';
-                nextBtn.style.borderColor = '#16a34a';
-            } else {
-                nextBtn.innerHTML = '❯';
-                nextBtn.style.background = ''; // Reset to default (via CSS class)
-                nextBtn.style.borderColor = '';
-            }
+            const isLast = this.currentCharIndex === this.validCharIndices.length - 1;
+            nextBtn.style.visibility = isLast ? 'hidden' : 'visible';
         }
 
-        const boxes = container.querySelectorAll('.dictation-char-box');
-        boxes.forEach((box, index) => {
-            if (index === this.mobileCharIndex) {
-                box.classList.add('active-mobile-char');
-                box.classList.remove('mobile-hidden');
-            } else {
-                box.classList.remove('active-mobile-char');
-                box.classList.add('mobile-hidden');
-            }
-        });
+        // Update progress
+        const progressEl = document.getElementById('dictation-progress');
+        if (progressEl) {
+            const completed = this.validCharIndices.filter(i => this.charBoxes[i].isCorrect).length;
+            progressEl.textContent = `${completed}/${this.validCharIndices.length}`;
+        }
     }
 
     /**
@@ -489,27 +415,16 @@ export class DictationManager {
             const isPunctuation = punctuationRegex.test(box.char);
 
             if (box.isBlank && !isPunctuation) {
-                // Determine dimensions based on container
-                // On mobile, the box might be hidden initially, so clientWidth is 0
-                // We default to a standard size or force a check
-                // For HanziWriter, it adapts, but initial size matters.
-                // Mobile layout forces large box.
-                const isMobile = window.innerWidth <= 600;
-                let width = el.clientWidth;
-                if (width === 0 && isMobile) width = 280; // Fallback for hidden mobile boxes
-                if (width === 0) width = 60; // Desktop fallback
-
-                const size = Math.min(width, 300);
-
+                // Use exact same dimensions as spelling mode (input.ts)
                 const writer = HanziWriter.create(writerId, box.char, {
-                    width: size,
-                    height: size,
-                    padding: 5,
-                    showOutline: false, // UNSEEN dictation
+                    width: 234,
+                    height: 234,
+                    padding: 15,
+                    showOutline: false, // Unseen dictation mode
                     strokeColor: '#38bdf8',
                     radicalColor: '#f472b6',
                     outlineColor: '#334155',
-                    drawingWidth: 10,
+                    drawingWidth: 12,
                     showCharacter: false,
                     drawingFadeDuration: 300,
                 });
@@ -528,9 +443,25 @@ export class DictationManager {
                         box.isCorrect = true;
                         box.userInput = box.char;
 
-                        // Auto-advance logic for mobile
-                        if (window.innerWidth <= 600) {
-                            setTimeout(() => this.nextMobileChar(), 400);
+                        // Check if ALL chars in chunk are correct (Auto-Verify)
+                        const chunk = this.chunks[this.currentChunkIndex];
+                        const allCorrect = this.charBoxes.slice(chunk.start, chunk.end).every(b => b.isCorrect);
+
+                        if (allCorrect) {
+                            SoundFX.success(); // Play success sound
+
+                            // Auto-advance after small delay
+                            setTimeout(() => {
+                                this.nextChunk();
+                            }, 800);
+                        }
+
+                        // Auto-advance to next char in carousel
+                        if (!allCorrect && this.currentCharIndex < this.validCharIndices.length - 1) {
+                            setTimeout(() => {
+                                this.currentCharIndex++;
+                                this.updateCarouselView();
+                            }, 400);
                         }
                     }
                 });
@@ -563,8 +494,8 @@ export class DictationManager {
         const allCorrect = this.charBoxes.slice(chunk.start, chunk.end).every(b => b.isCorrect);
 
         if (!allCorrect) {
-            // Shake effect
-            const container = document.querySelector('.focus-chunk-container');
+            // Shake effect on carousel
+            const container = document.querySelector('.spelling-carousel');
             container?.classList.add('shake');
             setTimeout(() => container?.classList.remove('shake'), 400);
             return;
@@ -581,7 +512,7 @@ export class DictationManager {
             }
 
             this.currentChunkIndex++;
-            this.mobileCharIndex = 0; // Reset mobile index
+            this.currentCharIndex = 0; // Reset char index for new chunk
             this.render();
             this.renderFooterProgress(); // Update footer
         } else {
@@ -611,7 +542,7 @@ export class DictationManager {
         }
     }
 
-    private showHint(): void {
+    showHint(): void {
         // Mark hint as used for this chunk
         this.chunks[this.currentChunkIndex].hintUsed = true;
 
@@ -620,7 +551,7 @@ export class DictationManager {
         // In mobile view, user is focused on ONE char (mobileCharIndex)
         // So hint should target visible char first if active.
         if (window.innerWidth <= 600) {
-            const activeCharIndex = chunk.start + this.mobileCharIndex;
+            const activeCharIndex = chunk.start + this.currentCharIndex;
 
 
             // HanziWriter instance doesn't easily expose ID.
@@ -668,6 +599,30 @@ export class DictationManager {
     notifyReveal(): void {
         if (this.chunks && this.chunks[this.currentChunkIndex]) {
             this.chunks[this.currentChunkIndex].revealUsed = true;
+        }
+    }
+
+    /**
+     * Reveal current chunk answers
+     */
+    revealCurrentChunk(): void {
+        this.notifyReveal();
+
+        // Show all characters in current chunk
+        this.writers.forEach(writer => {
+            writer.showCharacter();
+        });
+
+        // Also update charBoxes to mark as populated (but not necessarily "correct" for scoring, 
+        // though notifyReveal sets score to 0).
+        // If we want to allow "next" to proceed, we might need to pretend they are filled.
+        const chunk = this.chunks[this.currentChunkIndex];
+        for (let i = chunk.start; i < chunk.end; i++) {
+            const box = this.charBoxes[i];
+            // If it was blank, now it's effectively "filled" by the reveal
+            if (box.isBlank) {
+                box.isCorrect = true; // Mark as "correct" so nextChunk checks pass
+            }
         }
     }
 
