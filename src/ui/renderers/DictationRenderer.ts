@@ -100,17 +100,11 @@ export class DictationRenderer {
         }
     ): void {
         container.innerHTML = '';
-        container.className = 'dictation-container';
+        container.classList.add('dictation-container');
 
         // 1. Completed Phrases Display
         const completedArea = document.createElement('div');
         completedArea.className = 'dictation-completed-phrases';
-        completedArea.style.textAlign = 'center';
-        completedArea.style.fontSize = '1.5rem';
-        completedArea.style.color = '#94a3b8';
-        completedArea.style.marginBottom = '20px';
-        completedArea.style.padding = '10px';
-        completedArea.style.minHeight = '2rem';
 
         if (completedText) {
             completedArea.textContent = completedText;
@@ -164,16 +158,11 @@ export class DictationRenderer {
 
         carousel.appendChild(charContainer);
 
-        carousel.appendChild(charContainer);
-
-        // Progress indicator text
-        const progressEl = document.createElement('div');
-        progressEl.className = 'spelling-progress';
-        progressEl.id = 'dictation-progress';
-        progressEl.style.textAlign = 'center';
-        progressEl.style.marginTop = '10px';
-        progressEl.style.color = 'var(--tang-ink-light)';
-        carousel.appendChild(progressEl);
+        // Indicator dots (placed above buttons)
+        const indicators = document.createElement('div');
+        indicators.className = 'dictation-indicators';
+        indicators.id = 'dictation-indicators';
+        carousel.appendChild(indicators);
 
         // 5-Button Toolbar (Matching Spelling/Design)
         const toolbar = document.createElement('div');
@@ -204,20 +193,28 @@ export class DictationRenderer {
         revealBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
         revealBtn.onclick = callbacks.onReveal;
 
-        // 5. Next Button
-        const nextBtn = document.createElement('button');
-        nextBtn.className = 'tool-btn';
-        nextBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4l10 8-10 8V4zM19 5v14h2V5h-2z"/></svg>`; // Skip icon
-        nextBtn.onclick = callbacks.onNext;
-
         toolbar.appendChild(audioBtn);
         toolbar.appendChild(gridBtn);
         toolbar.appendChild(hintBtn);
         toolbar.appendChild(revealBtn);
-        toolbar.appendChild(nextBtn);
 
         carousel.appendChild(toolbar);
         container.appendChild(carousel);
+
+        // Swipe support
+        let touchStartX = 0;
+        carousel.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+
+        carousel.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) callbacks.onNext();
+                else callbacks.onPrev();
+            }
+        }, { passive: true });
 
         // Initial view update
         this.updateCarouselView(currentCharIndex, validCharIndices, charBoxes);
@@ -246,22 +243,26 @@ export class DictationRenderer {
 
         // Update nav buttons
         const prevBtn = document.getElementById('dictation-prev-btn');
-        const nextBtn = document.getElementById('dictation-next-btn');
-
         if (prevBtn) {
             prevBtn.style.visibility = currentCharIndex === 0 ? 'hidden' : 'visible';
         }
 
-        if (nextBtn) {
-            const isLast = currentCharIndex === validCharIndices.length - 1;
-            nextBtn.style.visibility = isLast ? 'hidden' : 'visible';
-        }
+        // Update indicators (dots)
+        const indicatorsEl = document.getElementById('dictation-indicators');
+        if (indicatorsEl) {
+            indicatorsEl.innerHTML = '';
+            validCharIndices.forEach((_, i) => {
+                const dot = document.createElement('div');
+                dot.className = `indicator-dot ${i === currentCharIndex ? 'active' : ''}`;
 
-        // Update progress
-        const progressEl = document.getElementById('dictation-progress');
-        if (progressEl) {
-            const completed = validCharIndices.filter(i => charBoxes[i].isCorrect).length;
-            progressEl.textContent = `${completed}/${validCharIndices.length}`;
+                // If it's correct, show a tick or different color
+                const globalIdx = validCharIndices[i];
+                if (charBoxes[globalIdx].isCorrect) {
+                    dot.classList.add('correct');
+                }
+
+                indicatorsEl.appendChild(dot);
+            });
         }
     }
 
