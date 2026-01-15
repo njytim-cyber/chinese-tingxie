@@ -1,0 +1,106 @@
+/* Dashboard Header Component */
+.dashboard-header {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 12px auto 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    box-sizing: border-box;
+    background: var(--bg-canvas);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--tang-paper-dark);
+    border-radius: 28px;
+    z-index: 2010;
+    font-family: var(--app-font);
+}
+
+.header-left,
+.header-stats {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.header-stats {
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.app-title {
+    flex: 2;
+    font-size: 2.2rem;
+    color: var(--ink);
+    margin: 0;
+    font-weight: 900;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.player-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--tang-red-light);
+    border: 2px solid var(--tang-red);
+    background-image: url('/avatars.webp');
+    background-size: 800% 800%;
+    background-position: 0 0;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(196, 64, 50, 0.2);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.player-avatar:hover {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.header-back-btn {
+    background: transparent;
+    border: none;
+    color: var(--ink-wash);
+    font-size: 1.4rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.header-back-btn:hover {
+    color: var(--ink);
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.header-back-btn:active {
+    transform: scale(0.95);
+}
+
+.stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--tang-paper-dark);
+    border-radius: 24px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ink);
+    box-shadow: none;
+}

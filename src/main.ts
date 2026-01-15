@@ -2,46 +2,17 @@
  * Main Entry Point
  */
 
+// CSS Import (all styles from legacy monolith - TODO: gradually migrate to modular files)
+// CSS Import (Modular)
+import '../public/css/index.css';
+
+// Module Imports
 import { initVoices, unlockAudio } from './audio';
 import { initParticles } from './particles';
 import { Game } from './game';
-import { saveDataSync, getStats, getLessons, getAttemptLogs } from './data';
-
-/**
- * Start the game (called from start button)
- */
-export function startGame(): void {
-    try {
-        // ... (keep existing)
-        // Save player name
-        const nameInput = document.getElementById('player-name') as HTMLInputElement | null;
-        if (nameInput && nameInput.value.trim()) {
-            Game.setPlayerName(nameInput.value);
-        }
-
-        const overlay = document.getElementById('start-overlay');
-        if (!overlay) {
-            console.error('Start overlay not found!');
-            return;
-        }
-
-        // Unlock audio (must be in click handler)
-        unlockAudio();
-
-        // Remove overlay and initialize game
-        overlay.style.opacity = '0';
-        setTimeout(() => {
-            overlay.remove();
-            Game.init();
-        }, 500);
-    } catch (error) {
-        console.error('Error starting game:', error);
-        alert('启动失败，请刷新页面重试。');
-    }
-}
+import { saveDataSync, getStats, getLessons } from './data';
 
 // Expose to window for backward compatibility with onclick and debugging
-(window as any).startGame = startGame;
 (window as any).Game = Game;
 
 /**
@@ -56,118 +27,62 @@ function init(): void {
         // Initialize particle system
         initParticles();
 
-        // Show Stats on Main Menu
-        const statsEl = document.getElementById('home-stats');
-        if (statsEl) {
-            const stats = getStats();
-            // Calculate completion based on stats
-            const logs = getAttemptLogs();
-            const dictationsDone = logs.filter(l => l.mode === 'dictation').length;
+        // Initialize the game core (this will handle stats, avatar, and initial UI state)
+        Game.init(false);
 
-            // Calculate total words
-            const lessons = getLessons();
-            let totalWords = 0;
-            lessons.forEach(l => totalWords += l.phrases.length);
-
-            // Fetch total dictations (approximate or fetch)
-            // We can try to fetch, or hardcode if we know. 
-            // Since we are in init, let's fetch lightly
-            fetch('/dictation.json')
-                .then(res => res.json())
-                .then(data => {
-                    const totalDictations = data.passages ? data.passages.length : 17;
-
-                    if (!statsEl) return;
-                    statsEl.style.display = 'flex'; // Ensure visible!
-                    statsEl.innerHTML = `
-                        <div class="stat-item">
-                            <span class="stat-val">📚 ${stats.wordsLearned} / ${totalWords}</span>
-                            <span class="stat-label">学会词语</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-val">✏️ ${dictationsDone} / ${totalDictations}</span>
-                            <span class="stat-label">完成默写</span>
-                        </div>
-                    `;
-                })
-                .catch(() => {
-                    // Fallback if fetch fails
-                    if (!statsEl) return;
-                    statsEl.style.display = 'flex'; // Ensure visible!
-                    statsEl.innerHTML = `
-                        <div class="stat-item">
-                            <span class="stat-val">📚 ${stats.wordsLearned} / ${totalWords}</span>
-                            <span class="stat-label">学会词语</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-val">✏️ ${dictationsDone}</span>
-                            <span class="stat-label">完成默写</span>
-                        </div>
-                    `;
-                });
-        }
-
-        // Load saved player name into input
-        const savedName = Game.getPlayerName();
-        const nameInput = document.getElementById('player-name') as HTMLInputElement | null;
-        if (nameInput && savedName) {
-            nameInput.value = savedName;
-        }
-
-        // Set up start button
+        // Set up start button (听写 - Spelling/Dictation listening)
         const startBtn = document.getElementById('start-btn');
         if (startBtn) {
-            startBtn.addEventListener('click', startGame);
-        }
-
-        // Allow Enter key to start game from name input
-        if (nameInput) {
-            nameInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    startGame();
+            startBtn.addEventListener('click', () => {
+                const overlay = document.getElementById('start-overlay');
+                if (overlay) {
+                    // First click - remove overlay and init
+                    unlockAudio();
+                    overlay.style.opacity = '0';
+                    setTimeout(() => {
+                        overlay.remove();
+                        Game.init();
+                    }, 500);
+                } else {
+                    // Subsequent clicks - just navigate
+                    Game.showLessonSelect();
                 }
             });
         }
 
+
+        // Review button (进度 - Progress)
         const reviewBtn = document.getElementById('review-btn');
         if (reviewBtn) {
             reviewBtn.addEventListener('click', () => {
                 const overlay = document.getElementById('start-overlay');
-                if (overlay) overlay.remove();
-
-                unlockAudio();
-                Game.init(false);
+                if (overlay) {
+                    unlockAudio();
+                    overlay.remove();
+                    Game.init(false);
+                }
                 Game.showProgress();
             });
         }
 
-        const practiceBtn = document.getElementById('main-practice-btn');
-        if (practiceBtn) {
-            practiceBtn.addEventListener('click', () => {
-                const overlay = document.getElementById('start-overlay');
-                if (overlay) overlay.remove();
-
-                unlockAudio();
-                Game.init(false);
-                Game.showPracticeSelect();
-            });
-        }
-
-        // Dictation mode button
+        // Dictation mode button (默写 - Silent Writing)
         const dictationBtn = document.getElementById('dictation-btn');
         if (dictationBtn) {
             dictationBtn.addEventListener('click', () => {
                 const overlay = document.getElementById('start-overlay');
-                if (overlay) overlay.remove();
-
-                unlockAudio();
-                Game.init(false);
+                if (overlay) {
+                    unlockAudio();
+                    overlay.remove();
+                    Game.init(false);
+                }
                 Game.showDictationSelect();
             });
         }
 
         // Set up game control buttons
+        const headerBackBtn = document.getElementById('header-back-btn');
+        if (headerBackBtn) headerBackBtn.addEventListener('click', () => Game.handleBackNavigation());
+
         const menuBtn = document.getElementById('menu-btn');
         if (menuBtn) menuBtn.addEventListener('click', () => Game.handleBackNavigation());
 
@@ -183,10 +98,25 @@ function init(): void {
         const skipBtn = document.getElementById('btn-skip');
         if (skipBtn) skipBtn.addEventListener('click', () => Game.skipLevel());
 
+        const gridBtn = document.getElementById('btn-grid');
+        if (gridBtn) gridBtn.addEventListener('click', () => Game.toggleGrid());
+
         const nextBtn = document.getElementById('next-btn');
         if (nextBtn) nextBtn.addEventListener('click', () => Game.nextLevel());
 
         console.log('App initialized');
+
+        // Auto-show lesson select on startup (听写 by default)
+        // Only if this is a fresh page load (overlay exists)
+        const overlay = document.getElementById('start-overlay');
+        if (overlay) {
+            unlockAudio();
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.remove();
+                Game.showLessonSelect();
+            }, 300);
+        }
     } catch (error) {
         console.error('App initialization failed:', error);
     }
@@ -207,6 +137,15 @@ document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
         saveDataSync();
     }
+});
+
+// Global Error Handlers
+window.addEventListener('error', (event) => {
+    console.error('Global Error caught:', event.error);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled Promise Rejection:', event.reason);
 });
 
 if (document.readyState === 'loading') {

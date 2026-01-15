@@ -4,107 +4,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>星空听写</title>
-    <meta name="description" content="练习汉字听写。通过互动描红学习词汇。">
+    <title>心织笔耕 - 汉字听写</title>
+    <meta name="description" content="Master Chinese characters through dictation and writing.">
     <meta name="version" content="1.21.20">
 
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#38bdf8">
+    <meta name="theme-color" content="#FAFAF6">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="星空听写">
+    <meta name="apple-mobile-web-app-title" content="Starry Sky">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-192.png">
 
-    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/styles.css?v=1.21.20">
 
+
+    <!-- Font: KaiTi enforced via styles.css system fonts -->
+
+
+    <!-- CSS is now imported via main.ts using Vite's native CSS import -->
     <!-- HanziLookup for handwriting recognition -->
     <script src="https://cdn.jsdelivr.net/gh/gugray/HanziLookupJS@master/dist/hanzilookup.min.js"></script>
 </head>
 
 <body>
 
-    <!-- START SCREEN -->
-    <div id="start-overlay" role="dialog" aria-labelledby="start-title">
-        <h1 class="start-title" id="start-title">星空听写</h1>
-        <p class="start-subtitle">银河听写练习</p>
-        <p class="version-tag">v1.21.20</p>
+    <!-- Header -->
+    <header class="dashboard-header" id="main-header">
+        <div class="header-left">
+            <button id="header-back-btn" class="header-back-btn" aria-label="返回">❮</button>
+            <div id="player-avatar" class="player-avatar" title="Change Avatar"></div>
+        </div>
+        <h1 class="app-title" id="app-title">心织笔耕</h1>
+        <div id="header-stats" class="header-stats">
+            <!-- Populated by JS -->
+            <span class="stat-pill">🔥 0</span>
+            <span class="stat-pill">⭐ 0</span>
+        </div>
+    </header>
 
-        <input type="text" id="player-name" class="name-input" placeholder="你的名字" maxlength="20" aria-label="输入你的名字">
-
-        <!-- Home Stats (New) -->
-        <div id="home-stats" class="home-stats" style="display: none; margin-bottom: 20px; text-align: center;">
-            <!-- Content populated by JS -->
+    <!-- DASHBOARD / START SCREEN -->
+    <div id="start-overlay" role="main">
+        <!-- Background Stars (CSS Animation) -->
+        <div class="starry-bg">
+            <div class="stars-1"></div>
+            <div class="stars-2"></div>
+            <div class="stars-3"></div>
         </div>
 
-        <button id="start-btn" class="start-btn main-menu-btn" aria-label="开始听写练习">听写练习</button>
-        <button id="dictation-btn" class="dictation-btn main-menu-btn" aria-label="开始默写练习">默写练习</button>
-        <button id="review-btn" class="review-btn main-menu-btn" aria-label="查看学习进度">查看进度</button>
 
-        <div class="instructions-box" role="note">
-            <p>🔊 听词语 → ✍️ 写汉字 → ⭐ 升级！</p>
-        </div>
-
-
+        <p class="version-tag-bottom">v1.21.21</p>
     </div>
+
+    <!-- Tab Bar Footer (Persistent) -->
+    <nav class="tab-bar">
+        <button class="tab-item active" id="start-btn">
+            <span class="tab-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M4 13V15C4 17.5 5 19 7 19M20 13V15C20 18 18 19.5 16 20" />
+                    <path d="M4 13C4 8 7 3 12 3C17 3 20 8 20 13" stroke-width="2.5" />
+                    <path d="M19 14H21M3 14H5" stroke-width="3" />
+                </svg>
+            </span>
+            <span class="tab-label">听写</span>
+        </button>
+        <button class="tab-item" id="dictation-btn">
+            <span class="tab-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M16.5 3.5L8 14" stroke-width="2.5" />
+                    <path d="M6 16L8.5 13.5" stroke-width="3" />
+                    <path d="M6 16C5 17.5 3 21 3 21C3 21 7 20 9 18" />
+                </svg>
+            </span>
+            <span class="tab-label">默写</span>
+        </button>
+        <button class="tab-item" id="review-btn">
+            <span class="tab-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                    <path d="M4 4V20M20 4V20" />
+                    <path d="M4 12H20" opacity="0.5" />
+                    <rect x="6" y="7" width="4" height="3" rx="1.5" stroke-width="2" />
+                    <rect x="6" y="14" width="4" height="3" rx="1.5" stroke-width="2" />
+                    <rect x="14" y="6" width="4" height="3" rx="1.5" stroke-width="2" />
+                    <rect x="14" y="15" width="4" height="3" rx="1.5" stroke-width="2" />
+                </svg>
+            </span>
+            <span class="tab-label">进度</span>
+        </button>
+    </nav>
+
+
 
     <canvas id="particle-canvas"></canvas>
 
-    <header class="hud" style="display: none;" role="banner">
+    <header class="hud hud-minimal" style="display: none;" role="banner">
         <div class="hud-inner">
             <button class="menu-btn" id="menu-btn" title="返回" aria-label="返回上一页">❮</button>
 
-            <nav class="hud-controls" role="toolbar" aria-label="游戏控制">
-                <!-- Buttons -->
-                <button class="game-btn btn-skip compact-btn" id="btn-skip" title="跳过" aria-label="跳过当前词语">⏭</button>
-                <button class="game-btn btn-audio compact-btn" id="btn-audio" title="听读音"
-                    aria-label="播放词语读音">🔊</button>
-                <button class="game-btn btn-hint compact-btn" id="btn-hint" title="提示" aria-label="显示拼音提示">💡</button>
-                <button class="game-btn btn-reveal compact-btn" id="btn-reveal" title="显示词语"
-                    aria-label="显示完整词语">👁️</button>
-
-                <!-- Stats -->
+            <!-- Score only on right -->
+            <div class="hud-right">
                 <div class="score-box" role="status" aria-live="polite" aria-label="当前分数">
                     <span aria-hidden="true">⭐</span> <span id="score">0</span>
                 </div>
 
-                <!-- Streak Badge -->
+                <!-- Streak Badge (hidden by default) -->
                 <div class="streak-badge" id="streak-badge" style="display: none;" role="status" aria-live="polite">
                     🔥 x<span id="streak-count">0</span>
                 </div>
-
-                <div class="daily-streak-display" id="streak-container" style="display: none;">
-                    <span class="streak-fire" aria-hidden="true">🔥</span>
-                    <span id="daily-streak">0</span>
-                </div>
-            </nav>
+            </div>
         </div>
     </header>
 
 
     <div class="game-stage">
-        <div class="game-header" style="display: none;">
-            <!-- Title removed for mobile optimization -->
-        </div>
-
-        <div id="feedback-overlay"></div>
-
-        <div class="character-container" id="writing-area">
-            <!-- Hanzi Writers go here -->
-        </div>
-
-        <div id="pinyin-display" class="pinyin-display"></div>
-
-        <!-- Progress bar removed, moved to footer -->
-
-        <div class="controls-area">
-            <!-- Buttons moved to HUD -->
-            <button class="game-btn" id="next-btn"
-                style="display:none; background: var(--success); border-color: #15803d;">
-                🚀 继续
-            </button>
-        </div>
+        <!-- Game content will be rendered here dynamically -->
     </div>
 
     <script type="module" src="/src/main.ts"></script>

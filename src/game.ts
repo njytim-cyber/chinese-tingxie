@@ -1,6 +1,6 @@
 /**
  * Game Logic Module with Gamification
- * Refactored to use modular architecture for UI and input handling
+ * Refactored to use modular architecture for UI, input handling, and game logic
  */
 
 import {
@@ -9,16 +9,18 @@ import {
     checkAchievements,
     getCurrentLesson, setCurrentLesson,
     getUnmasteredWords,
-    logAttempt, type AttemptLog,
+    logAttempt,
+    type AttemptLog
 } from './data';
 import { SoundFX, speakWord } from './audio';
 import { spawnParticles } from './particles';
-import { UIManager, getRandomPraise } from './ui';
+import { UIManager, getRandomPraise } from './ui/UIManager';
 import { HanziWriterInput } from './input';
-import { initDOMCache, type GameState, type DOMCache, type InputHandler } from './types';
+import { initDOMCache, type GameState, type DOMCache, type InputHandler, type DictationPassage } from './types';
+import { GameLogic } from './game/GameLogic';
+import { DictationController } from './game/DictationController';
 
 const PLAYER_NAME_KEY = 'tingxie_player_name';
-// const INPUT_MODE_KEY = 'tingxie_input_mode';
 
 // DOM cache for performance
 let domCache: DOMCache;
@@ -29,11 +31,8 @@ let ui: UIManager;
 // Input handler instance (stroke or handwriting)
 let inputHandler: InputHandler;
 
-// Dictation Manager instance (dynamic)
-let dictationManager: import('./dictation').DictationManager | null = null;
-
-// Current input mode
-// let inputMode: InputMode = 'stroke';
+// Dictation Controller instance
+let dictationController: DictationController | null = null;
 
 // Game state
 const state: GameState = {
@@ -55,8 +54,6 @@ const state: GameState = {
     sessionResults: [],
 };
 
-
-
 /**
  * Create input handler based on current mode
  */
@@ -72,26 +69,28 @@ export const Game = {
      * Initialize the game
      */
     init(showUI = true): void {
-        loadData();
+        if (!ui) {
+            loadData();
 
+            // Initialize DOM cache
+            domCache = initDOMCache();
+            ui = new UIManager(domCache);
+            inputHandler = createInputHandler();
 
+            // Set up input handler callbacks
+            inputHandler.onCharComplete = handleCharComplete;
+            inputHandler.onMistake = handleMistake;
+            inputHandler.onComplete = handleInputComplete;
+        }
 
-        // Initialize DOM cache
-        domCache = initDOMCache();
-        ui = new UIManager(domCache);
-        inputHandler = createInputHandler();
-
-        // Set up input handler callbacks
-        inputHandler.onCharComplete = handleCharComplete;
-        inputHandler.onMistake = handleMistake;
-        inputHandler.onComplete = handleInputComplete;
-
+        // Always reset session stats
         state.sessionStartTime = Date.now();
         state.wordsCompletedThisSession = 0;
         state.sessionStreak = 0;
 
         // Update UI with stats
         ui.updateStatsDisplay();
+        ui.setRandomAvatar();
         ui.displayGreeting(Game.getPlayerName());
 
         // Show lesson selection screen if requested
@@ -121,8 +120,8 @@ export const Game = {
     },
 
     /**
-    * Get current input mode
-    */
+     * Get current input mode
+     */
     getInputMode(): string {
         return 'stroke';
     },
@@ -135,16 +134,81 @@ export const Game = {
     },
 
     /**
+     * General navigation method with progress check
+     */
+    navigate(targetView: GameState['currentView'], onNavigate: () => void): void {
+        const isGameActive = state.currentView === 'game' && (state.wordsCompletedThisSession > 0 || state.completedChars > 0);
+
+        let isDictationActive = false;
+        if (state.currentView === 'dictation' && dictationController) {
+            // Check internal dictation state if possible
+            const manager = dictationController.getManager();
+            if (manager) {
+                // Access private or public state if exposed, or just assume active if in view
+                // Since we don't have easy access to 'completedChunks', we'll assume any active dictation session 
+                // (where time has passed > 2s) is worth confirming
+                const duration = state.sessionStartTime ? (Date.now() - state.sessionStartTime) : 0;
+                if (duration > 2000) isDictationActive = true;
+            }
+        }
+
+        if (isGameActive || isDictationActive) {
+            ui.showConfirm(
+                '退出练习?',
+                '当前进度将不会保存。确定要退出吗?',
+                () => {
+                    this.cleanupCurrentView();
+                    onNavigate();
+                }
+            );
+        } else {
+            this.cleanupCurrentView();
+            onNavigate();
+        }
+    },
+
+    cleanupCurrentView(): void {
+        // Stop any audio
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+        // Clean up Dictation Mode
+        if (dictationController && dictationController.getManager()) {
+            dictationController.getManager()?.destroy();
+            // Reset UI state for Dictation
+            const card = document.getElementById('writing-card');
+            if (card) {
+                const toolbar = card.querySelector('.card-toolbar');
+                if (toolbar) (toolbar as HTMLElement).style.display = '';
+            }
+        }
+    },
+
+    /**
      * Show lesson selection screen
      */
-    showLessonSelect(): void {
-        state.currentView = 'lesson-select';
-        ui.hideFooterProgress();
-        ui.showLessonSelect(
-            (lessonId, wordLimit) => Game.selectLesson(lessonId, wordLimit),
-            () => Game.showProgress(),
-            () => Game.showPracticeSelect()
-        );
+    showLessonSelect(force: boolean = false): void {
+        const doShow = () => {
+            state.currentView = 'lesson-select';
+            ui.hideFooterProgress();
+            // Ensure UI is reset for Spelling Mode (restores writing-card if needed)
+            if (domCache && domCache.writingArea) {
+                // GameRenderer handles this via internal logic usually, but 
+                // we might need to nudge it if we are coming from Dictation
+            }
+
+            ui.showLessonSelect(
+                (lessonId, wordLimit) => Game.selectLesson(lessonId, wordLimit),
+                () => Game.showProgress(),
+                () => Game.showPracticeSelect()
+            );
+        };
+
+        if (force) {
+            this.cleanupCurrentView();
+            doShow();
+        } else {
+            this.navigate('lesson-select', doShow);
+        }
     },
 
     /**
@@ -166,9 +230,8 @@ export const Game = {
         state.sessionResults = [];
         state.currentView = 'game';
 
-
-
         // Show controls
+        ui.toggleActiveGameUI(true);
         ui.showControls();
         ui.setHudTransparent(false);
         ui.renderProgressDots(state.practiceWords.length);
@@ -186,8 +249,10 @@ export const Game = {
      * Show progress view
      */
     showProgress(): void {
-        state.currentView = 'progress';
-        ui.showProgress();
+        this.navigate('progress', () => {
+            state.currentView = 'progress';
+            ui.showProgress();
+        });
     },
 
     /**
@@ -225,13 +290,12 @@ export const Game = {
             state.sessionStreak = 0;
             state.currentView = 'game';
 
-
-
             // Ensure valid state before UI updates
             if (!state.practiceWords || state.practiceWords.length === 0) {
                 throw new Error("No words available for practice");
             }
 
+            ui.toggleActiveGameUI(true);
             ui.showControls();
             ui.setHudTransparent(false);
             ui.renderProgressDots(state.practiceWords.length);
@@ -249,16 +313,18 @@ export const Game = {
      * Skip current level
      */
     skipLevel(): void {
-        // Dictation Mode: Skip button acts as Pause/Play toggle
-        if (state.currentView === 'dictation' && dictationManager) {
-            const isPlaying = dictationManager.toggleAudio();
-            const btn = document.getElementById('btn-skip');
-            if (btn) {
-                btn.innerHTML = isPlaying ? '⏸' : '▶';
-                btn.title = isPlaying ? '暂停' : '播放';
-                // Add active class if playing to show state
-                if (isPlaying) btn.classList.add('active');
-                else btn.classList.remove('active');
+        // Dictation Mode
+        if (state.currentView === 'dictation' && dictationController) {
+            const manager = dictationController.getManager();
+            if (manager) {
+                const isPlaying = manager.toggleAudio();
+                const btn = document.getElementById('btn-skip');
+                if (btn) {
+                    btn.innerHTML = isPlaying ? '⏸' : '▶';
+                    btn.title = isPlaying ? '暂停' : '播放';
+                    if (isPlaying) btn.classList.add('active');
+                    else btn.classList.remove('active');
+                }
             }
             return;
         }
@@ -291,18 +357,30 @@ export const Game = {
      */
     playCurrentAudio(): void {
         // In dictation mode, toggle audio playback
-        if (state.currentView === 'dictation' && dictationManager) {
-            const isPlaying = dictationManager.toggleAudio();
-            const btn = document.getElementById('btn-audio');
-            if (btn) {
-                btn.innerHTML = isPlaying ? '⏸' : '▶';
-                btn.title = isPlaying ? '暂停' : '播放';
+        if (state.currentView === 'dictation' && dictationController?.getManager()) {
+            const manager = dictationController.getManager();
+            if (manager) {
+                const isPlaying = manager.toggleAudio();
+                const btn = document.getElementById('btn-audio');
+                if (btn) {
+                    btn.innerHTML = isPlaying ? '⏸' : '▶';
+                    btn.title = isPlaying ? '暂停' : '播放';
+                }
             }
             return;
         }
 
         if (!state.currentWord) return;
         speakWord(state.currentWord.term);
+    },
+
+    /**
+     * Toggle grid style
+     */
+    toggleGrid(): void {
+        if (inputHandler && inputHandler.toggleGrid) {
+            inputHandler.toggleGrid();
+        }
     },
 
     /**
@@ -314,11 +392,7 @@ export const Game = {
         ui.updateHud(state.score, state.sessionStreak);
 
         inputHandler.showHint();
-
-        // Show pinyin on hint
-        if (state.currentWord) {
-            ui.showPinyin(state.currentWord.pinyin);
-        }
+        // Pinyin is now always visible, so no need to show it here
     },
 
     /**
@@ -350,176 +424,52 @@ export const Game = {
      * Show dictation passage selection
      */
     showDictationSelect(): void {
-        state.currentView = 'dictation-select';
-        ui.showDictationSelect(
-            (passage) => this.startDictation(passage)
-        );
+        this.navigate('dictation-select', () => {
+            state.currentView = 'dictation-select';
+            ui.toggleHeaderStats(false);
+            ui.showDictationSelect(
+                (passage) => this.startDictation(passage)
+            );
+        });
     },
 
     /**
      * Start dictation with selected passage
      */
-    startDictation(passage: import('./dictation').DictationPassage): void {
+    async startDictation(passage: DictationPassage): Promise<void> {
+        console.log('Game.startDictation called with passage:', passage.id, passage.title);
         state.currentView = 'dictation';
-        const container = document.getElementById('writing-area');
-        if (!container) return;
 
-        container.innerHTML = '';
+        if (!dictationController) {
+            console.log('Creating new DictationController');
+            dictationController = new DictationController(ui, () => this.showDictationSelect());
+        }
 
-        // Show HUD controls (reuse existing header)
-        ui.showControls();
-        ui.setHudTransparent(false);
-
-        // Dynamically import and create dictation manager
-        import('./dictation').then(({ DictationManager }) => {
-            const dictation = new DictationManager(ui);
-            dictationManager = dictation; // Assign to global for access
-
-            // Hide skip button in dictation mode (not applicable)
-            const skipBtn = document.getElementById('btn-skip');
-            if (skipBtn) {
-                skipBtn.style.display = 'none';
-            }
-
-            // Wire up audio button for dictation (play/pause toggle)
-            const audioBtn = document.getElementById('btn-audio');
-            if (audioBtn) {
-                // Start with pause icon since audio auto-plays
-                audioBtn.innerHTML = '⏸';
-                audioBtn.title = '暂停/播放';
-
-                audioBtn.onclick = () => {
-                    if (window.speechSynthesis.speaking) {
-                        if (window.speechSynthesis.paused) {
-                            window.speechSynthesis.resume();
-                            audioBtn.innerHTML = '⏸';
-                        } else {
-                            window.speechSynthesis.pause();
-                            audioBtn.innerHTML = '▶';
-                        }
-                    } else {
-                        dictation.playAudio();
-                        audioBtn.innerHTML = '⏸';
-                    }
-                };
-            }
-
-            // Wire up hint button for dictation
-            const hintBtn = document.getElementById('btn-hint');
-            if (hintBtn) {
-                hintBtn.onclick = () => {
-                    dictation.showHint();
-                };
-            }
-
-            // Wire up reveal button for dictation (directly show modal)
-            const revealBtn = document.getElementById('btn-reveal');
-            if (revealBtn) {
-                revealBtn.onclick = () => {
-                    const modal = document.getElementById('reveal-modal');
-                    const termEl = document.getElementById('reveal-term');
-                    const pinyinEl = document.getElementById('reveal-pinyin');
-
-                    if (!modal || !termEl || !pinyinEl) return;
-
-                    const passageData = dictation.getPassage();
-                    if (!passageData) return;
-
-                    // Notify manager for score penalty
-                    dictation.notifyReveal();
-
-                    // Show modal with passage text
-                    termEl.innerHTML = `<div style="text-align: left; font-size: 1.2rem; line-height: 1.6;">${passageData.text}</div>`;
-                    pinyinEl.textContent = '';
-                    modal.style.display = 'flex';
-
-                    // Dismiss on click
-                    const dismiss = () => {
-                        modal.style.display = 'none';
-                        modal.removeEventListener('click', dismiss);
-                    };
-                    modal.addEventListener('click', dismiss);
-                };
-            }
-
-            state.sessionStartTime = Date.now(); // Track start time
-
-            dictation.onComplete = (score, total) => {
-                // Log attempt
-                const chunks = dictation.chunks || [];
-                const phrases = chunks.map(c => ({
-                    term: c.text,
-                    correct: c.score > 0,
-                    mistakeCount: c.revealUsed ? 2 : (c.hintUsed ? 1 : 0),
-                    hintUsed: c.hintUsed || c.revealUsed
-                }));
-
-                const attempt: AttemptLog = {
-                    timestamp: new Date().toISOString(),
-                    lessonId: parseInt(passage.id) || 0,
-                    lessonTitle: passage.title,
-                    mode: 'dictation',
-                    phrases: phrases,
-                    totalScore: score,
-                    totalPhrases: chunks.length,
-                    duration: Math.round((Date.now() - (state.sessionStartTime || Date.now())) / 1000)
-                };
-                logAttempt(attempt);
-
-                ui.showDictationResult(score, total, () => {
-                    this.showDictationSelect();
-                });
-            };
-            dictation.init(passage, container);
-
-            // Auto-play audio on init for full dictation (button shows pause)
-            if (passage.isFullDictation) {
-                dictation.playAudio();
-                // Button already set to ⏸ above
-            }
-        });
+        state.sessionStartTime = Date.now();
+        console.log('Calling dictationController.start...');
+        await dictationController.start(passage, state.sessionStartTime);
+        console.log('dictationController.start completed');
     },
 
     /**
-     * Reveal phrase modal - shows term and pinyin (toggle on/off)
+     * Reveal phrase modal
      */
     revealPhrase(): void {
+        // Special handling for dictation mode is now handled in DictationController UI, 
+        // but triggered via buttons handled there. 
+        // If this is called from keyboard shortcut, we redirect.
+        if (state.currentView === 'dictation' && dictationController) {
+            // Logic moved to Controller/Manager interactions via UI buttons.
+            // For simplicity, we can ignore keyboard reveal in dictation or forward it if needed.
+            // But existing code had 'revealBtn.onclick', not Game.revealPhrase().
+            return;
+        }
+
         const modal = document.getElementById('reveal-modal');
         const termEl = document.getElementById('reveal-term');
         const pinyinEl = document.getElementById('reveal-pinyin');
 
         if (!modal || !termEl || !pinyinEl) return;
-
-        // Special handling for dictation mode
-        if (state.currentView === 'dictation' && dictationManager) {
-            const passage = dictationManager.getPassage();
-            if (!passage) return;
-
-            // Toggle: if already visible, hide it
-            if (modal.style.display === 'flex') {
-                modal.style.display = 'none';
-                return;
-            }
-
-            // Notify manager that reveal was used (score penalty)
-            dictationManager.notifyReveal();
-
-            termEl.innerHTML = `<div style="text-align: left; font-size: 1.2rem; line-height: 1.6;">${passage.text}</div>`;
-            pinyinEl.textContent = ''; // No pinyin for full passage
-            modal.style.display = 'flex';
-
-            // Dismiss on click or keypress
-            const dismiss = () => {
-                modal.style.display = 'none';
-                modal.removeEventListener('click', dismiss);
-                document.removeEventListener('keydown', dismiss);
-            };
-
-            modal.addEventListener('click', dismiss);
-            document.addEventListener('keydown', dismiss);
-            return;
-        }
-
         if (!state.currentWord) return;
 
         // Toggle: if already visible, hide it
@@ -569,8 +519,11 @@ function loadLevel(): void {
     ui.clearWritingArea();
     ui.hideNextButton();
     ui.resetFeedback();
-    ui.hidePinyin();
 
+    // Always show Pinyin as requested
+    if (state.currentWord) {
+        ui.showPinyin(state.currentWord.pinyin);
+    }
     // Initialize input handler
     const container = ui.getWritingArea();
     if (container && state.currentWord) {
@@ -589,6 +542,26 @@ function loadLevel(): void {
             scrollToActiveChar(activeChar);
         }
     }, 800);
+}
+
+function scrollToActiveChar(activeChar: HTMLElement): void {
+    const container = document.querySelector('.writing-grid');
+    if (container) {
+        const containerRect = container.getBoundingClientRect();
+        const charRect = activeChar.getBoundingClientRect();
+
+        // Check if char is out of view
+        const isOutOfView = charRect.left < containerRect.left || charRect.right > containerRect.right;
+
+        if (isOutOfView) {
+            // Calculate scroll position to center the char
+            const scrollLeft = activeChar.offsetLeft - (container.clientWidth / 2) + (activeChar.clientWidth / 2);
+            container.scrollTo({
+                left: scrollLeft,
+                behavior: 'smooth'
+            });
+        }
+    }
 }
 
 /**
@@ -667,25 +640,12 @@ function handleWordSuccess(result?: { mistakeCount: number; hintUsed: boolean })
     const hintUsed = result?.hintUsed || inputHandler.wasHintUsed() || state.hintUsed;
     const mistakeCount = result?.mistakeCount ?? inputHandler.getMistakeCount();
 
-    // Calculate quality for SM-2 (0-5)
-    let quality: number;
+    // Calculate quality using GameLogic
+    const isRevealed = (state as any).isRevealed || false;
+    const quality = GameLogic.calculateQuality(mistakeCount, hintUsed, isRevealed);
 
-    // Check if revealed first (highest penalty)
-    if ((state as any).isRevealed) {
-        quality = 1; // Incorrect response; the correct one remembered
-        // Reset flag
-        (state as any).isRevealed = false;
-    } else if (hintUsed) {
-        quality = 2; // Failed - used hint
-    } else {
-        if (mistakeCount === 0) {
-            quality = 5; // Perfect
-        } else if (mistakeCount <= 2) {
-            quality = 4; // Good
-        } else {
-            quality = 3; // Pass
-        }
-    }
+    // Reset revealed flag
+    if (isRevealed) (state as any).isRevealed = false;
 
     // Update SRS
     updateWordSRS(state.currentWord.term, quality);
@@ -694,20 +654,16 @@ function handleWordSuccess(result?: { mistakeCount: number; hintUsed: boolean })
     const isSuccess = quality >= 3;
     ui.updateProgressDot(state.currentWordIndex, isSuccess ? 'correct' : 'wrong');
 
-    // Calculate XP earned
-    let xpEarned = 10;
-    if (quality === 5) xpEarned += 10;
-    if (state.sessionStreak >= 3) xpEarned += 5;
-    if (state.sessionStreak >= 5) xpEarned += 5;
+    // Calculate XP using GameLogic
+    const xpEarned = GameLogic.calculateXP(quality, state.sessionStreak);
 
     const oldLevel = getLevel();
     state.score += xpEarned;
     addXP(xpEarned);
-    const newLevel = getLevel();
 
     // Check for level up
-    if (newLevel > oldLevel) {
-        ui.showLevelUp(newLevel);
+    if (GameLogic.checkLevelUp(oldLevel)) {
+        ui.showLevelUp(getLevel());
     }
 
     ui.updateHud(state.score, state.sessionStreak);
@@ -783,33 +739,21 @@ function showSessionComplete(): void {
             const stats = getStats();
             const text = `✨ 星空听写\n我刚刚练习了 ${state.wordsCompletedThisSession} 个词语！\n得分: ${state.score} | 连胜: ${stats.dailyStreak}🔥\n等级: Lv.${getLevel()}\n\n快来挑战吧！`;
 
+            // Web Share API
             if (navigator.share) {
                 navigator.share({
-                    title: '星空听写成绩',
+                    title: '星空听写 - 中文学习',
                     text: text,
                     url: window.location.href
                 }).catch(console.error);
             } else {
-                navigator.clipboard.writeText(text + ' ' + window.location.href).then(() => {
-                    ui.showFeedback('已复制到剪贴板！', '#38bdf8');
+                // Clipboard fallback
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('成绩已复制到剪贴板！');
+                }).catch(() => {
+                    alert('分享功能暂不可用');
                 });
             }
         }
     );
 }
-
-/**
- * Scroll element into view (mobile optimization)
- */
-function scrollToActiveChar(element: HTMLElement): void {
-    if (window.innerWidth > 600) return;
-
-    element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'center'
-    });
-}
-
-// Expose for backward compatibility
-(window as any).Game = Game;

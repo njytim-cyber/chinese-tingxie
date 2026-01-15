@@ -1,0 +1,63 @@
+/* Tab Bar Footer Component */
+.tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--bg-canvas);
+    border-top: 1px solid var(--tang-paper-dark);
+    border-bottom: 1px solid var(--tang-paper-dark);
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 10px 24px 10px;
+    z-index: 2010;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+    font-family: var(--app-font);
+}
+
+.tab-item {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--ink-light);
+    /* using generic ink-light instead of tang-ink-light */
+    cursor: pointer;
+    flex: 1;
+    transition: all 0.3s ease;
+}
+
+.tab-item.active {
+    color: var(--tang-red);
+}
+
+.tab-icon {
+    font-size: 1.5rem;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.tab-item.active .tab-icon {
+    transform: translateY(-4px) scale(1.1);
+}
+
+.tab-item.active svg {
+    fill: var(--tang-red-light);
+}
+
+.tab-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.version-tag-bottom {
+    position: absolute;
+    bottom: 80px;
+    width: 100%;
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 0.8rem;
+    pointer-events: none;
+}

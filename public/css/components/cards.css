@@ -1,0 +1,60 @@
+/* Card Components */
+
+/* Base Lesson Card - Paper texture */
+.lesson-card {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    height: 100px;
+    padding: 0 24px;
+    margin: 0 auto 8px;
+    background: #FFFFFF;
+    background-image: var(--texture-paper);
+    border: 1px solid var(--tang-paper-dark);
+    border-radius: 28px;
+    box-shadow: var(--shadow-tang);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.lesson-card:hover {
+    box-shadow: var(--shadow-tang-lg);
+    transform: translateY(-3px) scale(1.02);
+    border-color: var(--tang-gold);
+    background: #FFFDF8;
+}
+
+.lesson-card.active {
+    background: var(--tang-red-light);
+    border: 2px solid var(--tang-red);
+    box-shadow: var(--shadow-tang-hover);
+}
+
+.writing-card {
+    background: var(--card-bg);
+    border-radius: 28px;
+    border: 1px solid var(--tang-paper-dark);
+    padding: 20px;
+    width: 100%;
+    max-width: 360px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.summary-card {
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: var(--shadow-tang-lg);
+    border: 1px solid var(--tang-paper-dark);
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 20px;
+}

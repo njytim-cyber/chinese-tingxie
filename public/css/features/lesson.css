@@ -1,0 +1,178 @@
+/* Lesson Selection Feature */
+.lesson-select,
+.dictation-lesson-select {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 24px 20px 120px;
+    margin: 0 auto;
+    padding: 24px 20px 120px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.lesson-select-title {
+    color: var(--primary);
+    font-size: 1.5rem;
+    text-align: center;
+    margin: 10px 0 15px 0;
+}
+
+.lesson-grid {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+    margin: 0 auto;
+}
+
+/* Custom Scrollbar for Shan Shui Scroll */
+.lesson-grid::-webkit-scrollbar {
+    height: 6px;
+}
+
+.lesson-grid::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.lesson-grid::-webkit-scrollbar-thumb {
+    background: var(--ink-light);
+    border-radius: 3px;
+    opacity: 0.2;
+}
+
+.lesson-grid .lesson-card {
+    min-width: 280px;
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    position: relative;
+    animation: unfurl 0.5s ease-out backwards;
+}
+
+.lesson-grid .lesson-card:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.lesson-grid .lesson-card:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.lesson-grid .lesson-card:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.lesson-grid .lesson-card:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+.lesson-grid .lesson-card:nth-child(5) {
+    animation-delay: 0.25s;
+}
+
+.lesson-grid .lesson-card:nth-child(6) {
+    animation-delay: 0.3s;
+}
+
+.lesson-grid .lesson-card:nth-child(7) {
+    animation-delay: 0.35s;
+}
+
+.lesson-grid .lesson-card:nth-child(8) {
+    animation-delay: 0.4s;
+}
+
+/* Shan Shui Path Connector */
+.lesson-grid .lesson-card:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: -40px;
+    top: 50%;
+    width: 30px;
+    height: 2px;
+    background: repeating-linear-gradient(to right,
+            var(--tang-gold) 0,
+            var(--tang-gold) 8px,
+            transparent 8px,
+            transparent 16px);
+    opacity: 0.4;
+}
+
+.lesson-select-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Lesson Card Internals */
+.lesson-progress-ring {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+}
+
+.lesson-progress-ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.lesson-progress-ring .ring-bg {
+    fill: none;
+    stroke: #334155;
+    stroke-width: 3;
+}
+
+.lesson-progress-ring .ring-fill {
+    fill: none;
+    stroke: var(--primary);
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.5s ease;
+}
+
+.lesson-info {
+    flex: 1;
+    text-align: left;
+}
+
+.lesson-title {
+    font-size: 1.1rem;
+    color: var(--tang-ink);
+    /* Fixed: Was white, likely wrong for paper theme in light mode */
+    margin-bottom: 4px;
+}
+
+.lesson-meta {
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+}
+
+@media (max-width: 600px) {
+    .lesson-select {
+        padding: 10px;
+    }
+
+    .lesson-select-title {
+        font-size: 1.5rem;
+    }
+
+    .lesson-select-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .lesson-select-actions .game-btn {
+        width: 100%;
+    }
+}

@@ -3,7 +3,77 @@
  * Centralized type definitions for the Chinese Tingxie application
  */
 
-import type { PracticeWord } from './data';
+// Data Models
+export interface Word {
+    term: string;
+    pinyin: string;
+    level: number;
+    lessonId: number;
+}
+
+export interface PracticeWord extends Word, Partial<WordState> { }
+
+// Data Models
+export interface Phrase {
+    term: string;
+    pinyin: string;
+    definition?: string;
+}
+
+export interface Lesson {
+    id: number;
+    title: string;
+    phrases: Phrase[];
+}
+
+export interface WordState {
+    score: number;
+    interval: number;
+    nextReview: string;
+    easeFactor: number;
+    timesCorrect: number;
+    timesMistaken: number;
+}
+
+export interface PlayerStats {
+    totalXP: number;
+    dailyStreak: number;
+    lastPlayedDate: string | null;
+    wordsLearned: number;
+    perfectWords: number;
+    totalSessions: number;
+    achievements: string[];
+    currentLessonId: number;
+}
+
+export interface Achievement {
+    id: string;
+    name: string;
+    desc: string;
+    icon: string;
+    check: () => boolean;
+    unlocked?: boolean;
+}
+
+export interface AttemptLog {
+    timestamp: string;
+    lessonId: number;
+    lessonTitle: string;
+    mode: 'spelling' | 'dictation';
+    phrases: {
+        term: string;
+        correct: boolean;
+        mistakeCount: number;
+        hintUsed: boolean;
+    }[];
+    term?: string; // Legacy/Single word modes (optional)
+    correct?: boolean;
+    mistakeCount?: number;
+    hintUsed?: boolean;
+    totalScore: number;
+    totalPhrases: number;
+    duration: number;
+}
 
 /**
  * Input handler result when user completes input
@@ -24,22 +94,18 @@ export interface InputResult {
  * Implementations: HanziWriterInput (stroke-by-stroke), HandwritingInput (freeform)
  */
 export interface InputHandler {
-    /** Initialize the input handler for a word */
-    init(word: PracticeWord, container: HTMLElement): void;
-    /** Clean up and destroy the input handler */
+    init(word: PracticeWord, container: HTMLElement): Promise<void>;
     destroy(): void;
-    /** Show a hint for the current character */
+    onCharComplete?: (index: number) => void;
+    onMistake?: (index: number) => void;
+    onComplete?: (result: InputResult) => void;
     showHint(): void;
-    /** Check if hint was used */
-    wasHintUsed(): boolean;
-    /** Get the number of mistakes made */
     getMistakeCount(): number;
-    /** Callback when input is complete */
-    onComplete: ((result: InputResult) => void) | null;
-    /** Callback when a character is completed */
-    onCharComplete: ((index: number) => void) | null;
-    /** Callback when a mistake is made */
-    onMistake: ((index: number) => void) | null;
+    wasHintUsed(): boolean;
+    /**
+     * Toggle the grid style (Tian -> Mi -> Blank)
+     */
+    toggleGrid?(): void;
 }
 
 /**
@@ -99,6 +165,8 @@ export interface DOMCache {
     writingArea: HTMLElement | null;
     feedbackOverlay: HTMLElement | null;
     pinyinDisplay: HTMLElement | null;
+    definitionDisplay: HTMLElement | null;
+    charProgressFill: HTMLElement | null;
     nextBtn: HTMLElement | null;
     scoreEl: HTMLElement | null;
     streakCountEl: HTMLElement | null;
@@ -123,6 +191,8 @@ export function initDOMCache(): DOMCache {
         writingArea: document.getElementById('writing-area'),
         feedbackOverlay: document.getElementById('feedback-overlay'),
         pinyinDisplay: document.getElementById('pinyin-display'),
+        definitionDisplay: document.getElementById('definition-display'),
+        charProgressFill: document.getElementById('char-progress-fill'),
         nextBtn: document.getElementById('next-btn'),
         scoreEl: document.getElementById('score'),
         streakCountEl: document.getElementById('streak-count'),
@@ -138,4 +208,49 @@ export function initDOMCache(): DOMCache {
         lessonLabel: document.getElementById('current-lesson-label'),
         greetingEl: document.getElementById('player-greeting'),
     };
+}
+
+export interface IUIManager {
+    domCache: DOMCache;
+    updateHeaderTitle(title: string): void;
+    toggleMainHeader(visible: boolean): void;
+    toggleBackBtn(visible: boolean): void;
+    toggleHeaderStats(visible: boolean): void;
+    toggleActiveGameUI(visible: boolean): void;
+    transitionView(renderFn: () => void): void;
+    updateDashboardStats(): void;
+}
+
+// Dictation Types
+export interface DictationPassage {
+    id: string;
+    title: string;
+    text: string;
+    blanks: number[];  // Character indices that are blanks
+    isFullDictation?: boolean;
+    hint?: string;
+    chunks?: string[];
+    chunkPinyins?: string[];
+}
+
+export interface DictationData {
+    passages: DictationPassage[];
+}
+
+export interface CharBox {
+    char: string;
+    isBlank: boolean;
+    userInput: string; // Unused for strokes, but kept for state
+    isCorrect: boolean | null;
+    index: number;
+}
+
+export interface DictationChunk {
+    start: number;
+    end: number;
+    text: string;
+    pinyin: string[];
+    hintUsed: boolean;
+    revealUsed: boolean;
+    score: number;
 }

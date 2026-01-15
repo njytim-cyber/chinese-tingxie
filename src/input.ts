@@ -3,9 +3,9 @@
  * Abstraction layer for different character input methods
  */
 
-import HanziWriter from 'hanzi-writer';
+// import HanziWriter from 'hanzi-writer'; // Lazy loaded
 import { SoundFX } from './audio';
-import type { PracticeWord } from './data';
+import type { PracticeWord } from './types';
 import type { InputHandler, InputResult } from './types';
 
 /**
@@ -13,7 +13,7 @@ import type { InputHandler, InputResult } from './types';
  * Now uses dictation-style single character carousel
  */
 export class HanziWriterInput implements InputHandler {
-    private writers: HanziWriter[] = [];
+    private writers: any[] = []; // HanziWriter instances
     private charElements: HTMLElement[] = [];
     private completedChars = 0;
     private mistakesMade = 0;
@@ -22,17 +22,19 @@ export class HanziWriterInput implements InputHandler {
     private currentWord: PracticeWord | null = null;
     private currentCharIndex = 0;
     private validCharIndices: number[] = []; // Non-punctuation character indices
-    private navContainer: HTMLElement | null = null;
+    // private navContainer: HTMLElement | null = null;
 
 
-    onComplete: ((result: InputResult) => void) | null = null;
-    onCharComplete: ((index: number) => void) | null = null;
-    onMistake: ((index: number) => void) | null = null;
+    onComplete?: (result: InputResult) => void;
+    onCharComplete?: (index: number) => void;
+    onMistake?: (index: number) => void;
+
+    private gridState: 'tian' | 'mi' | 'blank' = 'tian';
 
     /**
      * Initialize the input handler for a word
      */
-    init(word: PracticeWord, container: HTMLElement): void {
+    async init(word: PracticeWord, container: HTMLElement): Promise<void> {
         this.destroy(); // Clean up any existing state
 
         this.currentWord = word;
@@ -47,7 +49,7 @@ export class HanziWriterInput implements InputHandler {
         this.validCharIndices = [];
 
         const chars = word.term.split('');
-        const pinyinSegments = word.pinyin.split(' ');
+        // const pinyinSegments = word.pinyin.split(' '); // Unused here
         const punctuationRegex = /[，。！？、：；""''（）《》.,!?;:'"()]/;
 
         // Build valid character indices (skip punctuation)
@@ -57,25 +59,7 @@ export class HanziWriterInput implements InputHandler {
             }
         });
 
-        // Create navigation wrapper
-        this.navContainer = document.createElement('div');
-        this.navContainer.className = 'spelling-carousel';
-
-        // Prev button
-        const prevBtn = document.createElement('button');
-        prevBtn.className = 'spelling-nav-btn';
-        prevBtn.id = 'spelling-prev-btn';
-        prevBtn.textContent = '❮';
-        prevBtn.onclick = () => this.prevChar();
-        this.navContainer.appendChild(prevBtn);
-
-        // Character boxes container
-        const charsContainer = document.createElement('div');
-        charsContainer.className = 'spelling-chars-container';
-        charsContainer.style.display = 'flex';
-        charsContainer.style.justifyContent = 'center';
-
-        // Store char data for deferred writer creation
+        // Character boxes container (Directly utilize container for flex layout)
         const charData: { char: string; index: number; element: HTMLElement }[] = [];
 
         chars.forEach((char, index) => {
@@ -89,53 +73,43 @@ export class HanziWriterInput implements InputHandler {
             const isFirst = this.charElements.length === 0;
             charBox.className = isFirst ? 'char-box spelling-active' : 'char-box spelling-hidden';
             charBox.id = `char-box-${index}`;
+            // Ensure char-box takes full size in card
+            charBox.style.width = '100%';
+            charBox.style.height = '100%';
+            charBox.style.display = isFirst ? 'flex' : 'none';
+            charBox.style.justifyContent = 'center';
+            charBox.style.alignItems = 'center';
 
             const div = document.createElement('div');
             div.id = `char-${index}`;
-            div.className = isFirst ? 'char-slot active' : 'char-slot';
-
-            const pinyinLabel = document.createElement('div');
-            pinyinLabel.className = 'char-pinyin-label';
-            pinyinLabel.textContent = pinyinSegments[index] || '';
+            // Apply current grid state
+            const baseClass = isFirst ? 'char-slot active' : 'char-slot';
+            div.className = `${baseClass} grid-${this.gridState}`;
 
             charBox.appendChild(div);
-            charBox.appendChild(pinyinLabel);
-            charsContainer.appendChild(charBox);
+            // No pinyin label here anymore
+
+            container.appendChild(charBox);
             this.charElements.push(charBox);
             charData.push({ char, index, element: div });
         });
 
-        this.navContainer.appendChild(charsContainer);
+        // Dynamic import for HanziWriter
+        try {
+            const HanziWriterModule = await import('hanzi-writer');
+            const HanziWriter = HanziWriterModule.default;
 
-        // Next button
-        const nextBtn = document.createElement('button');
-        nextBtn.className = 'spelling-nav-btn';
-        nextBtn.id = 'spelling-next-btn';
-        nextBtn.textContent = '❯';
-        nextBtn.onclick = () => this.nextChar();
-        this.navContainer.appendChild(nextBtn);
-
-        container.appendChild(this.navContainer);
-
-        // Progress indicator
-        const progressEl = document.createElement('div');
-        progressEl.className = 'spelling-progress';
-        progressEl.id = 'spelling-progress';
-        container.appendChild(progressEl);
-
-        // Create HanziWriters AFTER DOM insertion (elements must be visible)
-        // Use setTimeout to ensure DOM is fully rendered
-        setTimeout(() => {
+            // Create HanziWriters AFTER DOM insertion (elements must be visible)
             charData.forEach(({ char, index }) => {
                 const writer = HanziWriter.create(`char-${index}`, char, {
-                    width: 234,
-                    height: 234,
-                    padding: 15,
+                    width: 200, // Match CSS .char-slot
+                    height: 200,
+                    padding: 10,
                     showOutline: false,
-                    strokeColor: '#38bdf8',
-                    radicalColor: '#f472b6',
-                    outlineColor: '#334155',
-                    drawingWidth: 12,
+                    strokeColor: '#2B2B2B', // Dark Charcoal (Soot Black)
+                    radicalColor: '#C44032', // Cinnabar Red for radicals (optional refinement)
+                    outlineColor: '#E5E0D6', // Rice paper dark for outlines
+                    drawingWidth: 12, // Slightly thicker for brush look
                     showCharacter: false,
                     drawingFadeDuration: 300,
                 });
@@ -144,7 +118,7 @@ export class HanziWriterInput implements InputHandler {
                     leniency: 1.5,
                     showHintAfterMisses: 3,
                     highlightOnComplete: true,
-                    onCorrectStroke: (strokeData) => {
+                    onCorrectStroke: (strokeData: any) => {
                         SoundFX.correctStroke();
                         this.hintStrokeIndex[index] = strokeData.strokeNum + 1;
                     },
@@ -161,13 +135,16 @@ export class HanziWriterInput implements InputHandler {
 
             // Update the view after writers are created
             this.updateCarouselView();
-        }, 50);
+
+        } catch (error) {
+            console.error('Failed to load HanziWriter:', error);
+        }
     }
 
     /**
-     * Navigate to previous character
+     * Navigate to previous character (Used by carousel UI)
      */
-    private prevChar(): void {
+    public previousCharacter(): void {
         if (this.currentCharIndex > 0) {
             this.currentCharIndex--;
             this.updateCarouselView();
@@ -175,9 +152,9 @@ export class HanziWriterInput implements InputHandler {
     }
 
     /**
-     * Navigate to next character
+     * Navigate to next character (Used by carousel UI)
      */
-    private nextChar(): void {
+    public nextCharacter(): void {
         if (this.currentCharIndex < this.validCharIndices.length - 1) {
             this.currentCharIndex++;
             this.updateCarouselView();
@@ -191,41 +168,57 @@ export class HanziWriterInput implements InputHandler {
         // Hide all, show active
         this.charElements.forEach((el, i) => {
             if (i === this.currentCharIndex) {
+                el.style.display = 'flex';
                 el.classList.remove('spelling-hidden');
                 el.classList.add('spelling-active');
                 el.querySelector('.char-slot')?.classList.add('active');
             } else {
+                el.style.display = 'none';
                 el.classList.add('spelling-hidden');
                 el.classList.remove('spelling-active');
                 el.querySelector('.char-slot')?.classList.remove('active');
             }
         });
 
-        // Update nav buttons
-        const prevBtn = document.getElementById('spelling-prev-btn');
-        const nextBtn = document.getElementById('spelling-next-btn');
-
-        if (prevBtn) {
-            prevBtn.style.visibility = this.currentCharIndex === 0 ? 'hidden' : 'visible';
+        // Update Global Pinyin Display
+        const pinyinDisplay = document.getElementById('pinyin-display');
+        if (pinyinDisplay && this.currentWord) {
+            const pinyinSegments = this.currentWord.pinyin.split(' ');
+            // Need to map visual index back to original index if there was punctuation
+            // But simplified logic: assume pinyin segments match valid chars for now 
+            // OR better: use visual index
+            const charIndex = this.validCharIndices[this.currentCharIndex];
+            pinyinDisplay.textContent = pinyinSegments[charIndex] || '';
         }
 
-        if (nextBtn) {
-            const isLast = this.currentCharIndex === this.validCharIndices.length - 1;
-            // Hide next button on last character (auto-complete handles it)
-            nextBtn.style.visibility = isLast ? 'hidden' : 'visible';
+        // Update Progress Bar
+        const progressFill = document.getElementById('char-progress-fill');
+        if (progressFill) {
+            const progressPercent = (this.completedChars / this.validCharIndices.length) * 100;
+            progressFill.style.width = `${progressPercent}%`;
         }
 
-        // Update progress
-        const progressEl = document.getElementById('spelling-progress');
-        if (progressEl) {
-            progressEl.textContent = `${this.completedChars}/${this.validCharIndices.length}`;
+        // Update Definition (Placeholder if empty)
+        const defDisplay = document.getElementById('definition-display');
+        if (defDisplay && this.currentWord) {
+            // Assuming definition is on term, or we use placeholder
+            defDisplay.textContent = (this.currentWord as any).definition || ''; // Need to add definition to types
         }
     }
 
     /**
-     * Clean up and destroy the input handler
+     * Clean up resources
      */
     destroy(): void {
+        this.writers.forEach(writer => {
+            try {
+                if (writer && typeof writer.cancelQuiz === 'function') {
+                    writer.cancelQuiz();
+                }
+            } catch (e) {
+                // Ignore cleanup errors
+            }
+        });
         this.writers = [];
         this.charElements = [];
         this.currentWord = null;
@@ -235,7 +228,6 @@ export class HanziWriterInput implements InputHandler {
         this.hintStrokeIndex = [];
         this.currentCharIndex = 0;
         this.validCharIndices = [];
-        this.navContainer = null;
     }
 
     /**
@@ -261,7 +253,7 @@ export class HanziWriterInput implements InputHandler {
     }
 
     /**
-     * Get the number of mistakes made
+     * Get mistake count for current word
      */
     getMistakeCount(): number {
         return this.mistakesMade;
@@ -294,6 +286,9 @@ export class HanziWriterInput implements InputHandler {
 
         this.completedChars++;
 
+        // Show vermilion stamp animation
+        this.showSuccessStamp(box);
+
         if (this.onCharComplete) {
             this.onCharComplete(index);
         }
@@ -313,6 +308,34 @@ export class HanziWriterInput implements InputHandler {
     }
 
     /**
+     * Show the vermilion stamp success animation
+     */
+    private showSuccessStamp(container: HTMLElement): void {
+        // Check if stamp already exists
+        let stamp = container.querySelector('.success-stamp') as HTMLElement;
+
+        if (!stamp) {
+            stamp = document.createElement('div');
+            stamp.className = 'success-stamp';
+            stamp.innerHTML = `
+                <svg viewBox="0 0 80 80">
+                    <rect class="stamp-rect" x="5" y="5" width="70" height="70"/>
+                    <text class="stamp-text" x="40" y="44">优</text>
+                </svg>
+            `;
+            container.appendChild(stamp);
+        }
+
+        // Trigger animation
+        stamp.classList.remove('show');
+        void stamp.offsetWidth; // Force reflow
+        stamp.classList.add('show');
+
+        // Play success sound
+        SoundFX.success();
+    }
+
+    /**
      * Notify that input is complete
      */
     private notifyComplete(): void {
@@ -324,6 +347,24 @@ export class HanziWriterInput implements InputHandler {
                 hintUsed: this.hintUsed,
             });
         }
+    }
+
+    /**
+     * Toggle the grid style
+     */
+    toggleGrid(): void {
+        const states: ('tian' | 'mi' | 'blank')[] = ['tian', 'mi', 'blank'];
+        const currentIndex = states.indexOf(this.gridState);
+        this.gridState = states[(currentIndex + 1) % states.length];
+
+        // Update all char slots
+        this.charElements.forEach(box => {
+            const slot = box.querySelector('.char-slot');
+            if (slot) {
+                slot.classList.remove('grid-tian', 'grid-mi', 'grid-blank');
+                slot.classList.add(`grid-${this.gridState}`);
+            }
+        });
     }
 }
 

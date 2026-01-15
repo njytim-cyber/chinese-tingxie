@@ -1,0 +1,255 @@
+/* Progress Feature Styles */
+
+.progress-view {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 24px 20px 120px;
+    height: 100%;
+    overflow-y: auto;
+    font-family: var(--app-font);
+}
+
+.screen-title {
+    text-align: center;
+    color: var(--primary);
+    font-size: 1.8rem;
+    margin-bottom: 24px;
+    font-family: var(--font-serif);
+    font-weight: bold;
+}
+
+/* Sections */
+.section-header {
+    margin-top: 30px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--tang-paper-dark);
+    padding-bottom: 8px;
+}
+
+.section-header h3 {
+    font-family: var(--font-serif);
+    color: var(--ink);
+    font-size: 1.2rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 1. Hero Card */
+.progress-hero-card {
+    background: var(--bg-surface);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    margin-bottom: 25px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-hero-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--tang-gold), #d97706);
+}
+
+.hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.hero-level-badge {
+    background: var(--tang-gold);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+.hero-xp-text {
+    color: var(--ink-light);
+    font-size: 0.9rem;
+}
+
+.hero-xp-bar-container {
+    height: 8px;
+    background: var(--tang-paper-dark);
+    border-radius: 4px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.hero-xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--tang-jade), #059669);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.hero-stats-grid {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 10px;
+}
+
+.hero-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.hero-stat-val {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--ink);
+}
+
+.hero-stat-label {
+    font-size: 0.8rem;
+    color: var(--ink-light);
+}
+
+/* 2. Stats Grid (Daily Summary) */
+.stats-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.stat-card {
+    background: var(--bg-surface);
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--tang-paper-dark);
+    transition: transform 0.2s;
+}
+
+.stat-card:active {
+    transform: scale(0.98);
+    background: var(--bg-canvas);
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg-canvas);
+    border-radius: 50%;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--ink);
+    line-height: 1.2;
+}
+
+.stat-value .unit {
+    font-size: 0.8rem;
+    color: var(--ink-light);
+    margin-left: 2px;
+    font-weight: normal;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--ink-light);
+}
+
+/* 3. Activity List */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    background: var(--bg-surface);
+    padding: 12px 15px;
+    border-radius: 12px;
+    border: 1px solid var(--tang-paper-dark);
+}
+
+.activity-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    margin-right: 12px;
+    background: var(--primary-container);
+    color: var(--primary);
+}
+
+.activity-icon.icon-dictation {
+    background: #e0f2fe;
+    /* light blue */
+    color: #0284c7;
+}
+
+.activity-info {
+    flex: 1;
+}
+
+.activity-title {
+    font-weight: 500;
+    color: var(--ink);
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+.activity-time {
+    font-size: 0.8rem;
+    color: var(--ink-light);
+}
+
+.activity-score {
+    font-weight: bold;
+    color: var(--ink-light);
+    font-size: 1rem;
+}
+
+.activity-score.good {
+    color: var(--tang-jade);
+}
+
+.empty-state {
+    text-align: center;
+    color: var(--ink-light);
+    padding: 20px;
+    background: var(--bg-canvas);
+    border-radius: 12px;
+    border: 2px dashed var(--tang-paper-dark);
+}
+
+@media (min-width: 600px) {
+    .stats-grid-2 {
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+    }
+}

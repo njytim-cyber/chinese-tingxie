@@ -58,7 +58,6 @@ export function initVoices(): void {
 export const SoundFX = {
     playTone: (freq: number, type: OscillatorType, duration: number, volume = 0.15): void => {
         try {
-            // Resume audio context if suspended (required on some devices)
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
@@ -67,8 +66,10 @@ export const SoundFX = {
             const gain = audioCtx.createGain();
             osc.type = type;
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
             gain.gain.setValueAtTime(volume, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
@@ -78,25 +79,143 @@ export const SoundFX = {
         }
     },
 
-    correctStroke: (): void => { SoundFX.playTone(800, 'sine', 0.08, 0.1); },
-
-    // Wrong sound removed - was annoying to users
-    wrong: (): void => {
-        // Silent - no sound on wrong strokes
+    // Weiqi Stone clack (Stone on Wood)
+    tap: (): void => {
+        SoundFX.playTone(1200, 'sine', 0.05, 0.1);
+        setTimeout(() => SoundFX.playTone(800, 'triangle', 0.03, 0.05), 10);
+        if (navigator.vibrate) navigator.vibrate(10);
     },
 
+    correctStroke: (): void => {
+        SoundFX.playTone(1000, 'sine', 0.1, 0.08);
+        if (navigator.vibrate) navigator.vibrate(5);
+    },
+
+    // Bamboo Woodblock thud
+    wrong: (): void => {
+        SoundFX.playTone(150, 'square', 0.15, 0.1);
+        SoundFX.playTone(100, 'sine', 0.2, 0.1);
+        if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+    },
+
+    // Porcelain Bell / Single Guzheng pluck
     success: (): void => {
-        setTimeout(() => SoundFX.playTone(523.25, 'sine', 0.2, 0.15), 0);
-        setTimeout(() => SoundFX.playTone(659.25, 'sine', 0.2, 0.15), 100);
-        setTimeout(() => SoundFX.playTone(783.99, 'sine', 0.4, 0.15), 200);
+        SoundFX.playTone(880, 'sine', 0.6, 0.15); // A5
+        setTimeout(() => SoundFX.playTone(1320, 'sine', 0.4, 0.1), 50); // E6 
+        if (navigator.vibrate) navigator.vibrate(50);
     },
 
     levelUp: (): void => {
-        setTimeout(() => SoundFX.playTone(400, 'square', 0.1, 0.12), 0);
-        setTimeout(() => SoundFX.playTone(600, 'square', 0.1, 0.12), 100);
-        setTimeout(() => SoundFX.playTone(1000, 'square', 0.4, 0.12), 200);
+        setTimeout(() => SoundFX.playTone(523.25, 'sine', 0.2, 0.12), 0);
+        setTimeout(() => SoundFX.playTone(659.25, 'sine', 0.2, 0.12), 150);
+        setTimeout(() => SoundFX.playTone(783.99, 'sine', 0.5, 0.12), 300);
+    },
+
+    // Paper Rustle (White noise burst)
+    pageTurn: (): void => {
+        try {
+            const bufferSize = audioCtx.sampleRate * 0.1;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            noise.connect(gain);
+            gain.connect(audioCtx.destination);
+            noise.start();
+        } catch (e) {
+            console.warn('Paper rustle failed:', e);
+        }
     }
 };
+
+/**
+ * Generative Ambient Music (Pentatonic Wind Chimes)
+ */
+export class GenerativeAmbient {
+    private static isPlaying = false;
+    private static intervalId: number | null = null;
+    private static gainNode: GainNode | null = null;
+
+    // Pentatonic scale (C4, D4, E4, G4, A4, C5)
+    private static frequencies = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25];
+
+    static get isAmbientPlaying(): boolean {
+        return this.isPlaying;
+    }
+
+    static toggle(enable: boolean): void {
+        if (enable) {
+            this.start();
+        } else {
+            this.stop();
+        }
+    }
+
+    static start(): void {
+        if (this.isPlaying) return;
+        this.isPlaying = true;
+
+        // Create master gain for ambience
+        this.gainNode = audioCtx.createGain();
+        this.gainNode.gain.value = 0.05; // Very subtle
+        this.gainNode.connect(audioCtx.destination);
+
+        this.scheduleNextNote();
+    }
+
+    static stop(): void {
+        this.isPlaying = false;
+        if (this.intervalId) {
+            window.clearTimeout(this.intervalId);
+            this.intervalId = null;
+        }
+        if (this.gainNode) {
+            this.gainNode.disconnect();
+            this.gainNode = null;
+        }
+    }
+
+    private static scheduleNextNote(): void {
+        if (!this.isPlaying) return;
+
+        // Play a note
+        const freq = this.frequencies[Math.floor(Math.random() * this.frequencies.length)];
+        const duration = 2.0 + Math.random() * 3.0;
+
+        this.playAmbientTone(freq, duration);
+
+        // Schedule next note (random interval 3-8 seconds)
+        const nextDelay = 3000 + Math.random() * 5000;
+        this.intervalId = window.setTimeout(() => this.scheduleNextNote(), nextDelay);
+    }
+
+    private static playAmbientTone(freq: number, duration: number): void {
+        if (!this.gainNode || audioCtx.state !== 'running') return;
+
+        const osc = audioCtx.createOscillator();
+        const noteGain = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+        // Slow attack and release for ambient feel
+        noteGain.gain.setValueAtTime(0, audioCtx.currentTime);
+        noteGain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.5); // Attack
+        noteGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration); // Decay
+
+        osc.connect(noteGain);
+        noteGain.connect(this.gainNode);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+}
 
 /**
  * Speak a Chinese word with clear pronunciation

@@ -1,0 +1,105 @@
+/* Button Components */
+
+.action-btn-large {
+    width: 100%;
+    padding: 16px 24px;
+    font-size: 1.2rem;
+    font-family: 'KaiTi', var(--app-font), serif;
+    background: linear-gradient(135deg, var(--success), #22c55e);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px rgba(74, 222, 128, 0.3);
+    font-weight: 500;
+}
+
+.action-btn-large:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(74, 222, 128, 0.4);
+}
+
+.action-btn-large:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 8px rgba(74, 222, 128, 0.3);
+}
+
+.action-btn-primary {
+    display: inline-block;
+    padding: 12px 24px;
+    background: var(--tang-red);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: 'KaiTi', var(--app-font), serif;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn-primary:active {
+    transform: scale(0.95);
+}
+
+.action-btn-secondary {
+    display: inline-block;
+    padding: 12px 24px;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--tang-paper-dark);
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: 'KaiTi', var(--app-font), serif;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tool-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    padding: 10px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 48px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tool-btn:hover {
+    background: var(--surface-variant);
+}
+
+.tool-btn:active {
+    transform: scale(0.92);
+}
+
+.menu-btn {
+    background: transparent;
+    border: none;
+    color: var(--ink-wash);
+    font-size: 1.2rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.menu-btn:hover {
+    color: var(--ink);
+    background: rgba(0, 0, 0, 0.05);
+    transform: scale(1.05);
+}
+
+.menu-btn:active {
+    transform: scale(0.95);
+}

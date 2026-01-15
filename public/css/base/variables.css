@@ -1,0 +1,116 @@
+:root {
+    /* Tang Dynasty Sancai (Three-Color) Palette */
+    /* 1. The Canvas (Backgrounds) */
+    --tang-paper: #F9F7F2;
+    /* Warm Rice Paper (Body Bg) */
+    --tang-paper-dark: #E5E0D6;
+    /* Darker Rice Paper (Borders/Dividers) */
+    --bg-canvas: var(--tang-paper);
+    --bg-surface: #FFFFFF;
+    --card-bg: #FFFFFF;
+    --card-bg-elevated: #FAFAF6;
+
+    /* 2. The Ink (Text & Icons) */
+    --tang-ink: #111111;
+    /* Deepest black for maximum readability */
+    /* 3. The Seal (Primary Actions) */
+    --tang-red: #991B1B;
+    --tang-red-light: #FEF2F2;
+    /* Darker, richer cinnabar */
+    /* 4. The Jade (Success) */
+    --tang-jade: #065F46;
+    --success-container: #dcfce7;
+    /* Deep jade for high contrast */
+    /* 5. The Gold (Stars) */
+    --tang-gold: #92400E;
+    /* Deep amber/gold */
+    /* 6. Text Semantics */
+    --ink: var(--tang-ink);
+    --ink-light: #4B5563;
+    --ink-faint: #9CA3AF;
+    --ink-wash: rgba(17, 17, 17, 0.6);
+
+    /* 6. Lantern Mode (Dark Mode) */
+    --lantern-bg: #1B1F3B;
+    --lantern-text: #F2D0A4;
+
+    /* Tang Shadows - soft, diffused, paper-lift effect */
+    --shadow-tang: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
+    --shadow-tang-lg: 0 12px 24px -10px rgba(0, 0, 0, 0.2);
+    --shadow-tang-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.25);
+
+    /* Semantic Mappings */
+    --primary: var(--tang-red);
+    --primary-glow: rgba(153, 27, 27, 0.3);
+    --primary-container: #fee2e2;
+    --accent: var(--tang-gold);
+    --success: var(--tang-jade);
+    --danger: #DC2626;
+
+    /* Text */
+    --text-primary: var(--ink);
+    --text-secondary: var(--ink-wash);
+
+    /* Typography */
+    --app-font: "KaiTi", "STKaiti", "楷体", "STKaiti", serif;
+
+    /* Surface */
+    --surface-variant: #f3f4f6;
+    --outline-variant: #e5e7eb;
+
+    /* Texture */
+    --texture-paper: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* Lantern Mode (Dark Mode) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* Lantern Mode Palette */
+        --tang-paper: #1B1F3B;
+        /* Deep Indigo */
+        --tang-ink: #F2D0A4;
+        /* Amber */
+        --tang-ink-light: #C0A080;
+        /* Dimmer Amber */
+        --tang-paper-dark: #151830;
+        /* Darker Indigo */
+
+        --bg-color: #1B1F3B;
+        --bg-surface: #23274A;
+        /* Elevated Indigo */
+        --bg-canvas: #1B1F3B;
+
+        --text-primary: #F2D0A4;
+        --text-secondary: #C0A080;
+
+        --card-bg: #23274A;
+        --card-border: #3E4266;
+    }
+
+    body::before {
+        filter: invert(1) opacity(0.05);
+    }
+}
+
+body.dark-mode,
+body.lantern-mode {
+    --tang-paper: #1B1F3B;
+    --tang-ink: #F2D0A4;
+    --tang-ink-light: #C0A080;
+    --tang-paper-dark: #151830;
+    --bg-color: #1B1F3B;
+    --bg-surface: #23274A;
+    --bg-canvas: #1B1F3B;
+    --text-primary: #F2D0A4;
+    --text-secondary: #C0A080;
+    --card-bg: #23274A;
+    --card-border: #3E4266;
+
+    --ink: var(--tang-ink);
+    --ink-wash: rgba(242, 208, 164, 0.6);
+}
+
+body.dark-mode::before,
+body.lantern-mode::before {
+    filter: invert(1) opacity(0.05);
+}

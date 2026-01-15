@@ -6,63 +6,27 @@
 
 import HanziWriter from 'hanzi-writer';
 import { SoundFX } from './audio';
-import type { UIManager } from './ui';
+import { UIManager } from './ui/UIManager';
 
-/**
- * Dictation passage data structure
- */
-export interface DictationPassage {
-    id: string;
-    title: string;
-    text: string;
-    blanks: number[];  // Character indices that are blanks
-    isFullDictation?: boolean;
-    hint?: string;
-    chunks?: string[];
-    chunkPinyins?: string[];
-}
-
-/**
- * Dictation data file structure
- */
-export interface DictationData {
-    passages: DictationPassage[];
-}
-
-/**
- * Character box state
- */
-interface CharBox {
-    char: string;
-    isBlank: boolean;
-    userInput: string; // Unused for strokes, but kept for state
-    isCorrect: boolean | null;
-    index: number;
-}
+import type { DictationPassage, DictationData, CharBox, DictationChunk } from './types';
 
 /**
  * Dictation Manager
- * Handles rendering and interaction for dictation mode
+ * Handles logic and interaction for dictation mode
+ * Delegating UI rendering to DictationRenderer
  */
 export class DictationManager {
     private container: HTMLElement | null = null;
     private passage: DictationPassage | null = null;
     private charBoxes: CharBox[] = [];
+    private ui: UIManager;
 
-    constructor(_ui: UIManager) {
-        // UI manager passed for future use (e.g., reveal modal)
+    constructor(ui: UIManager) {
+        this.ui = ui;
     }
 
     // Chunking state
-    public chunks: {
-        start: number;
-        end: number;
-        text: string;
-        pinyin: string[];
-        hintUsed: boolean;
-        revealUsed: boolean;
-        score: number;
-    }[] = [];
+    public chunks: DictationChunk[] = [];
     private currentChunkIndex = 0;
 
     // Single-char carousel state
@@ -71,6 +35,9 @@ export class DictationManager {
     // HanziWriter instances for current chunk
     private writers: HanziWriter[] = [];
     private _isPlaying = false;
+
+    // Valid char indices for current chunk (non-punctuation)
+    private validCharIndices: number[] = [];
 
     onComplete: ((score: number, total: number) => void) | null = null;
 
@@ -150,12 +117,6 @@ export class DictationManager {
                 }];
             }
         }
-        // ... (rest of init)
-        // I need to skip 'init' middle part since replace_file_content handles contiguous blocks. 
-        // Ah, I see I included 'chunks' definition which is high up properly.
-        // But I need to preserve the rest of 'init' which is not shown in my replacement content.
-        // I should split this into two replacements or use a specific target.
-        // Let's target the 'private chunks' definition first.
 
         // Build character boxes
         const isFull = !!passage.isFullDictation;
@@ -179,18 +140,28 @@ export class DictationManager {
             setTimeout(() => this.playAudio(), 500);
         }
 
-        this.renderFooterProgress(); // Initial footer render
+        this.renderFooter(); // Initial footer render
     }
 
     /**
      * Play passage audio
      */
     playAudio(): void {
-        if (!this.passage) return;
+        if (!this.passage || !this.chunks[this.currentChunkIndex]) return;
         window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(this.passage.text);
+
+        // Play only current chunk
+        const textToRead = this.chunks[this.currentChunkIndex].text;
+
+        const utterance = new SpeechSynthesisUtterance(textToRead);
         utterance.lang = 'zh-CN';
         utterance.rate = 0.8;
+
+        this._isPlaying = true;
+        utterance.onend = () => {
+            this._isPlaying = false;
+        };
+
         window.speechSynthesis.speak(utterance);
     }
 
@@ -204,15 +175,12 @@ export class DictationManager {
             this.stopAudio();
         } else {
             this.playAudio();
-            this._isPlaying = true;
-            // Auto-reset state after delay (approximate)
-            setTimeout(() => { this._isPlaying = false; }, 5000);
         }
         return this._isPlaying;
     }
 
     /**
-     * Render the dictation UI (Single-char carousel like spelling mode)
+     * Coordinate rendering
      */
     private render(): void {
         if (!this.container || !this.passage || !this.chunks.length) return;
@@ -220,121 +188,64 @@ export class DictationManager {
         // Cleanup old writers before clearing DOM
         this.destroyWriters();
 
-        this.container.innerHTML = '';
-        this.container.className = 'dictation-container';
+        // Logic: Prepare indices for new chunk
+        this.computeValidIndicesForChunk();
 
-        // 1. Completed Phrases Display (shows verified phrases above)
-        const completedArea = document.createElement('div');
-        completedArea.className = 'dictation-completed-phrases';
-        completedArea.style.textAlign = 'center';
-        completedArea.style.fontSize = '1.5rem';
-        completedArea.style.color = '#94a3b8';
-        completedArea.style.marginBottom = '20px';
-        completedArea.style.padding = '10px';
-        completedArea.style.minHeight = '2rem';
-
-        // Build completed text from previous chunks
+        // Logic: Build completed text string
         let completedText = '';
         for (let i = 0; i < this.currentChunkIndex; i++) {
-            const chunk = this.chunks[i];
-            completedText += chunk.text;
+            completedText += this.chunks[i].text;
         }
-        if (completedText) {
-            completedArea.textContent = completedText;
-            completedArea.style.color = 'var(--success)';
-        }
-        this.container.appendChild(completedArea);
 
-        // 2. Current Chunk - Single Character Carousel (reuse spelling structure)
+        // UI: Delegate to Renderer
         if (this.currentChunkIndex < this.chunks.length) {
-            const chunkState = this.chunks[this.currentChunkIndex];
-
-            // Build valid char indices for this chunk (skip punctuation)
-            const validIndices: number[] = [];
-            const punctuationRegex = /[，。！？、：；""''（）《》]/;
-            for (let i = chunkState.start; i < chunkState.end; i++) {
-                const box = this.charBoxes[i];
-                if (!punctuationRegex.test(box.char)) {
-                    validIndices.push(i);
-                } else {
-                    // Auto-complete punctuation
-                    box.isCorrect = true;
-                    box.userInput = box.char;
+            this.ui.dictationRenderer.renderGame(
+                this.container,
+                completedText,
+                this.chunks[this.currentChunkIndex],
+                this.charBoxes,
+                this.currentCharIndex,
+                this.validCharIndices,
+                {
+                    onPrev: () => this.prevChar(),
+                    onNext: () => this.nextChar(),
+                    onPlayAudio: () => this.toggleAudio(),
+                    onToggleGrid: () => this.ui.dictationRenderer.toggleGrid(),
+                    onShowHint: () => this.showHint(),
+                    onReveal: () => this.revealCurrentChunk()
                 }
-            }
-            this.validCharIndices = validIndices;
-
-            // Carousel wrapper (reuse spelling-carousel class)
-            const carousel = document.createElement('div');
-            carousel.className = 'spelling-carousel';
-
-            // Prev button
-            const prevBtn = document.createElement('button');
-            prevBtn.className = 'spelling-nav-btn';
-            prevBtn.id = 'dictation-prev-btn';
-            prevBtn.textContent = '❮';
-            prevBtn.onclick = () => this.prevChar();
-            carousel.appendChild(prevBtn);
-
-            // Single char container
-            const charContainer = document.createElement('div');
-            charContainer.className = 'spelling-chars-container';
-            charContainer.style.display = 'flex';
-            charContainer.style.justifyContent = 'center';
-
-            // Create char boxes (all hidden except current)
-            validIndices.forEach((globalIdx, localIdx) => {
-                const isActive = localIdx === this.currentCharIndex;
-
-                const charBox = document.createElement('div');
-                charBox.className = isActive ? 'char-box spelling-active' : 'char-box spelling-hidden';
-                charBox.id = `dictation-box-${globalIdx}`;
-
-                const slot = document.createElement('div');
-                slot.id = `dictation-char-${globalIdx}`;
-                slot.className = isActive ? 'char-slot active' : 'char-slot';
-                slot.style.width = '240px';
-                slot.style.height = '240px';
-
-                const pinyinLabel = document.createElement('div');
-                pinyinLabel.className = 'char-pinyin-label';
-                pinyinLabel.textContent = chunkState.pinyin[globalIdx - chunkState.start] || '';
-
-                charBox.appendChild(slot);
-                charBox.appendChild(pinyinLabel);
-                charContainer.appendChild(charBox);
-            });
-
-            carousel.appendChild(charContainer);
-
-            // Next button
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'spelling-nav-btn';
-            nextBtn.id = 'dictation-next-btn';
-            nextBtn.textContent = '❯';
-            nextBtn.onclick = () => this.nextChar();
-            carousel.appendChild(nextBtn);
-
-            this.container.appendChild(carousel);
-
-            // Progress indicator
-            const progressEl = document.createElement('div');
-            progressEl.className = 'spelling-progress';
-            progressEl.id = 'dictation-progress';
-            const completed = validIndices.filter(i => this.charBoxes[i].isCorrect).length;
-            progressEl.textContent = `${completed}/${validIndices.length}`;
-            this.container.appendChild(progressEl);
+            );
 
             // Initialize writers after DOM insertion
             setTimeout(() => {
                 this.initWritersForChunk();
-                this.updateCarouselView();
+                // updateCarouselView is called by renderer initially
             }, 50);
         }
     }
 
-    // Valid char indices for current chunk (non-punctuation)
-    private validCharIndices: number[] = [];
+    /**
+     * Compute valid char indices for current chunk (Logic)
+     */
+    private computeValidIndicesForChunk(): void {
+        if (this.currentChunkIndex >= this.chunks.length) return;
+
+        const chunkState = this.chunks[this.currentChunkIndex];
+        const validIndices: number[] = [];
+        const punctuationRegex = /[，。！？、：；“”‘’（）《》]/;
+
+        for (let i = chunkState.start; i < chunkState.end; i++) {
+            const box = this.charBoxes[i];
+            if (!punctuationRegex.test(box.char)) {
+                validIndices.push(i);
+            } else {
+                // Logic: Auto-complete punctuation
+                box.isCorrect = true;
+                box.userInput = box.char;
+            }
+        }
+        this.validCharIndices = validIndices;
+    }
 
     /**
      * Navigate to previous character
@@ -342,7 +253,11 @@ export class DictationManager {
     private prevChar(): void {
         if (this.currentCharIndex > 0) {
             this.currentCharIndex--;
-            this.updateCarouselView();
+            this.ui.dictationRenderer.updateCarouselView(
+                this.currentCharIndex,
+                this.validCharIndices,
+                this.charBoxes
+            );
         }
     }
 
@@ -352,45 +267,11 @@ export class DictationManager {
     private nextChar(): void {
         if (this.currentCharIndex < this.validCharIndices.length - 1) {
             this.currentCharIndex++;
-            this.updateCarouselView();
-        }
-    }
-
-    /**
-     * Update carousel view to show current character
-     */
-    private updateCarouselView(): void {
-        const boxes = document.querySelectorAll('.spelling-chars-container .char-box');
-        boxes.forEach((box, i) => {
-            if (i === this.currentCharIndex) {
-                box.classList.remove('spelling-hidden');
-                box.classList.add('spelling-active');
-                box.querySelector('.char-slot')?.classList.add('active');
-            } else {
-                box.classList.add('spelling-hidden');
-                box.classList.remove('spelling-active');
-                box.querySelector('.char-slot')?.classList.remove('active');
-            }
-        });
-
-        // Update nav buttons
-        const prevBtn = document.getElementById('dictation-prev-btn');
-        const nextBtn = document.getElementById('dictation-next-btn');
-
-        if (prevBtn) {
-            prevBtn.style.visibility = this.currentCharIndex === 0 ? 'hidden' : 'visible';
-        }
-
-        if (nextBtn) {
-            const isLast = this.currentCharIndex === this.validCharIndices.length - 1;
-            nextBtn.style.visibility = isLast ? 'hidden' : 'visible';
-        }
-
-        // Update progress
-        const progressEl = document.getElementById('dictation-progress');
-        if (progressEl) {
-            const completed = this.validCharIndices.filter(i => this.charBoxes[i].isCorrect).length;
-            progressEl.textContent = `${completed}/${this.validCharIndices.length}`;
+            this.ui.dictationRenderer.updateCarouselView(
+                this.currentCharIndex,
+                this.validCharIndices,
+                this.charBoxes
+            );
         }
     }
 
@@ -406,7 +287,7 @@ export class DictationManager {
 
         for (let i = chunk.start; i < chunk.end; i++) {
             const box = this.charBoxes[i];
-            const writerId = `dictation-char-${i}`; // Must match ID in render
+            const writerId = `dictation-char-${i}`; // Match ID from Renderer
             const el = document.getElementById(writerId);
 
             if (!el) continue;
@@ -415,7 +296,7 @@ export class DictationManager {
             const isPunctuation = punctuationRegex.test(box.char);
 
             if (box.isBlank && !isPunctuation) {
-                // Use exact same dimensions as spelling mode (input.ts)
+                // Use exact same dimensions as spelling mode
                 const writer = HanziWriter.create(writerId, box.char, {
                     width: 234,
                     height: 234,
@@ -444,8 +325,8 @@ export class DictationManager {
                         box.userInput = box.char;
 
                         // Check if ALL chars in chunk are correct (Auto-Verify)
-                        const chunk = this.chunks[this.currentChunkIndex];
-                        const allCorrect = this.charBoxes.slice(chunk.start, chunk.end).every(b => b.isCorrect);
+                        const currentChunkState = this.chunks[this.currentChunkIndex];
+                        const allCorrect = this.charBoxes.slice(currentChunkState.start, currentChunkState.end).every(b => b.isCorrect);
 
                         if (allCorrect) {
                             SoundFX.success(); // Play success sound
@@ -460,7 +341,11 @@ export class DictationManager {
                         if (!allCorrect && this.currentCharIndex < this.validCharIndices.length - 1) {
                             setTimeout(() => {
                                 this.currentCharIndex++;
-                                this.updateCarouselView();
+                                this.ui.dictationRenderer.updateCarouselView(
+                                    this.currentCharIndex,
+                                    this.validCharIndices,
+                                    this.charBoxes
+                                );
                             }, 400);
                         }
                     }
@@ -468,7 +353,8 @@ export class DictationManager {
 
                 this.writers.push(writer);
             } else if (box.isBlank && isPunctuation) {
-                // Auto-fill punctuation
+                // Auto-fill punctuation UI Logic
+                // Ideally this styling should be in Renderer or CSS
                 box.isCorrect = true;
                 box.userInput = box.char;
                 el.textContent = box.char;
@@ -486,6 +372,18 @@ export class DictationManager {
     }
 
     private destroyWriters(): void {
+        this.writers.forEach(writer => {
+            try {
+                // HanziWriter definitions are loose, check for method existence
+                if (writer && typeof (writer as any).cancelQuiz === 'function') {
+                    (writer as any).cancelQuiz();
+                }
+                // Also hide/remove if needed, but container clear usually handles DOM.
+                // cancelling quiz stops timers/event listeners.
+            } catch (e) {
+                console.warn('Error cleaning up writer:', e);
+            }
+        });
         this.writers = [];
     }
 
@@ -514,7 +412,10 @@ export class DictationManager {
             this.currentChunkIndex++;
             this.currentCharIndex = 0; // Reset char index for new chunk
             this.render();
-            this.renderFooterProgress(); // Update footer
+            this.renderFooter(); // Update footer
+
+            // Auto-play next chunk audio
+            setTimeout(() => this.playAudio(), 500);
         } else {
             // Calculate last chunk score
             if (chunk.revealUsed) {
@@ -537,25 +438,24 @@ export class DictationManager {
             totalScore += chunk.score;
         });
 
-        if (this.onComplete) {
-            this.onComplete(totalScore, maxScore);
-        }
+        // Delegate UI to Renderer
+        this.ui.dictationRenderer.showResult(totalScore, maxScore, () => {
+            if (this.onComplete) {
+                this.onComplete(totalScore, maxScore);
+            }
+        });
     }
 
     showHint(): void {
         // Mark hint as used for this chunk
         this.chunks[this.currentChunkIndex].hintUsed = true;
-
         const chunk = this.chunks[this.currentChunkIndex];
 
-        // In mobile view, user is focused on ONE char (mobileCharIndex)
-        // So hint should target visible char first if active.
+        // Hint Logic
         if (window.innerWidth <= 600) {
             const activeCharIndex = chunk.start + this.currentCharIndex;
 
-
-            // HanziWriter instance doesn't easily expose ID.
-            // Fallback: iterate chunk, count writers
+            // Map global index to writer index
             let writerIdx = 0;
             for (let i = chunk.start; i < chunk.end; i++) {
                 const box = this.charBoxes[i];
@@ -564,7 +464,6 @@ export class DictationManager {
                     if (i === activeCharIndex) {
                         const w = this.writers[writerIdx];
                         if (w) {
-                            // Show next stroke hint instead of full outline
                             (w as any).highlightStroke?.(0);
                         }
                         return;
@@ -583,7 +482,6 @@ export class DictationManager {
                 if (!box.isCorrect) {
                     const writer = this.writers[writerIndex];
                     if (writer) {
-                        // Show next stroke hint instead of full outline
                         (writer as any).highlightStroke?.(0);
                     }
                     return;
@@ -613,13 +511,10 @@ export class DictationManager {
             writer.showCharacter();
         });
 
-        // Also update charBoxes to mark as populated (but not necessarily "correct" for scoring, 
-        // though notifyReveal sets score to 0).
-        // If we want to allow "next" to proceed, we might need to pretend they are filled.
+        // Logic: Mark as populated
         const chunk = this.chunks[this.currentChunkIndex];
         for (let i = chunk.start; i < chunk.end; i++) {
             const box = this.charBoxes[i];
-            // If it was blank, now it's effectively "filled" by the reveal
             if (box.isBlank) {
                 box.isCorrect = true; // Mark as "correct" so nextChunk checks pass
             }
@@ -636,47 +531,11 @@ export class DictationManager {
         if (footer) footer.innerHTML = '';
     }
 
-    private renderFooterProgress(): void {
-        const footer = document.getElementById('footer-progress');
-        if (!footer) return;
-
-        footer.innerHTML = '';
-
-        // Score Display
-        let currentScore = 0;
-        let currentMax = 0;
-        this.chunks.forEach((chunk, index) => {
-            if (index < this.currentChunkIndex) {
-                currentScore += chunk.score;
-                currentMax += 2;
-            }
-        });
-
-        const scoreEl = document.createElement('div');
-        scoreEl.className = 'dictation-footer-score';
-        scoreEl.textContent = `得分: ${currentScore}/${currentMax}`;
-        scoreEl.style.marginRight = '15px';
-        scoreEl.style.fontWeight = 'bold';
-        scoreEl.style.color = 'var(--primary)';
-        footer.appendChild(scoreEl);
-
-        const bar = document.createElement('div');
-        bar.className = 'dictation-progress-bar';
-
-        this.chunks.forEach((_, index) => {
-            const segment = document.createElement('div');
-            segment.className = 'dictation-progress-segment';
-
-            if (index < this.currentChunkIndex) {
-                segment.classList.add('completed');
-            } else if (index === this.currentChunkIndex) {
-                segment.classList.add('current');
-            }
-
-            bar.appendChild(segment);
-        });
-
-        footer.appendChild(bar);
+    private renderFooter(): void {
+        this.ui.dictationRenderer.renderFooterProgress(
+            this.chunks,
+            this.currentChunkIndex
+        );
     }
 }
 
