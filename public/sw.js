@@ -1,8 +1,5 @@
-const CACHE_NAME = 'tingxie-v1.21.20';
+const CACHE_NAME = 'tingxie-v1.21.21';
 const STATIC_ASSETS = [
-    '/',
-    '/index.html',
-    '/styles.css',
     '/manifest.json'
 ];
 
@@ -36,7 +33,7 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - network-first for HTML/JSON, cache-first for assets
 self.addEventListener('fetch', (event) => {
     // Skip non-GET requests
     if (event.request.method !== 'GET') return;
@@ -44,35 +41,51 @@ self.addEventListener('fetch', (event) => {
     // Skip external requests (Google Fonts, etc.)
     if (!event.request.url.startsWith(self.location.origin)) return;
 
-    event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) {
-                // Return cached version
-                return cachedResponse;
-            }
+    const url = new URL(event.request.url);
+    const isHTMLorJSON = url.pathname.endsWith('.html') || url.pathname.endsWith('.json') || url.pathname === '/';
 
-            // Fetch from network and cache
-            return fetch(event.request).then((networkResponse) => {
-                // Don't cache non-successful responses
-                if (!networkResponse || networkResponse.status !== 200) {
+    if (isHTMLorJSON) {
+        // Network-first strategy for HTML and JSON files
+        event.respondWith(
+            fetch(event.request)
+                .then((networkResponse) => {
+                    // Update cache with fresh version
+                    if (networkResponse && networkResponse.status === 200) {
+                        const responseToCache = networkResponse.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseToCache);
+                        });
+                    }
                     return networkResponse;
+                })
+                .catch(() => {
+                    // Fallback to cache if offline
+                    return caches.match(event.request);
+                })
+        );
+    } else {
+        // Cache-first strategy for static assets (CSS, JS, images)
+        event.respondWith(
+            caches.match(event.request).then((cachedResponse) => {
+                if (cachedResponse) {
+                    return cachedResponse;
                 }
 
-                // Clone the response before caching
-                const responseToCache = networkResponse.clone();
-                caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, responseToCache);
+                return fetch(event.request).then((networkResponse) => {
+                    if (!networkResponse || networkResponse.status !== 200) {
+                        return networkResponse;
+                    }
+
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseToCache);
+                    });
+
+                    return networkResponse;
                 });
-
-                return networkResponse;
-            }).catch(() => {
-                // Offline fallback for HTML pages
-                if (event.request.headers.get('accept').includes('text/html')) {
-                    return caches.match('/');
-                }
-            });
-        })
-    );
+            })
+        );
+    }
 });
 
 // Handle messages from the main app
