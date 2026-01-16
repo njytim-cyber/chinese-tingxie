@@ -110,6 +110,18 @@ export class DictationRenderer {
         container.innerHTML = '';
         container.classList.add('dictation-container');
 
+        // 0. Title
+        const title = document.createElement('h2');
+        title.className = 'dictation-title';
+        title.textContent = '默写';
+        title.style.textAlign = 'center';
+        title.style.color = 'var(--tang-ink)';
+        title.style.fontSize = '2rem';
+        title.style.fontWeight = 'bold';
+        title.style.marginBottom = '16px';
+        title.style.marginTop = '12px';
+        container.appendChild(title);
+
         // 1. Completed Phrases Display (Outside card)
         const completedArea = document.createElement('div');
         completedArea.className = 'dictation-completed-phrases';

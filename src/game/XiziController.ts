@@ -22,8 +22,9 @@ export class XiziController {
     private targetChar: string = '';
 
     // Scaffolding State
-    private currentStage: number = 0; // 0=Trace, 1=3/4, 2=1/2, 3=1/4, 4=Blank
+    private currentStage: number = 0; // 0=Full Guide, 1=Half Guide, 2=Blank
     private mistakesInCurrentStage: number = 0;
+    private totalCharactersInLesson: number = 0; // Track full lesson size for progress
 
     // DOM Elements
     private container: HTMLElement | null = null;
@@ -43,16 +44,16 @@ export class XiziController {
         // 1. Get characters
         const chars = getCharactersForLesson(lessonId);
 
-        // Filter out simple punctuation/numbers if needed, but getCharactersForLesson should handle most
-        // Shuffle or sort by weakest? For now, simple shuffle or sequential
-        this.practiceQueue = chars;
-        this.currentQueueIndex = 0;
-
-        if (this.practiceQueue.length === 0) {
+        if (chars.length === 0) {
             this.ui.showFeedback('没有可练习的汉字', '#ef4444');
             setTimeout(() => this.onExit(), 2000);
             return;
         }
+
+        // Auto-chunk to 5 characters max for 5-minute sessions
+        this.totalCharactersInLesson = chars.length;
+        this.practiceQueue = chars.slice(0, Math.min(5, chars.length));
+        this.currentQueueIndex = 0;
 
         // 2. Setup UI
         this.setupUI();
@@ -160,13 +161,28 @@ export class XiziController {
     }
 
     private async startStage(): Promise<void> {
-        if (this.currentStage > 4) {
-            // Char Complete
+        if (this.currentStage > 2) {
+            // Char Complete (3 stages: 0, 1, 2)
             SoundFX.success();
             // Update Data
             updateCharacterProgress(this.targetChar, true);
 
-            this.ui.showFeedback('完成!', '#4ade80');
+            // Check for milestone celebrations
+            const charsCompleted = this.currentQueueIndex + 1;
+            const totalInChunk = this.practiceQueue.length;
+            const percentComplete = Math.round((charsCompleted / totalInChunk) * 100);
+
+            if (charsCompleted === totalInChunk) {
+                // Chunk complete!
+                this.showChunkComplete();
+                return;
+            } else if (charsCompleted % 3 === 0 || percentComplete >= 50 && charsCompleted === Math.ceil(totalInChunk / 2)) {
+                // Milestone celebration
+                this.ui.showFeedback(`太棒了！已完成 ${charsCompleted} 个字！`, '#4ade80');
+            } else {
+                this.ui.showFeedback('完成!', '#4ade80');
+            }
+
             setTimeout(() => {
                 this.currentQueueIndex++;
                 this.loadCurrentCharacter();
