@@ -7,7 +7,7 @@ import '../public/css/index.css';
 import '../public/css/components/update-notification.css';
 
 // Module Imports
-import { initVoices, unlockAudio } from './audio';
+import { initVoices, unlockAudio, resumeAudioContext } from './audio';
 import { initParticles } from './particles';
 import { injectGlobalSVGDefs } from './utils/svg';
 import { Game } from './game';
@@ -167,6 +167,22 @@ document.addEventListener('visibilitychange', () => {
         saveDataSync();
     }
 });
+
+// Persistent audio context resume for stubborn devices (Huawei tablets)
+// This ensures audio works even if initial unlock failed
+let audioUnlockAttempted = false;
+const persistentAudioUnlock = () => {
+    if (audioUnlockAttempted) return;
+    audioUnlockAttempted = true;
+
+    // Try to resume on ANY user interaction
+    ['touchstart', 'touchend', 'click', 'keydown'].forEach(eventType => {
+        document.addEventListener(eventType, resumeAudioContext, { once: true, passive: true });
+    });
+};
+
+// Start persistent unlock after a short delay
+setTimeout(persistentAudioUnlock, 1000);
 
 // Global Error Handlers
 window.addEventListener('error', (event) => {

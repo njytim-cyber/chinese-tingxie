@@ -19,6 +19,16 @@ function getAudioContext(): AudioContext {
     return audioCtx;
 }
 
+/**
+ * Force resume audio context (for persistent unlock)
+ */
+export function resumeAudioContext(): void {
+    const ctx = getAudioContext();
+    if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+    }
+}
+
 export let selectedVoice: SpeechSynthesisVoice | null = null;
 
 /**
@@ -300,26 +310,67 @@ export function speakCharacters(text: string): void {
  */
 export function unlockAudio(): void {
     const ctx = getAudioContext();
+
+    // Immediate resume attempt
     if (ctx.state === 'suspended') {
-        void ctx.resume();
+        ctx.resume().then(() => {
+            console.log('[Audio] Context resumed successfully');
+        }).catch((err) => {
+            console.warn('[Audio] Resume failed:', err);
+        });
     }
 
-    // Add explicit touch handler for stubborn devices (Huawei)
+    // Play a silent tone to force audio unlock on stubborn devices (Huawei, some Android)
+    try {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        gain.gain.value = 0.001; // Nearly silent
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(0);
+        osc.stop(ctx.currentTime + 0.01);
+    } catch (e) {
+        console.warn('[Audio] Silent tone unlock failed:', e);
+    }
+
+    // Aggressive unlock handler for touch devices
     const unlockHandler = () => {
         if (ctx.state === 'suspended') {
-            void ctx.resume();
+            ctx.resume().then(() => {
+                console.log('[Audio] Context unlocked via touch');
+            });
         }
+
+        // Force play a test sound
+        try {
+            const testOsc = ctx.createOscillator();
+            const testGain = ctx.createGain();
+            testGain.gain.value = 0.001;
+            testOsc.connect(testGain);
+            testGain.connect(ctx.destination);
+            testOsc.start(0);
+            testOsc.stop(ctx.currentTime + 0.01);
+        } catch (e) {
+            // Silently ignore
+        }
+
         window.removeEventListener('touchstart', unlockHandler);
+        window.removeEventListener('touchend', unlockHandler);
         window.removeEventListener('click', unlockHandler);
     };
 
-    window.addEventListener('touchstart', unlockHandler, { passive: true });
-    window.addEventListener('click', unlockHandler);
+    window.addEventListener('touchstart', unlockHandler, { passive: true, once: true });
+    window.addEventListener('touchend', unlockHandler, { passive: true, once: true });
+    window.addEventListener('click', unlockHandler, { once: true });
 
     // Unlock Speech Synthesis with a dummy utterance (silent)
-    const u = new SpeechSynthesisUtterance('');
-    if (selectedVoice) u.voice = selectedVoice;
-    u.volume = 0.0; // Silent
-    u.rate = 2.0;
-    window.speechSynthesis.speak(u);
+    try {
+        const u = new SpeechSynthesisUtterance(' ');
+        if (selectedVoice) u.voice = selectedVoice;
+        u.volume = 0.01; // Very quiet but not zero (some devices ignore 0)
+        u.rate = 10; // Very fast
+        window.speechSynthesis.speak(u);
+    } catch (e) {
+        console.warn('[Audio] Speech unlock failed:', e);
+    }
 }
