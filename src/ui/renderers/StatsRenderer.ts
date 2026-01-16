@@ -96,9 +96,8 @@ export class StatsRenderer {
                 // Clear all game UI and content to prevent overlap
                 this.manager.toggleActiveGameUI(false);
 
-                // Remove all existing views
-                const existingViews = app.querySelectorAll('.lesson-select, .dictation-lesson-select, .progress-view, #writing-card, .bottom-action-area, .dictation-container');
-                existingViews.forEach(view => view.remove());
+                // Completely clear game stage to ensure no leftover content from dictation mode
+                app.innerHTML = '';
 
                 // Clear footer progress bar from dictation mode
                 const footerProgress = document.getElementById('footer-progress');
