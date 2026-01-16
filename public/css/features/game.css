@@ -438,7 +438,8 @@
     }
 
     .game-stage {
-        padding: 10px 8px 15px;
+        padding: 10px 8px calc(100px + env(safe-area-inset-bottom, 0px));
+        /* Increased bottom padding for mobile */
     }
 
     .game-stage #completed-text {
@@ -495,10 +496,11 @@
     flex-direction: column !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    padding: 15px 10px 20px !important;
+    padding: 15px 10px calc(20px + env(safe-area-inset-bottom, 0px)) !important;
     /* More compact padding */
-    min-height: calc(100vh - 140px);
-    /* Account for header and footer */
+    min-height: auto;
+    /* Let content determine height */
+    padding-bottom: 20px !important;
 }
 
 /* White card wrapper for dictation mode */
@@ -560,12 +562,15 @@
 
 @media (max-width: 600px) {
     .dictation-container {
-        padding: 10px 8px 15px !important;
+        padding: 10px 8px 30px !important;
+        /* Extra bottom padding for mobile */
     }
 
     .dictation-container .writing-card {
         width: 98%;
         padding: 10px;
+        margin-bottom: 20px;
+        /* Add bottom margin to ensure visibility */
     }
 
     .dictation-completed-phrases {
@@ -577,6 +582,8 @@
     .card-toolbar {
         gap: 12px;
         /* Tighter spacing on mobile */
+        margin-bottom: 30px;
+        /* Extra bottom margin */
     }
 
     .tool-btn {
@@ -594,11 +601,14 @@
     }
 
     .dictation-container {
-        padding: 8px 5px 12px !important;
+        padding: 8px 5px 40px !important;
+        /* Increased bottom padding for very small screens */
     }
 
     .dictation-container .writing-card {
         padding: 8px;
+        margin-bottom: 25px;
+        /* Extra bottom margin */
     }
 
     .spelling-carousel {
@@ -607,6 +617,8 @@
 
     .card-toolbar {
         gap: 8px;
+        margin-bottom: 35px;
+        /* Extra bottom margin for small screens */
     }
 
     .tool-btn {
@@ -621,7 +633,8 @@
 
     .dictation-indicators {
         margin-top: 8px;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
+        /* Increased bottom margin */
     }
 }
 
