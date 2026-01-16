@@ -138,4 +138,19 @@ export class HUDController {
             avatar.style.display = visible ? 'block' : 'none';
         }
     }
+
+    /**
+     * Toggle between session stats and global stats in header
+     */
+    showSessionStats(visible: boolean): void {
+        const sessionStats = document.getElementById('session-stats');
+        const globalStats = document.getElementById('header-stats');
+
+        if (sessionStats) {
+            sessionStats.style.display = visible ? 'flex' : 'none';
+        }
+        if (globalStats) {
+            globalStats.style.display = visible ? 'none' : 'flex';
+        }
+    }
 }

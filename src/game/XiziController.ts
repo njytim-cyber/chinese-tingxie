@@ -1,6 +1,6 @@
 import HanziWriter from 'hanzi-writer';
 import { UIManager } from '../ui/UIManager';
-import { getCharactersForLesson, getCharacterState, updateCharacterProgress } from '../data';
+import { getCharactersForLesson, updateCharacterProgress, getCharacterContext, getLessons } from '../data';
 import { SoundFX } from '../audio';
 import { spawnParticles } from '../particles';
 
@@ -16,6 +16,7 @@ export class XiziController {
     // Practice Queue
     private practiceQueue: string[] = [];
     private currentQueueIndex: number = 0;
+    private currentLessonId: number = 0; // Store for continuing practice
 
     // Writers
     private writer: HanziWriter | null = null;
@@ -25,10 +26,12 @@ export class XiziController {
     private currentStage: number = 0; // 0=Full Guide, 1=Half Guide, 2=Blank
     private mistakesInCurrentStage: number = 0;
     private totalCharactersInLesson: number = 0; // Track full lesson size for progress
+    private allLessonCharacters: string[] = []; // Full character list for chunking
 
     // DOM Elements
     private container: HTMLElement | null = null;
     private instructionsEl: HTMLElement | null = null;
+    private pinyinEl: HTMLElement | null = null;
 
     constructor(ui: UIManager, onExit: () => void) {
         this.ui = ui;
@@ -40,6 +43,7 @@ export class XiziController {
      */
     async start(lessonId: number, startTime: number): Promise<void> {
         this.sessionStartTime = startTime;
+        this.currentLessonId = lessonId;
 
         // 1. Get characters
         const chars = getCharactersForLesson(lessonId);
@@ -50,7 +54,8 @@ export class XiziController {
             return;
         }
 
-        // Auto-chunk to 5 characters max for 5-minute sessions
+        // Store all characters and auto-chunk to 5 characters max for 5-minute sessions
+        this.allLessonCharacters = chars;
         this.totalCharactersInLesson = chars.length;
         this.practiceQueue = chars.slice(0, Math.min(5, chars.length));
         this.currentQueueIndex = 0;
@@ -58,7 +63,14 @@ export class XiziController {
         // 2. Setup UI
         this.setupUI();
 
-        // 3. Start first character
+        // 3. Set lesson title in header
+        const lessons = getLessons();
+        const lesson = lessons.find(l => l.id === lessonId);
+        if (lesson) {
+            this.ui.updateHeaderTitle(lesson.title);
+        }
+
+        // 4. Start first character
         await this.loadCurrentCharacter();
     }
 
@@ -81,6 +93,8 @@ export class XiziController {
             padding: 20px;
             text-align: center;
         `;
+
+        // Lesson Title removed - it's in the header now
 
         // Instructions / Stage Indicator
         this.instructionsEl = document.createElement('div');
@@ -139,6 +153,19 @@ export class XiziController {
 
         container.appendChild(writerWrapper);
 
+        // Pinyin below the box
+        this.pinyinEl = document.createElement('div');
+        this.pinyinEl.className = 'xizi-pinyin';
+        this.pinyinEl.style.cssText = `
+            font-size: 1.3rem;
+            color: var(--tang-red);
+            margin-top: 12px;
+            margin-bottom: 16px;
+            font-style: italic;
+            font-weight: 500;
+        `;
+        container.appendChild(this.pinyinEl);
+
         app.appendChild(container);
         this.container = writerTarget;
     }
@@ -150,11 +177,8 @@ export class XiziController {
         }
 
         this.targetChar = this.practiceQueue[this.currentQueueIndex];
-        const state = getCharacterState(this.targetChar);
 
-        // Reset stages for this session
-        // Only trigger stage 1-5 loop. 
-        // If already master (level 5), maybe skip? No, explicit practice means we practice.
+        // Reset stages for this character (3 stages: 0, 1, 2)
         this.currentStage = 0;
 
         await this.startStage();
@@ -213,54 +237,11 @@ export class XiziController {
             // Start Quiz
             // Wait for load via quiz
 
-            // Set Outline Opacity via CSS Hack after load
-            // We use an interval to check for SVG presence
-            const setOpacity = () => {
-                const svg = document.querySelector('#xizi-target svg');
-                if (svg) {
-                    // Stage Config
-                    let outlineOpacity = 0;
-                    switch (this.currentStage) {
-                        case 0: outlineOpacity = 0.7; break; // Full Trace
-                        case 1: outlineOpacity = 0.5; break;
-                        case 2: outlineOpacity = 0.3; break;
-                        case 3: outlineOpacity = 0.15; break;
-                        case 4: outlineOpacity = 0; break;   // Blank
-                    }
-
-                    if (outlineOpacity > 0) {
-                        this.writer?.showOutline();
-                        // Find the outline group in SVG and force opacity
-                        // HanziWriter usually puts outlines in a group. We look for 'g' tags.
-                        // This is a best-effort visual hack.
-                        const groups = svg.querySelectorAll('g');
-                        groups.forEach(g => {
-                            // HanziWriter outlines often have a specific fill color/opacity attr
-                            // We attempt to set opacity on everything that looks like an outline (grey)
-                            // or simplified, just set the SVG root opacity for outlines if identifiable.
-                            // Better approach: HanziWriter API 'showOutline' creates an SVG element.
-                            // We can select based on color if we knew it? 
-                            // Actually, just relying on show/hide is safer logic-wise, 
-                            // but let's try to simulate checking mistakes for the "Flash" effect if needed.
-
-                            // For this implementation, we will stick to:
-                            // 0-3: Show Outline
-                            // 4: Hide Outline
-
-                            // If we want opacity difference, we might need to recreate writer.
-                            // But for "good enough" visual differentiation without recreating:
-                            // We just use show/hide.
-                        });
-                    } else {
-                        this.writer?.hideOutline();
-                    }
-                }
-            };
-
-            // Re-create writer if we really want to change stroke options (like outline opacity)
-            // But checking performance, let's keep the instance and just toggle visibility for now.
-            // If stage 4 (Blank), we hide.
-            if (this.currentStage === 4) {
+            // Set outline visibility based on stage
+            // Stage 0: Full guide (60% opacity)
+            // Stage 1: Half guide (30% opacity)
+            // Stage 2: Blank (no outline)
+            if (this.currentStage === 2) {
                 this.writer.hideOutline();
             } else {
                 this.writer.showOutline();
@@ -272,8 +253,8 @@ export class XiziController {
                     SoundFX.click();
                     spawnParticles(0, 0);
 
-                    // In later stages (Masked), show hint briefly on mistake
-                    if (this.currentStage >= 4) {
+                    // On final stage (blank), show hint briefly on mistake
+                    if (this.currentStage === 2) {
                         this.writer?.showOutline();
                         setTimeout(() => this.writer?.hideOutline(), 500);
                     }
@@ -295,24 +276,103 @@ export class XiziController {
     }
 
     private updateInstructions(): void {
-        if (!this.instructionsEl) return;
+        if (!this.instructionsEl || !this.pinyinEl) return;
 
         const stageNames = [
             '第一步: 描红',
             '第二步: 辅助',
-            '第三步: 进阶',
-            '第四步: 记忆',
-            '第五步: 默写'
+            '第三步: 默写'
         ];
 
+        // Stage dots
+        const stageDots = Array(3).fill(0).map((_, i) =>
+            i === this.currentStage ? '●' : '○'
+        ).join(' ');
+
+        // Get character context
+        const context = getCharacterContext(this.targetChar, this.currentLessonId);
+        const pinyinText = context ? context.pinyin : '';
+
+        // Update pinyin below the box
+        this.pinyinEl.textContent = pinyinText;
+
+        // Simple, clean instructions - one character at a time
         this.instructionsEl.innerHTML = `
-            <div style="font-size: 1.1rem; font-weight: 600; color: var(--tang-ink); margin-bottom: 8px;">
+            <div style="font-size: 0.95rem; color: var(--tang-ink); margin-bottom: 8px;">
                 ${stageNames[this.currentStage]}
             </div>
-            <div style="font-size: 0.95rem; color: var(--tang-ink-light); opacity: 0.8;">
-                ${this.currentQueueIndex + 1} / ${this.practiceQueue.length}
+            <div style="font-size: 1.2rem; color: var(--tang-gold); letter-spacing: 4px;">
+                ${stageDots}
             </div>
         `;
+    }
+
+    private showChunkComplete(): void {
+        const charsCompleted = this.practiceQueue.length;
+        const hasMoreCharacters = this.totalCharactersInLesson > charsCompleted;
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay show';
+        modal.innerHTML = `
+            <div class="modal-content result-card" style="max-width: 400px;">
+                <h2 class="result-title">本组练习完成！</h2>
+                <div class="result-score-large">${charsCompleted}</div>
+                <div class="result-percentage">个字完成</div>
+                <p class="result-message">太棒了！继续保持！</p>
+                ${hasMoreCharacters ? `
+                    <div style="padding: 12px; background: var(--tang-paper); border-radius: var(--scholar-radius); margin: 16px 0; color: var(--tang-ink-light); font-size: 0.9rem;">
+                        还有 ${this.totalCharactersInLesson - charsCompleted} 个字可以练习
+                    </div>
+                ` : ''}
+                <div class="modal-actions">
+                    ${hasMoreCharacters ? `
+                        <button class="action-btn-large" id="xizi-continue-btn">继续练习</button>
+                        <button class="text-btn" id="xizi-finish-btn">结束练习</button>
+                    ` : `
+                        <button class="action-btn-large" id="xizi-finish-btn">完成</button>
+                    `}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        const continueBtn = document.getElementById('xizi-continue-btn');
+        const finishBtn = document.getElementById('xizi-finish-btn');
+
+        if (continueBtn) {
+            continueBtn.onclick = () => {
+                modal.remove();
+                // Continue with next chunk
+                this.continueWithNextChunk();
+            };
+        }
+
+        if (finishBtn) {
+            finishBtn.onclick = () => {
+                modal.remove();
+                this.finishSession();
+            };
+        }
+    }
+
+    private async continueWithNextChunk(): Promise<void> {
+        // Calculate how many characters we've already practiced
+        const completedCount = this.practiceQueue.length;
+        const remainingChars = this.allLessonCharacters.slice(completedCount);
+
+        if (remainingChars.length === 0) {
+            // No more characters, finish
+            this.finishSession();
+            return;
+        }
+
+        // Get next chunk (up to 5 characters)
+        this.practiceQueue = remainingChars.slice(0, Math.min(5, remainingChars.length));
+        this.currentQueueIndex = 0;
+
+        // Restart with first character of new chunk
+        await this.loadCurrentCharacter();
     }
 
     private finishSession(): void {

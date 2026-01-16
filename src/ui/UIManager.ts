@@ -24,6 +24,10 @@ export class UIManager implements IUIManager {
     public gameRenderer: GameRenderer; // Public for Game access
     private hudController: HUDController;
 
+    // Transition state to prevent race conditions
+    private isTransitioning: boolean = false;
+    private pendingTransition: (() => void) | null = null;
+
     constructor(domCache?: DOMCache) {
         this.domCache = domCache || initDOMCache();
 
@@ -48,6 +52,7 @@ export class UIManager implements IUIManager {
 
     /**
      * Smooth view transition with fade animation
+     * Prevents race conditions by queuing transitions
      */
     transitionView(renderFn: () => void): void {
         const app = document.querySelector('.game-stage') as HTMLElement;
@@ -60,7 +65,17 @@ export class UIManager implements IUIManager {
             return;
         }
 
-        // Prevent race condition by ensuring only one transition runs at a time
+        // If a transition is in progress, queue this one
+        if (this.isTransitioning) {
+            this.pendingTransition = renderFn;
+            return;
+        }
+
+        // Mark as transitioning
+        this.isTransitioning = true;
+
+        // Start fade out
+        app.style.transition = 'opacity 200ms ease';
         app.style.opacity = '0';
 
         setTimeout(() => {
@@ -71,11 +86,26 @@ export class UIManager implements IUIManager {
                 console.error('Error rendering view during transition:', e);
             }
 
-            // Always restore opacity even if render failed
-            setTimeout(() => {
+            // Fade in - using requestAnimationFrame for smoother animation
+            requestAnimationFrame(() => {
                 app.style.opacity = '1';
-                void app.offsetWidth;
-            }, 50);
+
+                // Clean up and mark complete after transition ends
+                const cleanup = () => {
+                    app.style.transition = '';
+                    this.isTransitioning = false;
+
+                    // Process pending transition if any
+                    if (this.pendingTransition) {
+                        const pending = this.pendingTransition;
+                        this.pendingTransition = null;
+                        this.transitionView(pending);
+                    }
+                };
+
+                // Wait for transition to complete
+                setTimeout(cleanup, 250);
+            });
         }, 200);
     }
 
@@ -103,6 +133,10 @@ export class UIManager implements IUIManager {
 
     toggleAvatar(visible: boolean): void {
         this.hudController.toggleAvatar(visible);
+    }
+
+    showSessionStats(visible: boolean): void {
+        this.hudController.showSessionStats(visible);
     }
 
     toggleActiveGameUI(visible: boolean): void {
@@ -149,6 +183,7 @@ export class UIManager implements IUIManager {
         document.getElementById('btn-hint')?.addEventListener('click', () => game.useHint());
         document.getElementById('btn-reveal')?.addEventListener('click', () => game.revealPhrase());
         document.getElementById('btn-grid')?.addEventListener('click', () => game.toggleGrid());
+        document.getElementById('btn-wordlist')?.addEventListener('click', () => game.showWordList());
         document.getElementById('next-btn')?.addEventListener('click', () => game.nextLevel());
         // Header back button is persistent, no need to rebind usually, but good to check
         // document.getElementById('header-back-btn')?.addEventListener('click', () => game.handleBackNavigation());
@@ -166,6 +201,16 @@ export class UIManager implements IUIManager {
 
     showDictationSelect(onStart: (passage: any) => void): void {
         this.dictationRenderer.showSelect(onStart);
+    }
+
+    hideAllTabs(): void {
+        this.lessonRenderer.hideTabs();
+        this.dictationRenderer.hideTabs();
+    }
+
+    showAllTabs(): void {
+        this.lessonRenderer.showTabs();
+        this.dictationRenderer.showTabs();
     }
 
     showDictationResult(score: number, total: number, onContinue: () => void): void {
@@ -200,32 +245,138 @@ export class UIManager implements IUIManager {
     // For now, keep simple interactive UI methods here if they don't fit perfectly elsewhere,
     // or delegate if appropriate.
 
-    renderProgressDots(count: number): void {
-        const footer = this.domCache.footerProgress;
-        if (!footer) return;
-
-        footer.innerHTML = '';
-        if (count > 0) {
-            footer.style.display = 'flex';
-            for (let i = 0; i < count; i++) {
-                const dot = document.createElement('div');
-                dot.className = 'progress-dot';
-                dot.id = `dot-${i}`;
-                footer.appendChild(dot);
-            }
-        } else {
-            footer.style.display = 'none';
-        }
+    renderProgressDots(_count: number): void {
+        // Progress dots removed from footer - no longer displayed
     }
 
-    updateProgressDot(index: number, status: ProgressDotStatus): void {
-        const dot = document.getElementById(`dot-${index}`);
-        if (dot) {
-            dot.className = `progress-dot ${status}`;
-            if (status === 'active') {
-                dot.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    updateProgressDot(_index: number, _status: ProgressDotStatus): void {
+        // Progress dots removed from footer - no longer displayed
+    }
+
+    /**
+     * Render header progress bar for spelling mode
+     */
+    renderSpellingProgress(currentIndex: number, total: number): void {
+        let progressContainer = document.getElementById('spelling-header-progress');
+
+        if (!progressContainer) {
+            progressContainer = document.createElement('div');
+            progressContainer.id = 'spelling-header-progress';
+            progressContainer.className = 'dictation-header-progress'; // Reuse same styling
+
+            // Insert after header
+            const header = document.querySelector('.dashboard-header');
+            if (header && header.parentElement) {
+                header.parentElement.insertBefore(progressContainer, header.nextSibling);
             }
         }
+
+        // Calculate progress percentage
+        const progress = total > 0 ? ((currentIndex + 1) / total) * 100 : 0;
+
+        // Update progress bar
+        progressContainer.innerHTML = `
+            <div class="dictation-progress-fill" style="width: ${progress}%"></div>
+        `;
+    }
+
+    /**
+     * Remove spelling header progress bar
+     */
+    removeSpellingProgress(): void {
+        const progressBar = document.getElementById('spelling-header-progress');
+        if (progressBar) progressBar.remove();
+    }
+
+    /**
+     * Show word list modal for current lesson
+     */
+    showWordListModal(words: Array<{ term: string; pinyin: string }>, currentIndex: number): void {
+        console.log('showWordListModal called with:', words.length, 'words, currentIndex:', currentIndex);
+        console.log('Sample words:', words.slice(0, 3));
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay show';
+        modal.id = 'wordlist-modal';
+
+        const modalContent = document.createElement('div');
+        modalContent.className = 'modal-content';
+        modalContent.style.cssText = 'max-width: 500px; max-height: 80vh; overflow-y: auto; width: 90%; position: relative;';
+
+        // Back button
+        const backBtn = document.createElement('button');
+        backBtn.className = 'modal-back-btn';
+        backBtn.innerHTML = '←';
+        backBtn.setAttribute('aria-label', '关闭');
+        modalContent.appendChild(backBtn);
+
+        // Title
+        const title = document.createElement('h2');
+        title.className = 'modal-title';
+        title.textContent = `本课词语 (${currentIndex + 1}/${words.length})`;
+        modalContent.appendChild(title);
+
+        // Word list container
+        const wordListContainer = document.createElement('div');
+        wordListContainer.className = 'wordlist-container';
+
+        words.forEach((word, idx) => {
+            const item = document.createElement('div');
+            item.className = `wordlist-item ${idx === currentIndex ? 'current' : idx < currentIndex ? 'completed' : ''}`;
+
+            const number = document.createElement('span');
+            number.className = 'wordlist-number';
+            number.textContent = `${idx + 1}`;
+
+            const term = document.createElement('span');
+            term.className = 'wordlist-term';
+            term.textContent = word.term || '???';
+
+            const pinyin = document.createElement('span');
+            pinyin.className = 'wordlist-pinyin';
+            pinyin.textContent = word.pinyin || '';
+
+            item.appendChild(number);
+            item.appendChild(term);
+            item.appendChild(pinyin);
+            wordListContainer.appendChild(item);
+        });
+
+        modalContent.appendChild(wordListContainer);
+
+        // Actions
+        const actions = document.createElement('div');
+        actions.className = 'modal-actions';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'action-btn-large';
+        closeBtn.id = 'close-wordlist-btn';
+        closeBtn.textContent = '关闭';
+
+        actions.appendChild(closeBtn);
+        modalContent.appendChild(actions);
+
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        console.log('Modal appended, checking DOM:', document.getElementById('wordlist-modal'));
+
+        // Close button event handlers
+        const closeModal = () => modal.remove();
+
+        backBtn.addEventListener('click', closeModal);
+        closeBtn?.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // Scroll current word into view
+        setTimeout(() => {
+            const currentItem = modal.querySelector('.wordlist-item.current');
+            if (currentItem) {
+                currentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
     }
 
     // --- Interaction Area ---

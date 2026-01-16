@@ -7,6 +7,7 @@
 import HanziWriter from 'hanzi-writer';
 import { SoundFX } from './audio';
 import { UIManager } from './ui/UIManager';
+import { splitTextByPunctuation } from './utils/text';
 
 import type { DictationPassage, DictationData, CharBox, DictationChunk } from './types';
 
@@ -80,32 +81,21 @@ export class DictationManager {
                 };
             });
         } else {
-            // Auto-split fallback
-            const punctuationRegex = /([，。！？、：；“”‘’（）《》]+)/;
-            const parts = passage.text.split(punctuationRegex);
+            // Auto-split fallback using centralized text utility
+            const textChunks = splitTextByPunctuation(passage.text);
 
-            this.chunks = [];
-            let currentStart = 0;
-
-            for (let i = 0; i < parts.length; i += 2) {
-                const phrase = parts[i];
-                const punct = parts[i + 1] || "";
-                const fullChunk = phrase + punct;
-
-                if (fullChunk) {
-                    this.chunks.push({
-                        start: currentStart,
-                        end: currentStart + fullChunk.length,
-                        text: fullChunk,
-                        pinyin: [],
-                        hintUsed: false,
-                        revealUsed: false,
-                        score: 0
-                    });
-                    currentStart += fullChunk.length;
-                }
-            }
-            if (this.chunks.length === 0) {
+            if (textChunks.length > 0) {
+                this.chunks = textChunks.map(chunk => ({
+                    start: chunk.startPos,
+                    end: chunk.endPos,
+                    text: chunk.fullText,
+                    pinyin: [],
+                    hintUsed: false,
+                    revealUsed: false,
+                    score: 0
+                }));
+            } else {
+                // Fallback for plain text with no punctuation
                 this.chunks = [{
                     start: 0,
                     end: passage.text.length,
@@ -549,6 +539,10 @@ export class DictationManager {
 
     private renderFooter(): void {
         this.ui.dictationRenderer.renderFooterProgress(
+            this.chunks,
+            this.currentChunkIndex
+        );
+        this.ui.dictationRenderer.renderHeaderProgress(
             this.chunks,
             this.currentChunkIndex
         );

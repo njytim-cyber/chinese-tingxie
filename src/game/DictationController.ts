@@ -6,6 +6,7 @@
 import { UIManager } from '../ui/UIManager';
 import { logAttempt, type AttemptLog } from '../data';
 import type { DictationPassage } from '../types';
+import { DictationRenderer } from '../ui/renderers/DictationRenderer';
 
 export class DictationController {
     private ui: UIManager;
@@ -25,6 +26,9 @@ export class DictationController {
      * Start dictation session
      */
     async start(passage: DictationPassage, sessionStartTime: number): Promise<void> {
+        // Hide tabs when entering practice mode
+        this.ui.dictationRenderer.hideTabs();
+
         // Find the main game stage
         const container = document.querySelector('.game-stage') as HTMLElement;
         if (!container) {
@@ -42,7 +46,21 @@ export class DictationController {
         this.ui.toggleAvatar(false); // Remove avatar from dictation input page
         this.ui.setHudTransparent(false);
         this.ui.toggleBackBtn(true);
-        this.ui.updateHeaderTitle(''); // No title in dictation game
+
+        // Format title as "默写 1.1" for Set B passages
+        let displayTitle = DictationRenderer.shortenTitle(passage.title);
+        if (passage.setId === 'B') {
+            // Extract lesson number and passage index from title
+            // Title format: "第1课 - 高兴/笑 (2)" or "第1课 - 高兴/笑"
+            const match = passage.title.match(/第(\d+)课.*?(?:\((\d+)\))?$/);
+            if (match) {
+                const lessonNum = match[1];
+                const passageIndex = match[2] || '1';
+                displayTitle = `默写 ${lessonNum}.${passageIndex}`;
+            }
+        }
+
+        this.ui.updateHeaderTitle(displayTitle); // Show passage title in header
 
         // Hide standard HUD controls if they exist (Dictation manages its own)
         const hudControls = document.querySelector('.hud-controls');
@@ -71,14 +89,18 @@ export class DictationController {
             if (error instanceof Error) {
                 console.error(error.stack);
             }
-            this.ui.showFeedback('加载练习模块失败，请检查控制台', '#ef4444');
-            // Restore UI state or go back
+            this.ui.showFeedback('加载练习模块失败，请刷新页面重试', '#ef4444');
+
+            // Restore UI state
             this.ui.toggleActiveGameUI(false);
             const hudControls = document.querySelector('.hud-controls');
             if (hudControls) (hudControls as HTMLElement).style.display = '';
 
-            // FIXME: Commenting out redirection to debug the error
-            // this.onSelectCtx();
+            // Redirect back to lesson selection after showing error message
+            // Give user time to read the error (2 seconds)
+            setTimeout(() => {
+                this.onSelectCtx();
+            }, 2000);
         }
     }
 

@@ -45,7 +45,11 @@ export class CardFactory {
             </div>
         `;
 
-        card.onclick = onClick;
+        card.onclick = (e) => {
+            console.log('Card clicked:', id, title);
+            e.stopPropagation();
+            onClick();
+        };
         return card;
     }
 }

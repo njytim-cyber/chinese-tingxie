@@ -130,3 +130,32 @@
 .result-card .result-message {
     color: var(--tang-ink-light);
 }
+
+/* Modal Back Button */
+.modal-back-btn {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: transparent;
+    border: none;
+    color: var(--tang-ink-light);
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 1;
+}
+
+.modal-back-btn:hover {
+    color: var(--tang-ink);
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.modal-back-btn:active {
+    transform: scale(0.95);
+}

@@ -5,6 +5,8 @@
 let canvas: HTMLCanvasElement | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
 let particles: Particle[] = [];
+let animationFrameId: number | null = null;
+let isAnimating: boolean = false;
 
 /**
  * Resize canvas to match window
@@ -64,6 +66,8 @@ export function spawnParticles(x: number, y: number): void {
     for (let i = 0; i < 30; i++) {
         particles.push(new Particle(x, y, colors[Math.floor(Math.random() * colors.length)]));
     }
+    // Start animation if not already running
+    startAnimation();
 }
 
 /**
@@ -71,13 +75,14 @@ export function spawnParticles(x: number, y: number): void {
  */
 function animateParticles(): void {
     if (!ctx || !canvas) {
-        requestAnimationFrame(animateParticles);
+        animationFrameId = requestAnimationFrame(animateParticles);
         return;
     }
 
-    // Skip rendering when no particles (optimization)
+    // Stop animation when no particles (optimization for battery life)
     if (particles.length === 0) {
-        requestAnimationFrame(animateParticles);
+        isAnimating = false;
+        animationFrameId = null;
         return;
     }
 
@@ -96,11 +101,34 @@ function animateParticles(): void {
     }
     particles.length = writeIndex; // Truncate dead particles
 
-    requestAnimationFrame(animateParticles);
+    animationFrameId = requestAnimationFrame(animateParticles);
+}
+
+/**
+ * Starts the animation loop if not already running
+ */
+function startAnimation(): void {
+    if (!isAnimating) {
+        isAnimating = true;
+        animateParticles();
+    }
+}
+
+/**
+ * Stops the animation loop
+ */
+export function stopParticles(): void {
+    if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+    isAnimating = false;
+    particles = [];
 }
 
 /**
  * Initialize particle system
+ * Note: Animation only starts when particles are spawned (battery optimization)
  */
 export function initParticles(): void {
     canvas = document.getElementById('particle-canvas') as HTMLCanvasElement | null;
@@ -109,5 +137,5 @@ export function initParticles(): void {
     }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
-    animateParticles();
+    // Don't start animation loop immediately - it will start when particles are spawned
 }

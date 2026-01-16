@@ -20,6 +20,7 @@ import { initDOMCache, type GameState, type DOMCache, type InputHandler, type Di
 import { GameLogic } from './game/GameLogic';
 import { DictationController } from './game/DictationController';
 import { XiziController } from './game/XiziController';
+import { DictationRenderer } from './ui/renderers/DictationRenderer';
 
 const PLAYER_NAME_KEY = 'tingxie_player_name';
 
@@ -143,43 +144,17 @@ export const Game = {
         ui.updateHeaderTitle(title);
     },
 
-    /**
-     * General navigation method with progress check
-     */
-    navigate(targetView: GameState['currentView'], onNavigate: () => void): void {
-        const isGameActive = state.currentView === 'game' && (state.wordsCompletedThisSession > 0 || state.completedChars > 0);
-
-        let isDictationActive = false;
-        if (state.currentView === 'dictation' && dictationController) {
-            // Check internal dictation state if possible
-            const manager = dictationController.getManager();
-            if (manager) {
-                // Access private or public state if exposed, or just assume active if in view
-                // Since we don't have easy access to 'completedChunks', we'll assume any active dictation session 
-                // (where time has passed > 2s) is worth confirming
-                const duration = state.sessionStartTime ? (Date.now() - state.sessionStartTime) : 0;
-                if (duration > 2000) isDictationActive = true;
-            }
-        }
-
-        if (isGameActive || isDictationActive) {
-            ui.showConfirm(
-                '退出练习?',
-                '当前进度将不会保存。确定要退出吗?',
-                () => {
-                    this.cleanupCurrentView();
-                    onNavigate();
-                }
-            );
-        } else {
-            this.cleanupCurrentView();
-            onNavigate();
-        }
-    },
-
     cleanupCurrentView(): void {
         // Stop any audio
         if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+        // Clean up Input Handler (Tingxie mode)
+        if (inputHandler && typeof inputHandler.destroy === 'function') {
+            inputHandler.destroy();
+        }
+
+        // Remove spelling header progress bar
+        ui.removeSpellingProgress();
 
         // Clean up Dictation Mode
         if (dictationController && dictationController.getManager()) {
@@ -190,35 +165,82 @@ export const Game = {
                 const toolbar = card.querySelector('.card-toolbar');
                 if (toolbar) (toolbar as HTMLElement).style.display = '';
             }
+            // Remove dictation header progress bar
+            const progressBar = document.getElementById('dictation-header-progress');
+            if (progressBar) progressBar.remove();
         }
+
+        // Note: XiziController doesn't have a destroy method - it cleans up naturally
+        // when the DOM is replaced during view transitions
+    },
+
+    /**
+     * Navigation guards - check for active sessions before navigating
+     */
+    navigateToLessonSelect(): void {
+        if (this.isInActiveSession()) {
+            this.confirmExitSession(() => this.showLessonSelect(true));
+        } else {
+            this.showLessonSelect();
+        }
+    },
+
+    navigateToProgress(): void {
+        if (this.isInActiveSession()) {
+            this.confirmExitSession(() => this.showProgress(true));
+        } else {
+            this.showProgress();
+        }
+    },
+
+    navigateToDictationSelect(): void {
+        if (this.isInActiveSession()) {
+            this.confirmExitSession(() => this.showDictationSelect(true));
+        } else {
+            this.showDictationSelect();
+        }
+    },
+
+    isInActiveSession(): boolean {
+        return state.currentView === 'game' ||
+               state.currentView === 'xizi' ||
+               state.currentView === 'dictation';
+    },
+
+    confirmExitSession(onConfirm: () => void): void {
+        ui.showConfirm(
+            '退出练习',
+            '确定要退出当前练习吗？进度将不会保存。',
+            () => {
+                this.cleanupCurrentView();
+                onConfirm();
+            }
+        );
     },
 
     /**
      * Show lesson selection screen
      */
     showLessonSelect(force: boolean = false): void {
-        const doShow = () => {
-            state.currentView = 'lesson-select';
-            ui.hideFooterProgress();
-            // Ensure UI is reset for Spelling Mode (restores writing-card if needed)
-            if (domCache && domCache.writingArea) {
-                // GameRenderer handles this via internal logic usually, but 
-                // we might need to nudge it if we are coming from Dictation
-            }
-
-            ui.showLessonSelect(
-                (lessonId, wordLimit, mode) => Game.selectLesson(lessonId, wordLimit, mode),
-                () => Game.showProgress(),
-                () => Game.showPracticeSelect()
-            );
-        };
-
         if (force) {
             this.cleanupCurrentView();
-            doShow();
-        } else {
-            this.navigate('lesson-select', doShow);
         }
+
+        state.currentView = 'lesson-select';
+        ui.hideFooterProgress();
+        ui.showSessionStats(false); // Show global stats in header
+
+        // Ensure UI is reset for Spelling Mode (restores writing-card if needed)
+        if (domCache && domCache.writingArea) {
+            // GameRenderer handles this via internal logic usually, but
+            // we might need to nudge it if we are coming from Dictation
+        }
+
+        ui.showLessonSelect(
+            (lessonId, wordLimit, mode) => Game.selectLesson(lessonId, wordLimit, mode),
+            () => Game.showProgress(),
+            () => Game.showPracticeSelect()
+        );
     },
 
     /**
@@ -227,6 +249,9 @@ export const Game = {
     selectLesson(lessonId: number, wordLimit = 0, mode: 'tingxie' | 'xizi' = 'tingxie'): void {
         console.log(`Starting lesson ${lessonId} in ${mode} mode`);
         setCurrentLesson(lessonId);
+
+        // Hide tabs when starting practice
+        ui.hideAllTabs();
 
         if (mode === 'xizi') {
             Game.startXizi(lessonId);
@@ -251,6 +276,7 @@ export const Game = {
         ui.toggleActiveGameUI(true);
         ui.showControls();
         ui.setHudTransparent(false);
+        ui.showSessionStats(true); // Show session stats in header
         ui.renderProgressDots(state.practiceWords.length);
 
         // Update lesson display in HUD
@@ -266,11 +292,14 @@ export const Game = {
     /**
      * Show progress view
      */
-    showProgress(): void {
-        this.navigate('progress', () => {
-            state.currentView = 'progress';
-            ui.showProgress();
-        });
+    showProgress(force: boolean = false): void {
+        if (force) {
+            this.cleanupCurrentView();
+        }
+
+        state.currentView = 'progress';
+        ui.showSessionStats(false); // Show global stats in header
+        ui.showProgress();
     },
 
     /**
@@ -316,6 +345,7 @@ export const Game = {
             ui.toggleActiveGameUI(true);
             ui.showControls();
             ui.setHudTransparent(false);
+            ui.showSessionStats(true); // Show session stats in header
             ui.renderProgressDots(state.practiceWords.length);
 
             loadLevel();
@@ -364,9 +394,11 @@ export const Game = {
         } else if (state.currentView === 'lesson-select') {
             location.reload();
         } else if (state.currentView === 'dictation') {
+            this.cleanupCurrentView(); // Clean up dictation manager
             Game.showDictationSelect(); // Back to dictation select
-        } else if (state.currentView === 'game') {
-            Game.showLessonSelect(); // Back to spelling select (with confirmation)
+        } else if (state.currentView === 'game' || state.currentView === 'xizi') {
+            this.cleanupCurrentView(); // Clean up active session
+            Game.showLessonSelect(); // Back to lesson select
         } else {
             Game.showMenu();
         }
@@ -453,14 +485,17 @@ export const Game = {
     /**
      * Show dictation passage selection
      */
-    showDictationSelect(): void {
-        this.navigate('dictation-select', () => {
-            state.currentView = 'dictation-select';
-            ui.toggleHeaderStats(false);
-            ui.showDictationSelect(
-                (passage) => this.startDictation(passage)
-            );
-        });
+    showDictationSelect(force: boolean = false): void {
+        if (force) {
+            this.cleanupCurrentView();
+        }
+
+        state.currentView = 'dictation-select';
+        ui.toggleHeaderStats(false);
+        ui.showSessionStats(false); // Show global stats in header
+        ui.showDictationSelect(
+            (passage) => this.startDictation(passage)
+        );
     },
 
     /**
@@ -470,10 +505,11 @@ export const Game = {
         console.log('Game.startDictation called with passage:', passage.id, passage.title);
         state.currentView = 'dictation';
 
-        // Update header title to passage name (Cleared for game)
-        ui.updateHeaderTitle('');
+        // Update header title to passage name (shortened for better display)
+        ui.updateHeaderTitle(DictationRenderer.shortenTitle(passage.title));
         ui.toggleMainHeader(true);
         ui.toggleBackBtn(true);
+        ui.showSessionStats(true); // Show session stats in header
 
         if (!dictationController) {
             console.log('Creating new DictationController');
@@ -538,15 +574,31 @@ export const Game = {
     },
 
     /**
+     * Show word list for current lesson
+     */
+    showWordList(): void {
+        console.log('showWordList called, current view:', state.currentView);
+        console.log('practiceWords:', state.practiceWords);
+        console.log('currentWordIndex:', state.currentWordIndex);
+
+        if (state.practiceWords && state.practiceWords.length > 0) {
+            ui.showWordListModal(state.practiceWords, state.currentWordIndex);
+        } else {
+            ui.showFeedback('词语表仅在听写模式下可用', '#f59e0b');
+        }
+    },
+
+    /**
      * Start Xizi (Character Practice) Mode
      */
     async startXizi(lessonId: number): Promise<void> {
-        state.currentView = 'game'; // Re-use game view for now, or add 'xizi' view
+        state.currentView = 'xizi';
 
         // Hide standard game UI elements that might conflict
         ui.toggleActiveGameUI(false);
         ui.toggleMainHeader(true);
         ui.toggleBackBtn(true);
+        ui.showSessionStats(true); // Show session stats in header
 
         // Use lesson title
         const lesson = getCurrentLesson();
@@ -594,6 +646,9 @@ function loadLevel(): void {
 
     // Update progress dots
     ui.updateProgressDot(state.currentWordIndex, 'active');
+
+    // Update header progress bar
+    ui.renderSpellingProgress(state.currentWordIndex, state.practiceWords.length);
 
     // Play audio after animations settle
     setTimeout(() => {

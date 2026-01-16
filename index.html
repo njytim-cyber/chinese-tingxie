@@ -49,25 +49,54 @@
             <div id="player-avatar" class="player-avatar" title="Change Avatar"></div>
         </div>
         <h1 class="app-title" id="app-title">心织笔耕</h1>
-        <div id="header-stats" class="header-stats">
-            <!-- Populated by JS -->
-            <span class="stat-pill">🔥 0</span>
-            <span class="stat-pill"><svg viewBox="0 0 24 24" width="22" height="22"
-                    style="vertical-align: middle; margin-right: 2px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));">
-                    <defs>
-                        <linearGradient id="y-body" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stop-color="#B45309" />
-                            <stop offset="50%" stop-color="#fbbf24" />
-                            <stop offset="100%" stop-color="#B45309" />
-                        </linearGradient>
-                        <linearGradient id="y-top" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#FEF3C7" />
-                            <stop offset="100%" stop-color="#F59E0B" />
-                        </linearGradient>
-                    </defs>
-                    <path d="M7,11.5 A5,4 0 0,1 17,11.5" fill="url(#y-top)" />
-                    <path d="M2,11.5 Q12,14.5 22,11.5 Q21,19.5 12,19.5 Q3,19.5 2,11.5 Z" fill="url(#y-body)" />
-                </svg> 0</span>
+        <div class="header-right">
+            <!-- Session Stats (shown during active gameplay) -->
+            <div id="session-stats" class="header-stats" style="display: none;">
+                <span class="stat-pill" id="streak-container" style="display: none;">
+                    <span style="font-size: 1.1rem;">🔥</span>
+                    <span id="streak-count" style="font-weight: 600; margin-left: 4px;">0</span>
+                    <span id="streak-badge" style="display: none; color: var(--tang-gold); margin-left: 2px;">✨</span>
+                </span>
+                <span class="stat-pill">
+                    <svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-right: 2px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));">
+                        <defs>
+                            <linearGradient id="session-ingot-body" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#B45309" />
+                                <stop offset="50%" stop-color="#fbbf24" />
+                                <stop offset="100%" stop-color="#B45309" />
+                            </linearGradient>
+                            <linearGradient id="session-ingot-top" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#FEF3C7" />
+                                <stop offset="100%" stop-color="#F59E0B" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M7,11.5 A5,4 0 0,1 17,11.5" fill="url(#session-ingot-top)" />
+                        <path d="M2,11.5 Q12,14.5 22,11.5 Q21,19.5 12,19.5 Q3,19.5 2,11.5 Z" fill="url(#session-ingot-body)" />
+                    </svg>
+                    <span id="score" style="font-weight: 600;">0</span>
+                </span>
+            </div>
+            <!-- Global Stats (shown on menus) -->
+            <div id="header-stats" class="header-stats">
+                <!-- Populated by JS -->
+                <span class="stat-pill">🔥 0</span>
+                <span class="stat-pill"><svg viewBox="0 0 24 24" width="22" height="22"
+                        style="vertical-align: middle; margin-right: 2px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));">
+                        <defs>
+                            <linearGradient id="y-body" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#B45309" />
+                                <stop offset="50%" stop-color="#fbbf24" />
+                                <stop offset="100%" stop-color="#B45309" />
+                            </linearGradient>
+                            <linearGradient id="y-top" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#FEF3C7" />
+                                <stop offset="100%" stop-color="#F59E0B" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M7,11.5 A5,4 0 0,1 17,11.5" fill="url(#y-top)" />
+                        <path d="M2,11.5 Q12,14.5 22,11.5 Q21,19.5 12,19.5 Q3,19.5 2,11.5 Z" fill="url(#y-body)" />
+                    </svg> 0</span>
+            </div>
         </div>
     </header>
 
@@ -86,81 +115,48 @@
 
     <!-- Tab Bar Footer (Persistent) -->
     <nav class="tab-bar">
-        <button class="tab-item active" id="start-btn">
-            <span class="tab-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
-                    <path
-                        d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z">
-                    </path>
-                </svg>
-            </span>
-            <span class="tab-label">听写</span>
-        </button>
-        <button class="tab-item" id="dictation-btn">
-            <span class="tab-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-                    <path d="M2 2l7.586 7.586"></path>
-                    <circle cx="11" cy="11" r="2"></circle>
-                </svg>
-            </span>
-            <span class="tab-label">默写</span>
-        </button>
-        <button class="tab-item" id="review-btn">
-            <span class="tab-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <line x1="18" y1="20" x2="18" y2="10"></line>
-                    <line x1="12" y1="20" x2="12" y2="4"></line>
-                    <line x1="6" y1="20" x2="6" y2="14"></line>
-                </svg>
-            </span>
-            <span class="tab-label">进度</span>
-        </button>
+        <div class="tab-bar-inner">
+            <button class="tab-item active" id="start-btn">
+                <span class="tab-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                        <path
+                            d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z">
+                        </path>
+                    </svg>
+                </span>
+                <span class="tab-label">听写</span>
+            </button>
+            <button class="tab-item" id="dictation-btn">
+                <span class="tab-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                        <path d="M2 2l7.586 7.586"></path>
+                        <circle cx="11" cy="11" r="2"></circle>
+                    </svg>
+                </span>
+                <span class="tab-label">默写</span>
+            </button>
+            <button class="tab-item" id="review-btn">
+                <span class="tab-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                </span>
+                <span class="tab-label">进度</span>
+            </button>
+        </div>
     </nav>
 
 
 
     <canvas id="particle-canvas"></canvas>
-
-    <header class="hud hud-minimal" style="display: none;" role="banner">
-        <div class="hud-inner">
-            <!-- Back Button removed: using standard header-back-btn -->
-
-            <!-- Score only on right -->
-            <div class="hud-right">
-                <div class="score-box" role="status" aria-live="polite" aria-label="当前分数">
-                    <span aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"
-                            style="vertical-align: middle; margin-right: 4px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));">
-                            <defs>
-                                <linearGradient id="y-body-2" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" stop-color="#B45309" />
-                                    <stop offset="50%" stop-color="#fbbf24" />
-                                    <stop offset="100%" stop-color="#B45309" />
-                                </linearGradient>
-                                <linearGradient id="y-top-2" x1="0%" y1="0%" x2="0%" y2="100%">
-                                    <stop offset="0%" stop-color="#FEF3C7" />
-                                    <stop offset="100%" stop-color="#F59E0B" />
-                                </linearGradient>
-                            </defs>
-                            <path d="M7,11.5 A5,4 0 0,1 17,11.5" fill="url(#y-top-2)" />
-                            <path d="M2,11.5 Q12,14.5 22,11.5 Q21,19.5 12,19.5 Q3,19.5 2,11.5 Z"
-                                fill="url(#y-body-2)" />
-                        </svg></span> <span id="score">0</span>
-                </div>
-
-                <!-- Streak Badge (hidden by default) -->
-                <div class="streak-badge" id="streak-badge" style="display: none;" role="status" aria-live="polite">
-                    🔥 x<span id="streak-count">0</span>
-                </div>
-            </div>
-        </div>
-    </header>
-
 
     <div class="game-stage">
         <!-- Game content will be rendered here dynamically -->
@@ -190,7 +186,7 @@
             <div class="reveal-hint">点击任意位置关闭</div>
         </div>
     </div>
-    <div id="footer-progress" class="footer-progress"></div>
+    <div id="footer-progress" class="footer-progress" style="display: none;"></div>
 </body>
 
 </html>

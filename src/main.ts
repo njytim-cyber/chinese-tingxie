@@ -8,6 +8,7 @@ import '../public/css/index.css';
 // Module Imports
 import { initVoices, unlockAudio } from './audio';
 import { initParticles } from './particles';
+import { injectGlobalSVGDefs } from './utils/svg';
 import { Game } from './game';
 import { saveDataSync } from './data';
 
@@ -20,6 +21,9 @@ import { saveDataSync } from './data';
 function init(): void {
     console.log('Initializing app (v1.21.13)...');
     try {
+        // Initialize global SVG definitions (for shared gradients)
+        injectGlobalSVGDefs();
+
         // Initialize voices
         initVoices();
 
@@ -43,8 +47,8 @@ function init(): void {
                         Game.init();
                     }, 500);
                 } else {
-                    // Subsequent clicks - just navigate
-                    Game.showLessonSelect();
+                    // Check if in active session before navigating
+                    Game.navigateToLessonSelect();
                 }
             });
         }
@@ -59,7 +63,8 @@ function init(): void {
                     overlay.remove();
                     Game.init(false);
                 }
-                Game.showProgress();
+                // Use navigation guard to check for active sessions
+                Game.navigateToProgress();
             });
         }
 
@@ -73,7 +78,8 @@ function init(): void {
                     overlay.remove();
                     Game.init(false);
                 }
-                Game.showDictationSelect();
+                // Use navigation guard to check for active sessions
+                Game.navigateToDictationSelect();
             });
         }
 
@@ -101,6 +107,9 @@ function init(): void {
 
         const nextBtn = document.getElementById('next-btn');
         if (nextBtn) nextBtn.addEventListener('click', () => Game.nextLevel());
+
+        const wordlistBtn = document.getElementById('btn-wordlist');
+        if (wordlistBtn) wordlistBtn.addEventListener('click', () => Game.showWordList());
 
         console.log('App initialized');
 

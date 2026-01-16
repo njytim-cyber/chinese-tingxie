@@ -5,6 +5,7 @@ export const LESSONS: Lesson[] = [
         id: 1,
         title: "一起看电视",
         category: "小学三年级",
+        setId: "A",
         phrases: [
             { term: "播放新闻", pinyin: "bō fàng xīn wén", definition: "Broadcast news" },
             { term: "刚才", pinyin: "gāng cái", definition: "Just now; a moment ago" },

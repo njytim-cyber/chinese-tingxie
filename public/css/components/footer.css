@@ -4,21 +4,35 @@
     bottom: 0;
     left: 0;
     right: 0;
-    margin: 0 auto;
     width: 100%;
-    max-width: 600px;
-    background: #FFFEFA;
-    /* Match Rice Paper Cream */
-    border-top: 1px solid rgba(43, 43, 43, 0.1);
-    /* Thin Ink Line */
+    background: rgba(255, 254, 250, 0.95);
+    /* Semi-transparent rice paper cream */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(169, 50, 38, 0.15);
+    /* Faint Red Ink Line - match header */
     display: flex;
-    justify-content: space-around;
-    padding: 8px 20px calc(8px + env(safe-area-inset-bottom));
+    justify-content: center;
+    /* Center the container */
+    padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
     min-height: 60px;
     z-index: 2010;
-    box-shadow: none;
-    /* Blend into paper */
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+    /* Subtle shadow for depth */
     font-family: var(--app-font);
+    box-sizing: border-box;
+}
+
+.tab-bar-inner {
+    display: flex;
+    justify-content: space-between;
+    /* Even spacing like header */
+    align-items: center;
+    width: 100%;
+    max-width: 600px;
+    /* Match header */
+    padding: 0 20px;
+    /* Match header horizontal padding */
     box-sizing: border-box;
 }
 

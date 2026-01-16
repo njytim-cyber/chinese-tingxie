@@ -25,6 +25,7 @@ export interface Lesson {
     title: string;
     category?: string;
     phrases: Phrase[];
+    setId?: string; // 'A' or 'B'
 }
 
 export interface WordState {
@@ -137,7 +138,7 @@ export interface InputHandler {
 /**
  * Game view types
  */
-export type GameView = 'lesson-select' | 'practice-select' | 'progress' | 'game' | 'dictation-select' | 'dictation' | 'xizi-setup';
+export type GameView = 'lesson-select' | 'practice-select' | 'progress' | 'game' | 'dictation-select' | 'dictation' | 'xizi-setup' | 'xizi';
 
 /**
  * Progress dot status
@@ -268,6 +269,7 @@ export interface DictationPassage {
     hint?: string;
     chunks?: string[];
     chunkPinyins?: string[];
+    setId?: string; // 'A' or 'B'
 }
 
 export interface DictationData {

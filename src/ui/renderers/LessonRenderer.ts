@@ -1,12 +1,15 @@
 import type { IUIManager } from '../../types';
-import { getLessons, getLessonProgress } from '../../data';
+import { getLessonProgress } from '../../data';
 import { CardFactory } from '../components/CardFactory';
+import { TabbedNav } from '../components/TabbedNav';
+import { getLessonsBySet, getAvailableSets } from '../../data/sets';
 
 /**
  * Renders the lesson selection screen
  */
 export class LessonRenderer {
     private manager: IUIManager;
+    private tabbedNav: TabbedNav | null = null;
 
     constructor(manager: IUIManager) {
         this.manager = manager;
@@ -28,48 +31,13 @@ export class LessonRenderer {
             this.manager.toggleBackBtn(false); // No back button on root screen
             this.manager.toggleHeaderStats(false); // Hide stats counter
 
-            const content = document.createElement('div');
-            content.className = 'lesson-select';
-
-            // Title removed as it's now in the header
-
-            // Get all categories
-            const lessons = getLessons() || [];
-            if (lessons.length === 0) console.warn('No lessons found!');
-
-            const categories = ['全部', ...new Set(lessons.map(l => l.category).filter(Boolean))];
-            let selectedCategory = '全部';
-
-            // Filter Bar removed as per user request to clean up UI (was causing artifacts)
-
-            // Lesson Grid Container
-            const lessonGrid = document.createElement('div');
-            lessonGrid.className = 'lesson-grid';
-
-            const renderLessons = (category: string) => {
-                lessonGrid.innerHTML = '';
-                const filteredLessons = category === '全部'
-                    ? lessons
-                    : lessons.filter(l => l.category === category);
-
-                filteredLessons.forEach((lesson, _index) => {
-                    const card = CardFactory.createLessonCard({
-                        id: lesson.id,
-                        title: lesson.title,
-                        metaText: `${lesson.phrases.length} 词`,
-                        progress: getLessonProgress(lesson.id),
-                        onClick: () => this.showModeSelectionModal(lesson.id, lesson.title, onLessonSelect)
-                    });
-
-                    lessonGrid.appendChild(card);
-                });
-            };
-
-            // Removed Filter Chip rendering loop
-
-            content.appendChild(lessonGrid);
-
-            renderLessons(selectedCategory);
+            // Create tabbed navigation
+            const sets = getAvailableSets();
+            this.tabbedNav = new TabbedNav({
+                tabs: sets.map(set => ({ id: set.id, label: set.name })),
+                initialTab: 'A',
+                onTabChange: (setId) => this.renderLessonsForSet(setId, onLessonSelect)
+            });
 
             this.manager.transitionView(() => {
                 try {
@@ -80,7 +48,12 @@ export class LessonRenderer {
                         app.style.display = 'flex';
 
                         this.manager.toggleActiveGameUI(false);
-                        app.appendChild(content);
+
+                        if (this.tabbedNav) {
+                            app.appendChild(this.tabbedNav.getElement());
+                            // Render initial set
+                            this.renderLessonsForSet('A', onLessonSelect);
+                        }
                     } else {
                         console.error('Game stage not found!');
                     }
@@ -98,6 +71,78 @@ export class LessonRenderer {
     }
 
     /**
+     * Render lessons for a specific set
+     */
+    private renderLessonsForSet(
+        setId: string,
+        onLessonSelect: (lessonId: number, wordLimit: number, mode?: 'tingxie' | 'xizi') => void
+    ): void {
+        if (!this.tabbedNav) return;
+
+        const contentContainer = this.tabbedNav.getContentContainer();
+        contentContainer.innerHTML = '';
+
+        const lessonSelect = document.createElement('div');
+        lessonSelect.className = 'lesson-select';
+
+        const lessonGrid = document.createElement('div');
+        lessonGrid.className = 'lesson-grid';
+
+        const lessons = getLessonsBySet(setId);
+
+        lessons.forEach((lesson) => {
+            const card = CardFactory.createLessonCard({
+                id: lesson.id,
+                title: lesson.title,
+                metaText: `${lesson.phrases.length} 词`,
+                progress: getLessonProgress(lesson.id),
+                onClick: () => this.showModeSelectionModal(lesson.id, lesson.title, onLessonSelect)
+            });
+
+            lessonGrid.appendChild(card);
+        });
+
+        if (lessons.length === 0) {
+            lessonGrid.innerHTML = '<div style="padding: 24px; color: var(--tang-ink-light);">暂无课程</div>';
+        }
+
+        lessonSelect.appendChild(lessonGrid);
+        contentContainer.appendChild(lessonSelect);
+    }
+
+    /**
+     * Hide tabs when entering practice mode
+     */
+    hideTabs(): void {
+        if (this.tabbedNav) {
+            const tabsElement = this.tabbedNav.getElement();
+            if (tabsElement) {
+                tabsElement.classList.add('hide-tabs');
+            }
+        }
+        // Also hide any tabs-container elements directly
+        document.querySelectorAll('.tabs-container').forEach(el => {
+            (el as HTMLElement).classList.add('hidden');
+        });
+    }
+
+    /**
+     * Show tabs when returning to selection mode
+     */
+    showTabs(): void {
+        if (this.tabbedNav) {
+            const tabsElement = this.tabbedNav.getElement();
+            if (tabsElement) {
+                tabsElement.classList.remove('hide-tabs');
+            }
+        }
+        // Also show any tabs-container elements
+        document.querySelectorAll('.tabs-container').forEach(el => {
+            (el as HTMLElement).classList.remove('hidden');
+        });
+    }
+
+    /**
      * Show mode selection modal (Tingxie vs Xizi)
      */
     private showModeSelectionModal(
@@ -105,6 +150,7 @@ export class LessonRenderer {
         lessonTitle: string,
         onSelect: (lessonId: number, limit: number, mode: 'tingxie' | 'xizi') => void
     ): void {
+        console.log('showModeSelectionModal called for lesson:', lessonId, lessonTitle);
         const modalId = 'mode-selection-modal';
         let modal = document.getElementById(modalId);
 
@@ -127,7 +173,6 @@ export class LessonRenderer {
                                 <div class="mode-btn-desc">听音写字，考验记忆</div>
                             </div>
                         </div>
-                        <span class="mode-btn-arrow">›</span>
                     </button>
 
                     <button id="mode-xizi" class="mode-btn mode-btn-secondary">
@@ -138,7 +183,6 @@ export class LessonRenderer {
                                 <div class="mode-btn-desc">描摹笔画，练习书写</div>
                             </div>
                         </div>
-                        <span class="mode-btn-arrow">›</span>
                     </button>
                 </div>
             </div>

@@ -5,24 +5,24 @@
     padding: 16px 24px;
     font-size: 1.2rem;
     font-family: 'KaiTi', var(--app-font), serif;
-    background: linear-gradient(135deg, var(--success), #22c55e);
+    background: linear-gradient(135deg, var(--tang-red), #8b2820);
     color: white;
     border: none;
     border-radius: var(--scholar-radius);
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 16px rgba(74, 222, 128, 0.3);
+    box-shadow: 0 4px 16px rgba(169, 50, 38, 0.3);
     font-weight: 500;
 }
 
 .action-btn-large:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 24px rgba(74, 222, 128, 0.4);
+    box-shadow: 0 6px 24px rgba(169, 50, 38, 0.4);
 }
 
 .action-btn-large:active {
     transform: translateY(1px);
-    box-shadow: 0 2px 8px rgba(74, 222, 128, 0.3);
+    box-shadow: 0 2px 8px rgba(169, 50, 38, 0.3);
 }
 
 .action-btn-primary {

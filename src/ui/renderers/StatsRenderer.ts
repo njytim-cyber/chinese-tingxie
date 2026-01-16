@@ -196,7 +196,7 @@ export class StatsRenderer {
         const chars = Object.values(mastery).sort((a, b) => b.level - a.level || a.char.localeCompare(b.char));
 
         if (chars.length === 0) {
-            return `<div class="empty-state">完成习字练习以追踪汉字进度</div>`;
+            return '';
         }
 
         return chars.map(c => `
