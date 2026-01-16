@@ -21,7 +21,7 @@ export class UIManager implements IUIManager {
     private lessonRenderer: LessonRenderer;
     private statsRenderer: StatsRenderer;
     public dictationRenderer: DictationRenderer; // Public for DictationManager access
-    private gameRenderer: GameRenderer;
+    public gameRenderer: GameRenderer; // Public for Game access
     private hudController: HUDController;
 
     constructor(domCache?: DOMCache) {
@@ -60,6 +60,7 @@ export class UIManager implements IUIManager {
             return;
         }
 
+        // Prevent race condition by ensuring only one transition runs at a time
         app.style.opacity = '0';
 
         setTimeout(() => {
@@ -98,6 +99,10 @@ export class UIManager implements IUIManager {
 
     updateDashboardStats(): void {
         this.hudController.updateDashboardStats();
+    }
+
+    toggleAvatar(visible: boolean): void {
+        this.hudController.toggleAvatar(visible);
     }
 
     toggleActiveGameUI(visible: boolean): void {
@@ -143,7 +148,6 @@ export class UIManager implements IUIManager {
         document.getElementById('btn-audio')?.addEventListener('click', () => game.playCurrentAudio());
         document.getElementById('btn-hint')?.addEventListener('click', () => game.useHint());
         document.getElementById('btn-reveal')?.addEventListener('click', () => game.revealPhrase());
-        document.getElementById('btn-skip')?.addEventListener('click', () => game.skipLevel());
         document.getElementById('btn-grid')?.addEventListener('click', () => game.toggleGrid());
         document.getElementById('next-btn')?.addEventListener('click', () => game.nextLevel());
         // Header back button is persistent, no need to rebind usually, but good to check
@@ -152,7 +156,7 @@ export class UIManager implements IUIManager {
 
     // --- Renderer Delegation ---
 
-    showLessonSelect(onSelect: (id: number, limit: number) => void, _onProgressClick?: () => void, _onPracticeClick?: () => void): void {
+    showLessonSelect(onSelect: (id: number, limit: number, mode?: 'tingxie' | 'xizi') => void, _onProgressClick?: () => void, _onPracticeClick?: () => void): void {
         this.lessonRenderer.show(onSelect, _onProgressClick, _onPracticeClick);
     }
 

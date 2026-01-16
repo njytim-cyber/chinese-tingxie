@@ -42,26 +42,26 @@
 
 .score-box {
     font-size: 1.1rem;
-    display: flex;
+    display: none; /* Hidden - using header stats instead */
     align-items: center;
     gap: 6px;
-    background: var(--primary-container);
-    padding: 6px 14px;
-    border-radius: 20px;
-    color: var(--primary);
-    font-weight: 500;
+    background: transparent;
+    padding: 6px 0;
+    /* Align with unboxed header */
+    color: var(--ink);
+    font-weight: 700;
 }
 
 .streak-badge {
     background: linear-gradient(135deg, #ff6b6b 0%, #ffa07a 100%);
     color: white;
-    padding: 6px 14px;
-    border-radius: 20px;
+    padding: 6px 12px;
+    border-radius: var(--scholar-radius);
     font-weight: 600;
     font-size: 0.9rem;
     transform: scale(0);
     transition: transform 0.4s;
-    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+    box-shadow: 0 2px 6px rgba(255, 107, 107, 0.2);
 }
 
 .streak-badge.active {
@@ -90,7 +90,7 @@
     height: 240px;
     background: var(--bg-canvas);
     background-image: var(--texture-paper);
-    border: 2px solid var(--outline-variant);
+    border: 2px solid var(--tang-gold);
     border-radius: 4px;
     position: relative;
     box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
@@ -102,42 +102,41 @@
     /* Prevent scroll interference */
 }
 
-/* Grids - Updated with Solid Lines */
+/* Grids - Beautiful Xizi Style */
 .char-slot.grid-tian::before,
 .char-slot.grid-mi::before {
     content: '';
     position: absolute;
-    inset: 4px;
-    /* Slight inset to avoid border clash */
-    border: 2px solid rgba(196, 64, 50, 0.3);
+    inset: 0;
+    /* Grid background */
+    background-image:
+        linear-gradient(rgba(180, 83, 9, 0.2) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(180, 83, 9, 0.2) 1px, transparent 1px);
+    background-size: 50% 50%;
+    background-position: center;
     pointer-events: none;
-    z-index: 5;
+    z-index: 4;
 }
 
 .char-slot.grid-tian::after {
     content: '';
     position: absolute;
     inset: 0;
-    /* Red cross */
-    background-image:
-        linear-gradient(to right, transparent 49%, rgba(196, 64, 50, 0.2) 49%, rgba(196, 64, 50, 0.2) 51%, transparent 51%),
-        linear-gradient(to bottom, transparent 49%, rgba(196, 64, 50, 0.2) 49%, rgba(196, 64, 50, 0.2) 51%, transparent 51%);
+    /* No diagonals for Tian grid */
     pointer-events: none;
-    z-index: 4;
+    z-index: 5;
 }
 
 .char-slot.grid-mi::after {
     content: '';
     position: absolute;
     inset: 0;
-    /* Red cross + Diagonals */
-    background-image:
-        linear-gradient(to right, transparent 49%, rgba(196, 64, 50, 0.2) 49%, rgba(196, 64, 50, 0.2) 51%, transparent 51%),
-        linear-gradient(to bottom, transparent 49%, rgba(196, 64, 50, 0.2) 49%, rgba(196, 64, 50, 0.2) 51%, transparent 51%),
-        linear-gradient(45deg, transparent 49.5%, rgba(196, 64, 50, 0.15) 49.5%, rgba(196, 64, 50, 0.15) 50.5%, transparent 50.5%),
-        linear-gradient(-45deg, transparent 49.5%, rgba(196, 64, 50, 0.15) 49.5%, rgba(196, 64, 50, 0.15) 50.5%, transparent 50.5%);
+    /* Diagonal lines for Mi grid */
+    background:
+        linear-gradient(45deg, transparent 49.5%, rgba(180, 83, 9, 0.1) 49.5%, rgba(180, 83, 9, 0.1) 50.5%, transparent 50.5%),
+        linear-gradient(-45deg, transparent 49.5%, rgba(180, 83, 9, 0.1) 49.5%, rgba(180, 83, 9, 0.1) 50.5%, transparent 50.5%);
     pointer-events: none;
-    z-index: 4;
+    z-index: 5;
 }
 
 .char-slot.grid-blank::before,
@@ -162,8 +161,8 @@
 }
 
 .char-slot.active {
-    border-color: var(--tang-red);
-    box-shadow: 0 0 0 3px rgba(196, 64, 50, 0.15);
+    border-color: var(--tang-gold);
+    box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.15);
     animation: gentle-pulse 2s infinite;
 }
 
@@ -185,6 +184,7 @@
     margin-bottom: 8px;
     font-weight: 500;
     text-align: center;
+    font-family: var(--pinyin-font);
 }
 
 .definition-display {
@@ -198,7 +198,11 @@
     font-size: 1.6rem;
     color: var(--link-light);
     margin-top: 5px;
-    font-family: var(--app-font);
+    font-family: var(--pinyin-font);
+}
+
+.reveal-pinyin {
+    font-family: var(--pinyin-font);
 }
 
 /* Footer Progress */
@@ -386,11 +390,11 @@
 
     0%,
     100% {
-        box-shadow: 0 0 0 3px rgba(196, 64, 50, 0.15);
+        box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.15);
     }
 
     50% {
-        box-shadow: 0 0 0 5px rgba(196, 64, 50, 0.2);
+        box-shadow: 0 0 0 5px rgba(180, 83, 9, 0.2);
     }
 }
 
@@ -462,15 +466,22 @@
     /* Reduced from 60px */
 }
 
+/* White card wrapper for dictation mode */
+.dictation-container .writing-card {
+    max-width: 400px;
+    /* Slightly larger for dictation */
+    margin-top: 10px;
+}
+
 .dictation-completed-phrases {
     width: 100%;
     max-width: 600px;
     /* Wider */
-    margin-bottom: 30px !important;
-    /* Reduced from 50px */
+    margin-bottom: 15px !important;
+    /* Reduced from 30px */
     font-size: 2.2rem !important;
     /* Larger text */
-    min-height: 4rem !important;
+    min-height: 2rem !important;
     line-height: 1.4;
     color: var(--tang-jade) !important;
     /* Jade for completed text */

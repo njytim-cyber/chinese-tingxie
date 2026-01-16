@@ -11,8 +11,8 @@
     --card-bg-elevated: #FAFAF6;
 
     /* 2. The Ink (Text & Icons) */
-    --tang-ink: #111111;
-    /* Deepest black for maximum readability */
+    --tang-ink: #2B2B2B;
+    /* Traditional Ink Gray-Black */
     /* 3. The Seal (Primary Actions) */
     --tang-red: #991B1B;
     --tang-red-light: #FEF2F2;
@@ -21,14 +21,14 @@
     --tang-jade: #065F46;
     --success-container: #dcfce7;
     /* Deep jade for high contrast */
-    /* 5. The Gold (Stars) */
-    --tang-gold: #92400E;
-    /* Deep amber/gold */
+    /* 5. The Gold (Stars/Ingots) */
+    --tang-gold: #FFD700;
+    /* True Gold */
     /* 6. Text Semantics */
     --ink: var(--tang-ink);
     --ink-light: #4B5563;
     --ink-faint: #9CA3AF;
-    --ink-wash: rgba(17, 17, 17, 0.6);
+    --ink-wash: rgba(43, 43, 43, 0.6);
 
     /* 6. Lantern Mode (Dark Mode) */
     --lantern-bg: #1B1F3B;
@@ -53,6 +53,7 @@
 
     /* Typography */
     --app-font: "KaiTi", "STKaiti", "楷体", "STKaiti", serif;
+    --pinyin-font: 'Ubuntu', sans-serif;
 
     /* Surface */
     --surface-variant: #f3f4f6;
@@ -60,4 +61,6 @@
 
     /* Texture */
     --texture-paper: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+    /* 8. Spacing & Radius */
+    --scholar-radius: 8px;
 }

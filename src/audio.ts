@@ -9,7 +9,16 @@ declare global {
     }
 }
 
-export const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+// Lazy initialization of audio context for better performance
+let audioCtx: AudioContext | null = null;
+
+function getAudioContext(): AudioContext {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+}
+
 export let selectedVoice: SpeechSynthesisVoice | null = null;
 
 /**
@@ -58,22 +67,23 @@ export function initVoices(): void {
 export const SoundFX = {
     playTone: (freq: number, type: OscillatorType, duration: number, volume = 0.15): void => {
         try {
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+            const ctx = getAudioContext();
+            if (ctx.state === 'suspended') {
+                void ctx.resume();
             }
 
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
             osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(freq, ctx.currentTime);
 
-            gain.gain.setValueAtTime(volume, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            gain.gain.setValueAtTime(volume, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
 
             osc.connect(gain);
-            gain.connect(audioCtx.destination);
+            gain.connect(ctx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+            osc.stop(ctx.currentTime + duration);
         } catch (e) {
             console.warn('Audio playback failed:', e);
         }
@@ -89,6 +99,16 @@ export const SoundFX = {
     correctStroke: (): void => {
         SoundFX.playTone(1000, 'sine', 0.1, 0.08);
         if (navigator.vibrate) navigator.vibrate(5);
+    },
+
+    // Alias for UI clicks
+    click: (): void => {
+        SoundFX.tap();
+    },
+
+    // Alias for pop sound
+    pop: (): void => {
+        SoundFX.playTone(800, 'sine', 0.08, 0.1);
     },
 
     // Bamboo Woodblock thud
@@ -114,19 +134,20 @@ export const SoundFX = {
     // Paper Rustle (White noise burst)
     pageTurn: (): void => {
         try {
-            const bufferSize = audioCtx.sampleRate * 0.1;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const ctx = getAudioContext();
+            const bufferSize = ctx.sampleRate * 0.1;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
             const data = buffer.getChannelData(0);
             for (let i = 0; i < bufferSize; i++) {
                 data[i] = Math.random() * 2 - 1;
             }
-            const noise = audioCtx.createBufferSource();
+            const noise = ctx.createBufferSource();
             noise.buffer = buffer;
-            const gain = audioCtx.createGain();
-            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            const gain = ctx.createGain();
+            gain.gain.setValueAtTime(0.05, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
             noise.connect(gain);
-            gain.connect(audioCtx.destination);
+            gain.connect(ctx.destination);
             noise.start();
         } catch (e) {
             console.warn('Paper rustle failed:', e);
@@ -143,7 +164,7 @@ export class GenerativeAmbient {
     private static gainNode: GainNode | null = null;
 
     // Pentatonic scale (C4, D4, E4, G4, A4, C5)
-    private static frequencies = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25];
+    private static readonly frequencies = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25] as const;
 
     static get isAmbientPlaying(): boolean {
         return this.isPlaying;
@@ -161,10 +182,11 @@ export class GenerativeAmbient {
         if (this.isPlaying) return;
         this.isPlaying = true;
 
+        const ctx = getAudioContext();
         // Create master gain for ambience
-        this.gainNode = audioCtx.createGain();
+        this.gainNode = ctx.createGain();
         this.gainNode.gain.value = 0.05; // Very subtle
-        this.gainNode.connect(audioCtx.destination);
+        this.gainNode.connect(ctx.destination);
 
         this.scheduleNextNote();
     }
@@ -185,7 +207,10 @@ export class GenerativeAmbient {
         if (!this.isPlaying) return;
 
         // Play a note
-        const freq = this.frequencies[Math.floor(Math.random() * this.frequencies.length)];
+        const index = Math.floor(Math.random() * this.frequencies.length);
+        const freq = this.frequencies[index];
+        if (!freq) return;
+
         const duration = 2.0 + Math.random() * 3.0;
 
         this.playAmbientTone(freq, duration);
@@ -196,24 +221,25 @@ export class GenerativeAmbient {
     }
 
     private static playAmbientTone(freq: number, duration: number): void {
-        if (!this.gainNode || audioCtx.state !== 'running') return;
+        const ctx = getAudioContext();
+        if (!this.gainNode || ctx.state !== 'running') return;
 
-        const osc = audioCtx.createOscillator();
-        const noteGain = audioCtx.createGain();
+        const osc = ctx.createOscillator();
+        const noteGain = ctx.createGain();
 
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
 
         // Slow attack and release for ambient feel
-        noteGain.gain.setValueAtTime(0, audioCtx.currentTime);
-        noteGain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.5); // Attack
-        noteGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration); // Decay
+        noteGain.gain.setValueAtTime(0, ctx.currentTime);
+        noteGain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.5); // Attack
+        noteGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration); // Decay
 
         osc.connect(noteGain);
         noteGain.connect(this.gainNode);
 
         osc.start();
-        osc.stop(audioCtx.currentTime + duration);
+        osc.stop(ctx.currentTime + duration);
     }
 }
 
@@ -273,23 +299,23 @@ export function speakCharacters(text: string): void {
  * Unlock audio context and speech synthesis (must be called from user gesture)
  */
 export function unlockAudio(): void {
-    if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
+    const ctx = getAudioContext();
+    if (ctx.state === 'suspended') {
+        void ctx.resume();
     }
 
     // Add explicit touch handler for stubborn devices (Huawei)
     const unlockHandler = () => {
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
+        if (ctx.state === 'suspended') {
+            void ctx.resume();
         }
         window.removeEventListener('touchstart', unlockHandler);
         window.removeEventListener('click', unlockHandler);
     };
 
-    window.addEventListener('touchstart', unlockHandler);
+    window.addEventListener('touchstart', unlockHandler, { passive: true });
     window.addEventListener('click', unlockHandler);
 
-    // Unlock Speech Synthesis with a dummy utterance
     // Unlock Speech Synthesis with a dummy utterance (silent)
     const u = new SpeechSynthesisUtterance('');
     if (selectedVoice) u.voice = selectedVoice;

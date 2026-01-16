@@ -1,23 +1,68 @@
 /* Main CSS Entry Point */
 
 /* Base Styles */
-@import './base/variables.css';
-@import './base/reset.css';
+@import 'base/variables.css';
+@import 'base/reset.css';
+@import 'layout/main.css';
+@import 'components/header.css';
+@import 'components/footer.css';
+@import 'components/cards.css';
+@import 'components/buttons.css';
+@import 'components/modals.css';
+@import 'features/game.css';
+@import 'features/lesson.css';
+@import 'features/progress.css';
+@import 'utils/animations.css';
 
-/* Layout */
-@import './layout/main.css';
+/* Splash Screen */
+.splash-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--tang-paper);
+    background-image: var(--texture-paper);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.8s ease-out, visibility 0.8s step-end;
+}
 
-/* Components */
-@import './components/header.css';
-@import './components/footer.css';
-@import './components/cards.css';
-@import './components/buttons.css';
-@import './components/modals.css';
+.splash-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
 
-/* Features */
-@import './features/game.css';
-@import './features/lesson.css';
-@import './features/progress.css';
+.splash-content {
+    text-align: center;
+    animation: fadeUp 1s ease-out;
+}
 
-/* Utilities */
-/* @import './utils/animations.css'; -- Animations currently embedded in feature files */
+.splash-title {
+    font-family: var(--app-font);
+    font-size: 4rem;
+    color: var(--tang-ink);
+    margin-bottom: 10px;
+    font-weight: bold;
+    letter-spacing: 0.2rem;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.splash-subtitle {
+    font-size: 1.5rem;
+    color: var(--tang-red);
+    letter-spacing: 0.5rem;
+    font-weight: 500;
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

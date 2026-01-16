@@ -6,8 +6,11 @@
 import { LESSONS } from './data/lessons';
 import {
     Lesson, Phrase, WordState, PlayerStats, Achievement, AttemptLog,
-    Word, PracticeWord
+    Word, PracticeWord, CharacterState
 } from './types';
+
+// Re-export types for convenience
+export type { Achievement, AttemptLog, Lesson, Phrase, WordState, PlayerStats, Word, PracticeWord, CharacterState };
 
 // Constants
 const STORAGE_KEY = 'tingxie_word_data';
@@ -42,7 +45,8 @@ let playerStats: PlayerStats = {
     perfectWords: 0,
     totalSessions: 0,
     achievements: [],
-    currentLessonId: 1
+    currentLessonId: 1,
+    charsMastery: {}
 };
 
 /**
@@ -234,6 +238,75 @@ export function updateWordSRS(term: string, quality: number): void {
 }
 
 /**
+ * Get character state
+ */
+export function getCharacterState(char: string): CharacterState {
+    if (!playerStats.charsMastery) {
+        playerStats.charsMastery = {};
+    }
+
+    if (!playerStats.charsMastery[char]) {
+        playerStats.charsMastery[char] = {
+            char,
+            level: 0,
+            nextReview: getToday(),
+            lastPracticed: '',
+            stagesCompleted: 0
+        };
+    }
+
+    return playerStats.charsMastery[char];
+}
+
+/**
+ * Update character mastery
+ */
+export function updateCharacterProgress(char: string, success: boolean): void {
+    const state = getCharacterState(char);
+    const today = getToday();
+
+    state.lastPracticed = today;
+
+    if (success) {
+        // Simple progression for now: each successful session adds a "level" point towards mastery 
+        // Logic can be refined to be more SRS-like later
+        state.level = Math.min(5, state.level + 1);
+
+        // Schedule next review based on level (1, 2, 3, 5, 10 days)
+        const intervals = [1, 2, 3, 5, 10, 20];
+        const nextDate = new Date();
+        nextDate.setDate(nextDate.getDate() + (intervals[state.level] || 1));
+        state.nextReview = nextDate.toISOString().split('T')[0];
+    } else {
+        // Validation failure drops level
+        state.level = Math.max(0, state.level - 1);
+        state.nextReview = today; // Review immediately
+    }
+
+    saveData();
+}
+
+/**
+ * Get unique characters for a specific lesson
+ */
+export function getCharactersForLesson(lessonId: number): string[] {
+    const lesson = LESSONS.find(l => l.id === lessonId);
+    if (!lesson) return [];
+
+    const uniqueChars = new Set<string>();
+    lesson.phrases.forEach(phrase => {
+        // Filter out non-Chinese characters if needed, or assume data quality
+        for (const char of phrase.term) {
+            if (/[\u4e00-\u9fa5]/.test(char)) {
+                uniqueChars.add(char);
+            }
+        }
+    });
+
+    return Array.from(uniqueChars);
+}
+
+/**
  * Get all lessons
  */
 export function getLessons(): Lesson[] {
@@ -410,8 +483,8 @@ const ACHIEVEMENTS: Achievement[] = [
     { id: 'streak_3', name: '连续三天', desc: '连续练习三天', icon: '🔥', check: () => playerStats.dailyStreak >= 3 },
     { id: 'streak_7', name: '一周勇士', desc: '连续练习七天', icon: '⚔️', check: () => playerStats.dailyStreak >= 7 },
     { id: 'streak_30', name: '月度大师', desc: '连续练习三十天', icon: '👑', check: () => playerStats.dailyStreak >= 30 },
-    { id: 'level_5', name: '初学者', desc: '达到等级 5', icon: '⭐', check: () => getLevel() >= 5 },
-    { id: 'level_10', name: '学习者', desc: '达到等级 10', icon: '🌟', check: () => getLevel() >= 10 },
+    { id: 'level_5', name: '初学者', desc: '达到等级 5', icon: `<svg viewBox="0 0 24 24" width="32" height="32" style="filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));"><defs><linearGradient id="y-body-5" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#B45309"/><stop offset="50%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#B45309"/></linearGradient><linearGradient id="y-top-5" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FEF3C7"/><stop offset="100%" stop-color="#F59E0B"/></linearGradient></defs><path d="M7,11.5 A5,4 0 0,1 17,11.5" fill="url(#y-top-5)"/><path d="M2,11.5 Q12,14.5 22,11.5 Q21,19.5 12,19.5 Q3,19.5 2,11.5 Z" fill="url(#y-body-5)"/></svg>`, check: () => getLevel() >= 5 },
+    { id: 'level_10', name: '学习者', desc: '达到等级 10', icon: `<svg viewBox="0 0 24 24" width="32" height="32" style="filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));"><defs><linearGradient id="y-body-6" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#B45309"/><stop offset="50%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#B45309"/></linearGradient><linearGradient id="y-top-6" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FEF3C7"/><stop offset="100%" stop-color="#F59E0B"/></linearGradient></defs><path d="M7,11.5 A5,4 0 0,1 17,11.5" fill="url(#y-top-6)"/><path d="M2,11.5 Q12,14.5 22,11.5 Q21,19.5 12,19.5 Q3,19.5 2,11.5 Z" fill="url(#y-body-6)"/></svg>`, check: () => getLevel() >= 10 },
     { id: 'learned_10', name: '词汇新手', desc: '学会 10 个词语', icon: '📚', check: () => playerStats.wordsLearned >= 10 },
     { id: 'learned_50', name: '词汇达人', desc: '学会 50 个词语', icon: '📖', check: () => playerStats.wordsLearned >= 50 },
     { id: 'learned_all', name: '词汇大师', desc: '学会所有 135 个词语', icon: '🏆', check: () => playerStats.wordsLearned >= 135 },

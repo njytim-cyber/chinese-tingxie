@@ -1,5 +1,6 @@
 import type { IUIManager } from '../../types';
 import { DictationPassage, DictationChunk, CharBox } from '../../types';
+import { CardFactory } from '../components/CardFactory';
 
 /**
  * Renders the dictation selection and game screens
@@ -15,49 +16,55 @@ export class DictationRenderer {
      * Show dictation passage selection
      */
     showSelect(onStartDictation: (passage: any) => void): void {
-        this.manager.updateHeaderTitle('心织笔耕');
+        this.manager.updateHeaderTitle('默写练习');
         this.manager.toggleMainHeader(true);
         this.manager.toggleBackBtn(false);
-        this.manager.toggleHeaderStats(false);
+        this.manager.toggleAvatar(true);
+        this.manager.toggleHeaderStats(false); // Hide stats in dictation mode
 
         const content = document.createElement('div');
-        content.className = 'dictation-lesson-select';
-
-        const title = document.createElement('h2');
-        title.className = 'screen-title';
-        title.innerText = '默写练习';
-        content.appendChild(title);
+        content.className = 'lesson-select'; /* Changed from dictation-lesson-select to match shared styles */
 
         const lessonGrid = document.createElement('div');
         lessonGrid.className = 'lesson-grid';
 
         // Load dictation data
         fetch('/dictation.json')
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to load dictation data');
+                return res.json();
+            })
             .then(data => {
                 const passages = data.passages || [];
                 passages.forEach((passage: any) => {
-                    const card = document.createElement('div');
-                    card.className = 'lesson-card active';
-                    card.innerHTML = `
-                        <div class="lesson-progress-ring">
-                            <div class="lesson-number">${passage.id}</div>
-                        </div>
-                        <div class="lesson-info">
-                            <h3 class="lesson-title">${passage.title}</h3>
-                            <div class="lesson-meta">${passage.chunks.length} 段落 | ${passage.text.length} 字</div>
-                        </div>
-                    `;
-                    card.onclick = () => {
-                        console.log('Dictation card clicked:', passage.id, passage.title);
-                        onStartDictation(passage);
-                    };
+                    const shortenedTitle = this.shortenTitle(passage.title);
+                    const card = CardFactory.createLessonCard({
+                        id: passage.id,
+                        title: shortenedTitle,
+                        metaText: `${passage.text.length} 字`,
+                        progress: 0,
+                        onClick: () => {
+                            console.log('Dictation card clicked:', passage.id, passage.title);
+                            onStartDictation(passage);
+                        }
+                    });
+
                     lessonGrid.appendChild(card);
                 });
 
                 if (passages.length === 0) {
                     lessonGrid.innerHTML = '<div style="padding: 24px; color: var(--tang-ink-light);">暂无篇章</div>';
                 }
+            })
+            .catch(err => {
+                console.error('Error loading dictation:', err);
+                // Sanitize error message to prevent XSS
+                const errorDiv = document.createElement('div');
+                errorDiv.style.padding = '24px';
+                errorDiv.style.color = 'var(--tang-red)';
+                errorDiv.textContent = `加载失败: ${err.message || '未知错误'}`;
+                lessonGrid.innerHTML = '';
+                lessonGrid.appendChild(errorDiv);
             });
 
         content.appendChild(lessonGrid);
@@ -97,33 +104,35 @@ export class DictationRenderer {
             onToggleGrid: () => void;
             onShowHint: () => void;
             onReveal: () => void;
+            onJumpTo: (index: number) => void;
         }
     ): void {
         container.innerHTML = '';
         container.classList.add('dictation-container');
 
-        // 1. Completed Phrases Display
+        // 1. Completed Phrases Display (Outside card)
         const completedArea = document.createElement('div');
         completedArea.className = 'dictation-completed-phrases';
 
         if (completedText) {
             completedArea.textContent = completedText;
             completedArea.style.color = 'var(--success)';
+        } else {
+            completedArea.textContent = '您输入的词组将显示在这里...';
+            completedArea.style.color = 'var(--tang-ink-light)';
+            completedArea.style.opacity = '0.6';
+            completedArea.style.fontSize = '1.2rem';
         }
         container.appendChild(completedArea);
 
-        // 2. Carousel Wrapper
+        // 2. White Card Wrapper (matching 听写 mode)
+        const card = document.createElement('div');
+        card.className = 'writing-card';
+
+        // 3. Carousel Wrapper
         const carousel = document.createElement('div');
         carousel.className = 'spelling-carousel';
 
-        // Prev button
-        const prevBtn = document.createElement('button');
-        prevBtn.className = 'spelling-nav-btn';
-        prevBtn.id = 'dictation-prev-btn';
-        prevBtn.textContent = '❮';
-        prevBtn.onclick = callbacks.onPrev;
-        // Visibility set by updateCarouselView
-        carousel.appendChild(prevBtn);
 
         // Single char container
         const charContainer = document.createElement('div');
@@ -171,26 +180,30 @@ export class DictationRenderer {
         // 1. Audio Button
         const audioBtn = document.createElement('button');
         audioBtn.className = 'tool-btn';
-        audioBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
-        audioBtn.title = 'Read Phrase';
+        audioBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M18.37 5.64a9 9 0 010 12.73"/></svg>`;
+        audioBtn.title = '听读音';
         audioBtn.onclick = callbacks.onPlayAudio;
 
         // 2. Grid Button
         const gridBtn = document.createElement('button');
         gridBtn.className = 'tool-btn';
-        gridBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>`;
+        gridBtn.id = 'btn-grid'; // Added for consistency
+        gridBtn.title = '切换格线';
+        gridBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18M12 3v18"/></svg>`;
         gridBtn.onclick = callbacks.onToggleGrid;
 
         // 3. Hint Button
         const hintBtn = document.createElement('button');
         hintBtn.className = 'tool-btn';
-        hintBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21h6v-2H9v2zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>`;
+        hintBtn.title = '提示';
+        hintBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2C8 2 5 5.5 5 9c0 2.5 2 5 3 6v2a2 2 0 002 2h4a2 2 0 002-2v-2c1-1 3-3.5 3-6 0-3.5-3-7-7-7z"/><path d="M9 21h6"/></svg>`;
         hintBtn.onclick = callbacks.onShowHint;
 
         // 4. Reveal Button
         const revealBtn = document.createElement('button');
         revealBtn.className = 'tool-btn';
-        revealBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+        revealBtn.title = '显示';
+        revealBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/></svg>`;
         revealBtn.onclick = callbacks.onReveal;
 
         toolbar.appendChild(audioBtn);
@@ -199,15 +212,18 @@ export class DictationRenderer {
         toolbar.appendChild(revealBtn);
 
         carousel.appendChild(toolbar);
-        container.appendChild(carousel);
 
-        // Swipe support
+        // Append carousel to card, then card to container
+        card.appendChild(carousel);
+        container.appendChild(card);
+
+        // Swipe support on indicators
         let touchStartX = 0;
-        carousel.addEventListener('touchstart', (e) => {
+        indicators.addEventListener('touchstart', (e) => {
             touchStartX = e.touches[0].clientX;
         }, { passive: true });
 
-        carousel.addEventListener('touchend', (e) => {
+        indicators.addEventListener('touchend', (e) => {
             const touchEndX = e.changedTouches[0].clientX;
             const diff = touchStartX - touchEndX;
             if (Math.abs(diff) > 50) {
@@ -217,7 +233,7 @@ export class DictationRenderer {
         }, { passive: true });
 
         // Initial view update
-        this.updateCarouselView(currentCharIndex, validCharIndices, charBoxes);
+        this.updateCarouselView(currentCharIndex, validCharIndices, charBoxes, callbacks.onJumpTo);
     }
 
     /**
@@ -226,7 +242,8 @@ export class DictationRenderer {
     updateCarouselView(
         currentCharIndex: number,
         validCharIndices: number[],
-        charBoxes: CharBox[]
+        charBoxes: CharBox[],
+        onJumpTo?: (index: number) => void
     ): void {
         const boxes = document.querySelectorAll('.spelling-chars-container .char-box');
         boxes.forEach((box, i) => {
@@ -241,11 +258,6 @@ export class DictationRenderer {
             }
         });
 
-        // Update nav buttons
-        const prevBtn = document.getElementById('dictation-prev-btn');
-        if (prevBtn) {
-            prevBtn.style.visibility = currentCharIndex === 0 ? 'hidden' : 'visible';
-        }
 
         // Update indicators (dots)
         const indicatorsEl = document.getElementById('dictation-indicators');
@@ -254,6 +266,11 @@ export class DictationRenderer {
             validCharIndices.forEach((_, i) => {
                 const dot = document.createElement('div');
                 dot.className = `indicator-dot ${i === currentCharIndex ? 'active' : ''}`;
+
+                if (onJumpTo) {
+                    dot.style.cursor = 'pointer';
+                    dot.onclick = () => onJumpTo(i);
+                }
 
                 // If it's correct, show a tick or different color
                 const globalIdx = validCharIndices[i];
@@ -285,13 +302,8 @@ export class DictationRenderer {
             }
         });
 
-        const scoreEl = document.createElement('div');
-        scoreEl.className = 'dictation-footer-score';
-        scoreEl.textContent = `得分: ${currentScore}/${currentMax}`;
-        scoreEl.style.marginRight = '15px';
-        scoreEl.style.fontWeight = 'bold';
-        scoreEl.style.color = 'var(--primary)';
-        footer.appendChild(scoreEl);
+        // Update HUD star counter (Sync with spelling mode layout)
+        this.manager.updateHud(currentScore, 0);
 
         const bar = document.createElement('div');
         bar.className = 'dictation-progress-bar';
@@ -325,7 +337,7 @@ export class DictationRenderer {
 
         modal.innerHTML = `
             <div class="modal-content result-card">
-                <h2 class="result-title">默写完成</h2>
+                <h2 class="result-title">练习完成</h2>
                 <div class="result-score-large">${score} / ${total}</div>
                 <div class="result-percentage">${percentage}%</div>
                 <p class="result-message">${message}</p>
@@ -361,5 +373,25 @@ export class DictationRenderer {
                 slot.classList.add('grid-mi');
             }
         });
+    }
+
+    private shortenTitle(title: string): string {
+        // Requested: Break at punctuation or reasonable length to prevent truncation of phrases
+        const MAX_LEN = 10;
+
+        // If short enough, just return
+        if (title.length <= MAX_LEN + 2) return title;
+
+        // Try to split at first punctuation
+        const match = title.match(/^([^，。；！？,.;!?]+)[，。；！？,.;!?]/);
+        if (match && match[1]) {
+            // If the first part is reasonably long (but not TOO long), use it
+            if (match[1].length > 2 && match[1].length <= MAX_LEN + 2) {
+                return match[1];
+            }
+        }
+
+        // Fallback: simple truncation
+        return title.substring(0, MAX_LEN) + '...';
     }
 }
