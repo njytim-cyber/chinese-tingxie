@@ -1,11 +1,11 @@
 {
-    "name": "星空听写",
-    "short_name": "星空听写",
-    "description": "练习汉字听写。通过互动描红学习词汇。",
+    "name": "心织笔耕",
+    "short_name": "心织笔耕",
+    "description": "汉字听写练习 - 通过互动描红学习词汇",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#0f172a",
-    "theme_color": "#38bdf8",
+    "background_color": "#FAFAF6",
+    "theme_color": "#FAFAF6",
     "orientation": "portrait",
     "icons": [
         {

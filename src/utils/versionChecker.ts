@@ -3,7 +3,7 @@
  * This preserves localStorage while ensuring users see the latest version
  */
 
-const APP_VERSION = '1.21.21'; // Should match package.json version
+const APP_VERSION = '1.21.22'; // Should match package.json version
 const VERSION_KEY = 'app_version';
 
 export function checkVersion(): void {

@@ -21,7 +21,7 @@ import { checkVersion } from './utils/versionChecker';
  * Initialize application
  */
 function init(): void {
-    console.log('Initializing app (v1.21.21)...');
+    console.log('Initializing app (v1.21.22)...');
     try {
         // Check for app version updates
         checkVersion();
