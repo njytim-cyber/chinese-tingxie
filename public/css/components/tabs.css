@@ -1,0 +1,155 @@
+/**
+ * Tabbed Navigation Styles
+ */
+
+.tabbed-nav-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+.tabs-container {
+    flex-shrink: 0;
+    background: var(--tang-paper);
+    border-bottom: 1px solid var(--tang-ink-lighter);
+    padding: 0 var(--spacing-md);
+}
+
+.tabs-wrapper {
+    position: relative;
+    display: flex;
+    gap: var(--spacing-sm);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.tab-item {
+    flex: 1;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: transparent;
+    border: none;
+    font-family: var(--font-chinese), var(--font-family);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--tang-ink-light);
+    cursor: pointer;
+    transition: color 0.2s ease;
+    position: relative;
+    white-space: nowrap;
+}
+
+.tab-item:hover {
+    color: var(--tang-ink);
+}
+
+.tab-item.active {
+    color: var(--tang-red);
+    font-weight: 600;
+}
+
+.tab-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--tang-red), var(--tang-red-dark));
+    border-radius: 3px 3px 0 0;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-content-container {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    touch-action: pan-y;
+}
+
+/* Smooth transitions for tab content */
+.tab-content-enter {
+    animation: slideInFromRight 0.3s ease-out;
+}
+
+.tab-content-exit {
+    animation: slideOutToLeft 0.3s ease-out;
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutToLeft {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .tabs-container {
+        padding: 0 var(--spacing-sm);
+    }
+
+    .tab-item {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.9rem;
+    }
+}
+
+/* Touch feedback */
+.tab-item:active {
+    transform: scale(0.98);
+}
+
+/* Accessibility */
+.tab-item:focus {
+    outline: 2px solid var(--tang-red);
+    outline-offset: -2px;
+}
+
+.tab-item:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Hide tabs when in practice mode */
+.tabbed-nav-container.hide-tabs .tabs-container,
+.tabs-container.hidden {
+    display: none !important;
+}
+
+/* Dark mode support (if needed in the future) */
+@media (prefers-color-scheme: dark) {
+    .tabs-container {
+        background: var(--tang-ink);
+        border-bottom-color: var(--tang-ink-light);
+    }
+
+    .tab-item {
+        color: var(--tang-paper-dim);
+    }
+
+    .tab-item:hover {
+        color: var(--tang-paper);
+    }
+
+    .tab-item.active {
+        color: var(--tang-gold);
+    }
+
+    .tab-indicator {
+        background: linear-gradient(90deg, var(--tang-gold), var(--tang-gold-bright));
+    }
+}

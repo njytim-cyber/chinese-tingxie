@@ -23,6 +23,23 @@
     padding: 12px 15px;
 }
 
+.hud-stats {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 1rem;
+    color: var(--tang-ink);
+}
+
 .hud-inner {
     width: 100%;
     max-width: 600px;
@@ -86,8 +103,10 @@
 }
 
 .char-slot {
-    width: 240px;
-    height: 240px;
+    width: min(240px, 60vw);
+    height: min(240px, 60vw);
+    max-width: 280px;
+    max-height: 280px;
     background: var(--bg-canvas);
     background-image: var(--texture-paper);
     border: 2px solid var(--tang-gold);
@@ -195,9 +214,9 @@
 }
 
 .char-pinyin-label {
-    font-size: 1.6rem;
+    font-size: clamp(1.2rem, 3vw, 1.6rem);
     color: var(--link-light);
-    margin-top: 5px;
+    margin-top: 8px;
     font-family: var(--pinyin-font);
 }
 
@@ -268,11 +287,11 @@
 
 .success-stamp {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(5);
-    width: 120px;
-    height: 120px;
+    bottom: 8px;
+    right: 8px;
+    transform: scale(5);
+    width: 80px;
+    height: 80px;
     opacity: 0;
     pointer-events: none;
     z-index: 10;
@@ -280,14 +299,14 @@
 
 .success-stamp.show {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
     animation: stamp-slam 0.4s forwards;
 }
 
 .stamp-rect {
     fill: none;
     stroke: var(--tang-red);
-    stroke-width: 4;
+    stroke-width: 2;
 }
 
 .stamp-text {
@@ -410,12 +429,26 @@
 
 @media (max-width: 600px) {
     .char-slot {
-        width: 220px;
-        height: 220px;
+        width: min(220px, 65vw);
+        height: min(220px, 65vw);
     }
 
     .hud {
         padding: 8px 10px;
+    }
+
+    .game-stage {
+        padding: 10px 8px 15px;
+    }
+
+    .game-stage #completed-text {
+        width: 98%;
+        margin-bottom: 8px !important;
+        padding: 0 8px;
+    }
+
+    .game-stage #writing-card {
+        width: 98%;
     }
 }
 
@@ -462,30 +495,58 @@
     flex-direction: column !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    padding-top: 20px !important;
-    /* Reduced from 60px */
+    padding: 15px 10px 20px !important;
+    /* More compact padding */
+    min-height: calc(100vh - 140px);
+    /* Account for header and footer */
 }
 
 /* White card wrapper for dictation mode */
 .dictation-container .writing-card {
-    max-width: 400px;
-    /* Slightly larger for dictation */
-    margin-top: 10px;
+    width: 95%;
+    max-width: min(400px, 90vw);
+    margin-top: 5px;
+    padding: 15px;
+    /* Add internal padding */
+}
+
+/* Spelling (听写) Mode - Match dictation layout */
+.game-stage {
+    padding: 15px 10px 20px;
+}
+
+.game-stage #completed-text {
+    width: 95%;
+    max-width: 600px;
+    margin-bottom: 10px !important;
+    font-size: clamp(1.2rem, 4vw, 2.2rem) !important;
+    min-height: 2rem !important;
+    line-height: 1.4;
+    color: var(--tang-jade) !important;
+    font-family: var(--app-font);
+    text-align: center;
+    padding: 0 10px;
+}
+
+.game-stage #writing-card {
+    width: 95%;
+    max-width: min(400px, 90vw);
+    margin-top: 5px;
 }
 
 .dictation-completed-phrases {
-    width: 100%;
+    width: 95%;
     max-width: 600px;
-    /* Wider */
-    margin-bottom: 15px !important;
-    /* Reduced from 30px */
-    font-size: 2.2rem !important;
-    /* Larger text */
+    margin-bottom: 10px !important;
+    font-size: clamp(1.2rem, 4vw, 2.2rem) !important;
+    /* Responsive font size */
     min-height: 2rem !important;
     line-height: 1.4;
     color: var(--tang-jade) !important;
     /* Jade for completed text */
     font-family: var(--app-font);
+    text-align: center;
+    padding: 0 10px;
 }
 
 .spelling-carousel {
@@ -493,17 +554,74 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
-    gap: 20px;
+    gap: 15px;
+    padding: 0 5px;
 }
 
 @media (max-width: 600px) {
     .dictation-container {
-        padding-top: 20px !important;
+        padding: 10px 8px 15px !important;
+    }
+
+    .dictation-container .writing-card {
+        width: 98%;
+        padding: 10px;
     }
 
     .dictation-completed-phrases {
-        font-size: 1.4rem !important;
-        margin-bottom: 25px !important;
+        width: 98%;
+        margin-bottom: 8px !important;
+        padding: 0 8px;
+    }
+
+    .card-toolbar {
+        gap: 12px;
+        /* Tighter spacing on mobile */
+    }
+
+    .tool-btn {
+        width: 44px;
+        height: 44px;
+        /* Slightly smaller on mobile */
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 380px) {
+    .char-slot {
+        width: min(200px, 70vw);
+        height: min(200px, 70vw);
+    }
+
+    .dictation-container {
+        padding: 8px 5px 12px !important;
+    }
+
+    .dictation-container .writing-card {
+        padding: 8px;
+    }
+
+    .spelling-carousel {
+        gap: 10px;
+    }
+
+    .card-toolbar {
+        gap: 8px;
+    }
+
+    .tool-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .indicator-dot {
+        width: 8px;
+        height: 8px;
+    }
+
+    .dictation-indicators {
+        margin-top: 8px;
+        margin-bottom: 10px;
     }
 }
 
@@ -511,9 +629,10 @@
 .dictation-indicators {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin-top: 10px;
-    margin-bottom: 20px;
+    gap: 10px;
+    margin-top: 12px;
+    margin-bottom: 15px;
+    padding: 0 10px;
 }
 
 .indicator-dot {
@@ -532,4 +651,128 @@
 
 .indicator-dot.correct {
     background: var(--tang-jade);
+}
+
+/* Header Progress Bar for Dictation */
+.dictation-header-progress {
+    width: 95%;
+    max-width: min(400px, 90vw);
+    height: 5px;
+    background: rgba(169, 50, 38, 0.15);
+    /* More visible background */
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    margin: 8px auto 15px;
+}
+
+.dictation-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--tang-red), #d94d3a);
+    /* Brighter gradient */
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(196, 64, 50, 0.6);
+    /* More prominent glow */
+    border-radius: 4px;
+}
+
+@media (max-width: 600px) {
+    .dictation-header-progress {
+        width: 98%;
+        height: 4px;
+        margin: 6px auto 12px;
+    }
+}
+
+/* Word List Modal */
+.wordlist-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 0;
+    width: 100%;
+    align-self: stretch;
+}
+
+.wordlist-item {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--tang-paper);
+    border: 1px solid var(--outline-variant);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.wordlist-item:hover {
+    background: rgba(169, 50, 38, 0.05);
+    border-color: var(--tang-red);
+}
+
+.wordlist-item.current {
+    background: linear-gradient(135deg, rgba(169, 50, 38, 0.15), rgba(169, 50, 38, 0.08));
+    border: 2px solid var(--tang-red);
+    box-shadow: 0 2px 8px rgba(169, 50, 38, 0.2);
+}
+
+.wordlist-item.completed {
+    background: rgba(52, 168, 83, 0.08);
+    border-color: var(--tang-jade);
+}
+
+.wordlist-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--outline-variant);
+    border-radius: 50%;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--tang-ink);
+}
+
+.wordlist-item.current .wordlist-number {
+    background: var(--tang-red);
+    color: white;
+}
+
+.wordlist-item.completed .wordlist-number {
+    background: var(--tang-jade);
+    color: white;
+}
+
+.wordlist-term {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--tang-ink);
+    font-family: var(--app-font);
+}
+
+.wordlist-pinyin {
+    font-size: 0.95rem;
+    color: var(--tang-ink-light);
+    font-style: italic;
+    white-space: nowrap;
+}
+
+@media (max-width: 500px) {
+    .wordlist-item {
+        grid-template-columns: 36px 1fr;
+        gap: 10px;
+        padding: 10px 12px;
+    }
+
+    .wordlist-pinyin {
+        grid-column: 2;
+        font-size: 0.85rem;
+        margin-top: -4px;
+    }
+
+    .wordlist-term {
+        font-size: 1.3rem;
+    }
 }

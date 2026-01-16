@@ -151,8 +151,15 @@ export class GameRenderer {
     updateCompletedText(text: string): void {
         const el = document.getElementById('completed-text');
         if (el) {
-            el.textContent = text;
-            el.style.display = text ? 'block' : 'none';
+            if (text) {
+                el.textContent = text;
+                el.style.color = 'var(--tang-jade)';
+                el.style.opacity = '1';
+            } else {
+                el.textContent = '您输入的词组将显示在这里...';
+                el.style.color = 'var(--tang-ink-light)';
+                el.style.opacity = '0.6';
+            }
         }
     }
 
@@ -184,13 +191,28 @@ export class GameRenderer {
         feedback.id = 'feedback-overlay';
         fragment.appendChild(feedback);
 
-        // 2. Writing Card
+        // 2. Completed Text (outside card)
+        const completedText = document.createElement('div');
+        completedText.id = 'completed-text';
+        completedText.className = 'dictation-completed-phrases';
+        completedText.textContent = '您输入的词组将显示在这里...';
+        completedText.style.color = 'var(--tang-ink-light)';
+        completedText.style.opacity = '0.6';
+        fragment.appendChild(completedText);
+
+        // 3. Progress Bar (between completed text and card)
+        const progressContainer = document.createElement('div');
+        progressContainer.id = 'spelling-progress-bar';
+        progressContainer.className = 'dictation-header-progress';
+        progressContainer.innerHTML = '<div class="dictation-progress-fill" style="width: 0%"></div>';
+        fragment.appendChild(progressContainer);
+
+        // 4. Writing Card
         const card = document.createElement('div');
         card.className = 'writing-card';
         card.id = 'writing-card';
         card.innerHTML = `
             <div class="card-header">
-                <div id="completed-text" class="dictation-completed-phrases" style="min-height: 24px;"></div>
                 <div id="definition-display" class="definition-display"></div>
             </div>
             <div class="card-body">
@@ -211,11 +233,11 @@ export class GameRenderer {
                 <button class="tool-btn" id="btn-reveal" title="显示" aria-label="显示完整词语">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/></svg>
                 </button>
-            </div>
-            <div class="card-progress">
-                <div class="progress-bar-mini" id="char-progress-bar">
-                    <div class="progress-fill-mini" id="char-progress-fill"></div>
-                </div>
+                <button class="tool-btn" id="btn-wordlist" title="词语表" aria-label="查看本课词语">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M3 6h18M3 12h18M3 18h18"/>
+                    </svg>
+                </button>
             </div>
         `;
         fragment.appendChild(card);

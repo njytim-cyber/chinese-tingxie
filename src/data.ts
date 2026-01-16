@@ -8,6 +8,7 @@ import {
     Lesson, Phrase, WordState, PlayerStats, Achievement, AttemptLog,
     Word, PracticeWord, CharacterState
 } from './types';
+import { getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from './utils/errors';
 
 // Re-export types for convenience
 export type { Achievement, AttemptLog, Lesson, Phrase, WordState, PlayerStats, Word, PracticeWord, CharacterState };
@@ -80,29 +81,20 @@ function initWordState(): void {
  * Load saved data from localStorage
  */
 export function loadData(): void {
-    try {
-        const savedWords = localStorage.getItem(STORAGE_KEY);
-        if (savedWords) {
-            const parsed = JSON.parse(savedWords);
-            if (parsed && typeof parsed === 'object') {
-                wordState = parsed;
-            }
-        }
-
-        const savedStats = localStorage.getItem(STATS_KEY);
-        if (savedStats) {
-            const parsed = JSON.parse(savedStats);
-            if (parsed && typeof parsed === 'object') {
-                playerStats = { ...playerStats, ...parsed };
-            }
-        }
-
-        initWordState();
-        updateDailyStreak();
-    } catch (e) {
-        console.warn('Could not load data:', e);
-        initWordState();
+    // Load word state with safe error handling
+    const savedWords = getLocalStorageItem<Record<string, WordState>>(STORAGE_KEY, {});
+    if (savedWords && typeof savedWords === 'object') {
+        wordState = savedWords;
     }
+
+    // Load player stats with safe error handling
+    const savedStats = getLocalStorageItem<Partial<PlayerStats>>(STATS_KEY, {});
+    if (savedStats && typeof savedStats === 'object') {
+        playerStats = { ...playerStats, ...savedStats };
+    }
+
+    initWordState();
+    updateDailyStreak();
 }
 
 /**
@@ -112,12 +104,9 @@ let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 const SAVE_DEBOUNCE_MS = 500;
 
 function saveDataImmediate(): void {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(wordState));
-        localStorage.setItem(STATS_KEY, JSON.stringify(playerStats));
-    } catch (e) {
-        console.warn('Could not save data:', e);
-    }
+    // Use safe localStorage utilities with centralized error handling
+    setLocalStorageItem(STORAGE_KEY, wordState);
+    setLocalStorageItem(STATS_KEY, playerStats);
 }
 
 export function saveData(): void {
@@ -304,6 +293,31 @@ export function getCharactersForLesson(lessonId: number): string[] {
     });
 
     return Array.from(uniqueChars);
+}
+
+/**
+ * Get character context (pinyin and example phrase)
+ */
+export function getCharacterContext(char: string, lessonId: number): { pinyin: string; examplePhrase: string; definition?: string } | null {
+    const lesson = LESSONS.find(l => l.id === lessonId);
+    if (!lesson) return null;
+
+    // Find first phrase containing this character
+    const phraseWithChar = lesson.phrases.find(p => p.term.includes(char));
+    if (!phraseWithChar) return null;
+
+    // Extract pinyin for this character
+    // If the phrase is "看电视" with pinyin "kàn diàn shì", and char is "看",
+    // we find its position and extract the corresponding pinyin syllable
+    const charIndex = phraseWithChar.term.indexOf(char);
+    const pinyinParts = phraseWithChar.pinyin.split(' ');
+    const charPinyin = pinyinParts[charIndex] || phraseWithChar.pinyin;
+
+    return {
+        pinyin: charPinyin,
+        examplePhrase: phraseWithChar.term,
+        definition: phraseWithChar.definition
+    };
 }
 
 /**
@@ -540,41 +554,25 @@ export function updateWordScore(term: string, delta: number): void {
  * Log a practice attempt to localStorage
  */
 export function logAttempt(attempt: AttemptLog): void {
-    try {
-        const logs = getAttemptLogs();
-        logs.push(attempt);
-        // Keep only last 100 attempts to avoid storage overflow
-        if (logs.length > 100) {
-            logs.splice(0, logs.length - 100);
-        }
-        localStorage.setItem(ATTEMPT_LOG_KEY, JSON.stringify(logs));
-    } catch (e) {
-        console.warn('Could not save attempt log:', e);
+    const logs = getAttemptLogs();
+    logs.push(attempt);
+    // Keep only last 100 attempts to avoid storage overflow
+    if (logs.length > 100) {
+        logs.splice(0, logs.length - 100);
     }
+    setLocalStorageItem(ATTEMPT_LOG_KEY, logs);
 }
 
 /**
  * Get all attempt logs from localStorage
  */
 export function getAttemptLogs(): AttemptLog[] {
-    try {
-        const saved = localStorage.getItem(ATTEMPT_LOG_KEY);
-        if (saved) {
-            return JSON.parse(saved);
-        }
-    } catch (e) {
-        console.warn('Could not load attempt logs:', e);
-    }
-    return [];
+    return getLocalStorageItem<AttemptLog[]>(ATTEMPT_LOG_KEY, []);
 }
 
 /**
  * Clear all attempt logs
  */
 export function clearAttemptLogs(): void {
-    try {
-        localStorage.removeItem(ATTEMPT_LOG_KEY);
-    } catch (e) {
-        console.warn('Could not clear attempt logs:', e);
-    }
+    removeLocalStorageItem(ATTEMPT_LOG_KEY);
 }

@@ -5,6 +5,7 @@
 
 // import HanziWriter from 'hanzi-writer'; // Lazy loaded
 import { SoundFX } from './audio';
+import { splitTextByPunctuation } from './utils/text';
 import type { PracticeWord } from './types';
 import type { InputHandler, InputResult } from './types';
 
@@ -67,26 +68,13 @@ export class HanziWriterInput implements InputHandler {
             }
         });
 
-        // Split into chunks if sentence is long or contains punctuation
-        this.chunks = [];
-        const splitRegex = /([，。！？、：；“”‘’（）《》]+)/;
-        const parts = word.term.split(splitRegex);
-        let currentStart = 0;
-
-        for (let i = 0; i < parts.length; i += 2) {
-            const phrase = parts[i];
-            const punct = parts[i + 1] || "";
-            const fullChunk = phrase + punct;
-
-            if (phrase.trim()) {
-                this.chunks.push({
-                    start: currentStart,
-                    end: currentStart + phrase.length,
-                    text: phrase
-                });
-            }
-            currentStart += fullChunk.length;
-        }
+        // Split into chunks using centralized text utility
+        const textChunks = splitTextByPunctuation(word.term);
+        this.chunks = textChunks.map(chunk => ({
+            start: chunk.startPos,
+            end: chunk.startPos + chunk.phrase.length,
+            text: chunk.phrase
+        }));
 
         // If no chunks were created (e.g. no punctuation), treat whole word as one chunk
         if (this.chunks.length === 0) {
@@ -310,10 +298,10 @@ export class HanziWriterInput implements InputHandler {
         }
 
         // Update Progress Bar
-        const progressFill = document.getElementById('char-progress-fill');
-        if (progressFill) {
+        const progressContainer = document.getElementById('spelling-progress-bar');
+        if (progressContainer) {
             const progressPercent = (this.completedChars / this.validCharIndices.length) * 100;
-            progressFill.style.width = `${progressPercent}%`;
+            progressContainer.innerHTML = `<div class="dictation-progress-fill" style="width: ${progressPercent}%"></div>`;
         }
 
         // Update Definition (Placeholder if empty)
@@ -529,14 +517,31 @@ export class HanziWriterInput implements InputHandler {
         const writer = this.writers[writerIndex];
         if (!writer) return;
 
-        writer.showCharacter();
+        writer.showCharacter({ duration: 400 });
 
         // Hide after 1 second to give user a "glimpse"
         setTimeout(() => {
             try {
-                (writer as any).hideCharacter?.();
+                // Properly hide the character
+                writer.hideCharacter({ duration: 200 });
+
+                // Additionally, ensure all character SVG paths are hidden
+                const globalIdx = this.validCharIndices[writerIndex];
+                const container = document.getElementById(`dictation-char-${globalIdx}`) ||
+                                document.getElementById(`char-${globalIdx}`);
+
+                if (container) {
+                    // Hide all character display paths to ensure they don't block input
+                    const svg = container.querySelector('svg');
+                    if (svg) {
+                        const charGroup = svg.querySelector('g[data-test="character"]');
+                        if (charGroup) {
+                            (charGroup as HTMLElement).style.opacity = '0';
+                        }
+                    }
+                }
             } catch (e) {
-                // Ignore
+                console.warn('Error hiding character:', e);
             }
         }, 1000);
 

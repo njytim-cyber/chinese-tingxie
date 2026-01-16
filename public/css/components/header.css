@@ -7,7 +7,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
+    padding: 10px 20px;
     box-sizing: border-box;
     background: transparent;
     border-bottom: 1px solid rgba(169, 50, 38, 0.15);
@@ -50,8 +50,8 @@
 }
 
 .player-avatar {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: var(--tang-red-light);
     border: 2px solid var(--tang-red);
@@ -109,4 +109,25 @@
 .stat-pill svg,
 .score-box svg {
     filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+    .dashboard-header {
+        padding: 8px 15px;
+    }
+
+    .player-avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .app-title {
+        font-size: clamp(1.2rem, 5vw, 1.8rem);
+    }
+
+    .stat-pill {
+        font-size: 1rem;
+        padding: 4px 6px;
+    }
 }
