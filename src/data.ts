@@ -296,6 +296,15 @@ export function getCharactersForLesson(lessonId: number): string[] {
 }
 
 /**
+ * Get phrases for a specific lesson (for phrase-based practice)
+ */
+export function getPhrasesForLesson(lessonId: number): Phrase[] {
+    const lesson = LESSONS.find(l => l.id === lessonId);
+    if (!lesson) return [];
+    return lesson.phrases;
+}
+
+/**
  * Get character context (pinyin and example phrase)
  */
 export function getCharacterContext(char: string, lessonId: number): { pinyin: string; examplePhrase: string; definition?: string } | null {

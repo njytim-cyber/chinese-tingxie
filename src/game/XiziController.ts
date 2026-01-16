@@ -1,12 +1,12 @@
 import HanziWriter from 'hanzi-writer';
 import { UIManager } from '../ui/UIManager';
-import { getCharactersForLesson, updateCharacterProgress, getCharacterContext, getLessons } from '../data';
+import { getPhrasesForLesson, updateCharacterProgress, getLessons, type Phrase } from '../data';
 import { SoundFX } from '../audio';
 import { spawnParticles } from '../particles';
 
 /**
  * Xizi (Character Practice) Controller
- * Manages the 5-stage scaffolding practice session
+ * Manages phrase-based practice with 3-stage scaffolding per phrase
  */
 export class XiziController {
     private ui: UIManager;
@@ -14,22 +14,23 @@ export class XiziController {
     private sessionStartTime: number = 0;
 
     // Practice Queue
-    private practiceQueue: string[] = [];
+    private practiceQueue: Phrase[] = [];
     private currentQueueIndex: number = 0;
     private currentLessonId: number = 0; // Store for continuing practice
 
     // Writers
-    private writer: HanziWriter | null = null;
-    private targetChar: string = '';
+    private writers: HanziWriter[] = [];
+    private currentPhrase: Phrase | null = null;
+    private currentCharIndexInPhrase: number = 0;
 
     // Scaffolding State
     private currentStage: number = 0; // 0=Full Guide, 1=Half Guide, 2=Blank
     private mistakesInCurrentStage: number = 0;
-    private totalCharactersInLesson: number = 0; // Track full lesson size for progress
-    private allLessonCharacters: string[] = []; // Full character list for chunking
+    private totalPhrasesInLesson: number = 0; // Track full lesson size for progress
+    private allLessonPhrases: Phrase[] = []; // Full phrase list for chunking
 
     // DOM Elements
-    private container: HTMLElement | null = null;
+    private phraseContainer: HTMLElement | null = null;
     private instructionsEl: HTMLElement | null = null;
     private pinyinEl: HTMLElement | null = null;
 
@@ -45,19 +46,19 @@ export class XiziController {
         this.sessionStartTime = startTime;
         this.currentLessonId = lessonId;
 
-        // 1. Get characters
-        const chars = getCharactersForLesson(lessonId);
+        // 1. Get phrases
+        const phrases = getPhrasesForLesson(lessonId);
 
-        if (chars.length === 0) {
-            this.ui.showFeedback('没有可练习的汉字', '#ef4444');
+        if (phrases.length === 0) {
+            this.ui.showFeedback('没有可练习的词组', '#ef4444');
             setTimeout(() => this.onExit(), 2000);
             return;
         }
 
-        // Store all characters and auto-chunk to 5 characters max for 5-minute sessions
-        this.allLessonCharacters = chars;
-        this.totalCharactersInLesson = chars.length;
-        this.practiceQueue = chars.slice(0, Math.min(5, chars.length));
+        // Store all phrases and auto-chunk to 5 phrases max for 5-minute sessions
+        this.allLessonPhrases = phrases;
+        this.totalPhrasesInLesson = phrases.length;
+        this.practiceQueue = phrases.slice(0, Math.min(5, phrases.length));
         this.currentQueueIndex = 0;
 
         // 2. Setup UI
@@ -70,8 +71,8 @@ export class XiziController {
             this.ui.updateHeaderTitle(lesson.title);
         }
 
-        // 4. Start first character
-        await this.loadCurrentCharacter();
+        // 4. Start first phrase
+        await this.loadCurrentPhrase();
     }
 
     private setupUI(): void {
@@ -94,8 +95,6 @@ export class XiziController {
             text-align: center;
         `;
 
-        // Lesson Title removed - it's in the header now
-
         // Instructions / Stage Indicator
         this.instructionsEl = document.createElement('div');
         this.instructionsEl.className = 'xizi-instructions';
@@ -107,53 +106,31 @@ export class XiziController {
         `;
         container.appendChild(this.instructionsEl);
 
-        // Character Writer Container
-        // We'll use a larger box for detail
-        const writerWrapper = document.createElement('div');
-        writerWrapper.className = 'xizi-writer-wrapper';
-        writerWrapper.style.cssText = `
-            width: 280px;
-            height: 280px;
-            background: #fff;
-            border-radius: var(--scholar-radius);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            position: relative;
+        // Phrase Container - horizontal layout for multiple characters
+        const phraseWrapper = document.createElement('div');
+        phraseWrapper.className = 'xizi-phrase-wrapper';
+        phraseWrapper.style.cssText = `
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
             margin-bottom: 30px;
-            border: 2px solid var(--tang-gold);
+            flex-wrap: wrap;
         `;
 
-        // Grid background (Tian Zi Ge)
-        const grid = document.createElement('div');
-        grid.style.cssText = `
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: 
-                linear-gradient(rgba(180, 83, 9, 0.2) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(180, 83, 9, 0.2) 1px, transparent 1px);
-            background-size: 50% 50%;
-            background-position: center;
-            pointer-events: none; /* Let clicks pass to SVG */
+        const phraseContainer = document.createElement('div');
+        phraseContainer.id = 'xizi-phrase-container';
+        phraseContainer.style.cssText = `
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
         `;
-        writerWrapper.appendChild(grid);
-        // Diagonal lines
-        const diag = document.createElement('div');
-        diag.style.cssText = `
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: 
-                linear-gradient(45deg, transparent 49.5%, rgba(180, 83, 9, 0.1) 49.5%, rgba(180, 83, 9, 0.1) 50.5%, transparent 50.5%),
-                linear-gradient(-45deg, transparent 49.5%, rgba(180, 83, 9, 0.1) 49.5%, rgba(180, 83, 9, 0.1) 50.5%, transparent 50.5%);
-            pointer-events: none;
-        `;
-        writerWrapper.appendChild(diag);
 
-        const writerTarget = document.createElement('div');
-        writerTarget.id = 'xizi-target';
-        writerWrapper.appendChild(writerTarget);
+        phraseWrapper.appendChild(phraseContainer);
+        container.appendChild(phraseWrapper);
 
-        container.appendChild(writerWrapper);
-
-        // Pinyin below the box
+        // Pinyin below the boxes
         this.pinyinEl = document.createElement('div');
         this.pinyinEl.className = 'xizi-pinyin';
         this.pinyinEl.style.cssText = `
@@ -167,116 +144,191 @@ export class XiziController {
         container.appendChild(this.pinyinEl);
 
         app.appendChild(container);
-        this.container = writerTarget;
+        this.phraseContainer = phraseContainer;
     }
 
-    private async loadCurrentCharacter(): Promise<void> {
+    private async loadCurrentPhrase(): Promise<void> {
         if (this.currentQueueIndex >= this.practiceQueue.length) {
             this.finishSession();
             return;
         }
 
-        this.targetChar = this.practiceQueue[this.currentQueueIndex];
+        this.currentPhrase = this.practiceQueue[this.currentQueueIndex];
 
-        // Reset stages for this character (3 stages: 0, 1, 2)
+        // Reset stages for this phrase (3 stages: 0, 1, 2)
         this.currentStage = 0;
+        this.currentCharIndexInPhrase = 0;
 
         await this.startStage();
     }
 
     private async startStage(): Promise<void> {
         if (this.currentStage > 2) {
-            // Char Complete (3 stages: 0, 1, 2)
+            // Phrase Complete (3 stages: 0, 1, 2)
             SoundFX.success();
-            // Update Data
-            updateCharacterProgress(this.targetChar, true);
+
+            // Update Data for all characters in the phrase
+            if (this.currentPhrase) {
+                const chineseChars = this.currentPhrase.term.split('').filter(c => /[\u4e00-\u9fa5]/.test(c));
+                chineseChars.forEach(char => {
+                    updateCharacterProgress(char, true);
+                });
+            }
 
             // Check for milestone celebrations
-            const charsCompleted = this.currentQueueIndex + 1;
+            const phrasesCompleted = this.currentQueueIndex + 1;
             const totalInChunk = this.practiceQueue.length;
-            const percentComplete = Math.round((charsCompleted / totalInChunk) * 100);
+            const percentComplete = Math.round((phrasesCompleted / totalInChunk) * 100);
 
-            if (charsCompleted === totalInChunk) {
+            if (phrasesCompleted === totalInChunk) {
                 // Chunk complete!
                 this.showChunkComplete();
                 return;
-            } else if (charsCompleted % 3 === 0 || percentComplete >= 50 && charsCompleted === Math.ceil(totalInChunk / 2)) {
+            } else if (phrasesCompleted % 3 === 0 || percentComplete >= 50 && phrasesCompleted === Math.ceil(totalInChunk / 2)) {
                 // Milestone celebration
-                this.ui.showFeedback(`太棒了！已完成 ${charsCompleted} 个字！`, '#4ade80');
+                this.ui.showFeedback(`太棒了！已完成 ${phrasesCompleted} 个词组！`, '#4ade80');
             } else {
                 this.ui.showFeedback('完成!', '#4ade80');
             }
 
             setTimeout(() => {
                 this.currentQueueIndex++;
-                this.loadCurrentCharacter();
+                this.loadCurrentPhrase();
             }, 1000);
             return;
         }
 
         this.mistakesInCurrentStage = 0;
+        this.currentCharIndexInPhrase = 0;
         this.updateInstructions();
 
-        // Init Writer
-        if (this.container) {
-            this.container.innerHTML = ''; // Start fresh
+        // Init Writers for all characters in phrase
+        if (this.phraseContainer && this.currentPhrase) {
+            this.phraseContainer.innerHTML = ''; // Start fresh
+            this.writers = [];
 
-            this.writer = HanziWriter.create('xizi-target', this.targetChar, {
-                width: 280,
-                height: 280,
-                padding: 20,
-                showOutline: false, // We control this
-                strokeColor: '#2B2B2B', // Ink color
-                radicalColor: '#9CA3AF', // Optional distinction
-                showCharacter: false, // We control visibility
-                highlightOnComplete: true,
-                drawingWidth: 30, // Thicker brush
-                drawingColor: '#2B2B2B',
+            // Get only Chinese characters from the phrase
+            const chineseChars = this.currentPhrase.term.split('').filter(c => /[\u4e00-\u9fa5]/.test(c));
+
+            // Create a writer box for each Chinese character
+            chineseChars.forEach((char, index) => {
+                const writerBox = document.createElement('div');
+                writerBox.className = 'xizi-char-box';
+                writerBox.style.cssText = `
+                    width: 140px;
+                    height: 140px;
+                    background: #fff;
+                    border-radius: var(--scholar-radius);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    position: relative;
+                    border: 2px solid var(--tang-gold);
+                `;
+
+                // Grid background (Tian Zi Ge)
+                const grid = document.createElement('div');
+                grid.style.cssText = `
+                    position: absolute;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background-image:
+                        linear-gradient(rgba(180, 83, 9, 0.2) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(180, 83, 9, 0.2) 1px, transparent 1px);
+                    background-size: 50% 50%;
+                    background-position: center;
+                    pointer-events: none;
+                `;
+                writerBox.appendChild(grid);
+
+                // Diagonal lines
+                const diag = document.createElement('div');
+                diag.style.cssText = `
+                    position: absolute;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background:
+                        linear-gradient(45deg, transparent 49.5%, rgba(180, 83, 9, 0.1) 49.5%, rgba(180, 83, 9, 0.1) 50.5%, transparent 50.5%),
+                        linear-gradient(-45deg, transparent 49.5%, rgba(180, 83, 9, 0.1) 49.5%, rgba(180, 83, 9, 0.1) 50.5%, transparent 50.5%);
+                    pointer-events: none;
+                `;
+                writerBox.appendChild(diag);
+
+                const writerTarget = document.createElement('div');
+                writerTarget.id = `xizi-char-${index}`;
+                writerBox.appendChild(writerTarget);
+
+                this.phraseContainer!.appendChild(writerBox);
+
+                // Create HanziWriter instance
+                const writer = HanziWriter.create(`xizi-char-${index}`, char, {
+                    width: 140,
+                    height: 140,
+                    padding: 10,
+                    showOutline: false, // We control this
+                    strokeColor: '#2B2B2B', // Ink color
+                    radicalColor: '#9CA3AF', // Optional distinction
+                    showCharacter: false, // We control visibility
+                    highlightOnComplete: true,
+                    drawingWidth: 20, // Thicker brush
+                    drawingColor: '#2B2B2B',
+                });
+
+                this.writers.push(writer);
             });
 
-            // Start Quiz
-            // Wait for load via quiz
-
-            // Set outline visibility based on stage
-            // Stage 0: Full guide (60% opacity)
-            // Stage 1: Half guide (30% opacity)
-            // Stage 2: Blank (no outline)
-            if (this.currentStage === 2) {
-                this.writer.hideOutline();
-            } else {
-                this.writer.showOutline();
-            }
-
-            await this.writer.quiz({
-                onMistake: () => {
-                    this.mistakesInCurrentStage++;
-                    SoundFX.click();
-                    spawnParticles(0, 0);
-
-                    // On final stage (blank), show hint briefly on mistake
-                    if (this.currentStage === 2) {
-                        this.writer?.showOutline();
-                        setTimeout(() => this.writer?.hideOutline(), 500);
-                    }
-                },
-                onCorrectStroke: () => {
-                    SoundFX.pop();
-                },
-                onComplete: () => {
-                    // Stage Complete
-                    SoundFX.success();
-                    // Slight delay before next stage
-                    setTimeout(() => {
-                        this.currentStage++;
-                        this.startStage();
-                    }, 800);
-                }
-            });
+            // Start quiz for first character
+            await this.startCharacterQuiz();
         }
     }
 
+    private async startCharacterQuiz(): Promise<void> {
+        if (this.currentCharIndexInPhrase >= this.writers.length) {
+            // All characters in phrase completed for this stage
+            SoundFX.success();
+            setTimeout(() => {
+                this.currentStage++;
+                this.startStage();
+            }, 800);
+            return;
+        }
+
+        const writer = this.writers[this.currentCharIndexInPhrase];
+
+        // Set outline visibility based on stage
+        // Stage 0: Full guide (show outline)
+        // Stage 1: Half guide (show outline with less emphasis)
+        // Stage 2: Blank (no outline)
+        if (this.currentStage === 2) {
+            writer.hideOutline();
+        } else {
+            writer.showOutline();
+        }
+
+        await writer.quiz({
+            onMistake: () => {
+                this.mistakesInCurrentStage++;
+                SoundFX.click();
+                spawnParticles(0, 0);
+
+                // On final stage (blank), show hint briefly on mistake
+                if (this.currentStage === 2) {
+                    writer.showOutline();
+                    setTimeout(() => writer.hideOutline(), 500);
+                }
+            },
+            onCorrectStroke: () => {
+                SoundFX.pop();
+            },
+            onComplete: () => {
+                // Character complete, move to next character in phrase
+                SoundFX.pop();
+                setTimeout(() => {
+                    this.currentCharIndexInPhrase++;
+                    this.startCharacterQuiz();
+                }, 400);
+            }
+        });
+    }
+
     private updateInstructions(): void {
-        if (!this.instructionsEl || !this.pinyinEl) return;
+        if (!this.instructionsEl || !this.pinyinEl || !this.currentPhrase) return;
 
         const stageNames = [
             '第一步: 描红',
@@ -289,17 +341,16 @@ export class XiziController {
             i === this.currentStage ? '●' : '○'
         ).join(' ');
 
-        // Get character context
-        const context = getCharacterContext(this.targetChar, this.currentLessonId);
-        const pinyinText = context ? context.pinyin : '';
+        // Update pinyin to show full phrase pinyin
+        this.pinyinEl.textContent = this.currentPhrase.pinyin;
 
-        // Update pinyin below the box
-        this.pinyinEl.textContent = pinyinText;
-
-        // Simple, clean instructions - one character at a time
+        // Simple, clean instructions - show phrase term
         this.instructionsEl.innerHTML = `
             <div style="font-size: 0.95rem; color: var(--tang-ink); margin-bottom: 8px;">
                 ${stageNames[this.currentStage]}
+            </div>
+            <div style="font-size: 1.4rem; color: var(--tang-gold); margin-bottom: 8px; font-weight: 600;">
+                ${this.currentPhrase.term}
             </div>
             <div style="font-size: 1.2rem; color: var(--tang-gold); letter-spacing: 4px;">
                 ${stageDots}
@@ -308,24 +359,24 @@ export class XiziController {
     }
 
     private showChunkComplete(): void {
-        const charsCompleted = this.practiceQueue.length;
-        const hasMoreCharacters = this.totalCharactersInLesson > charsCompleted;
+        const phrasesCompleted = this.practiceQueue.length;
+        const hasMorePhrases = this.totalPhrasesInLesson > phrasesCompleted;
 
         const modal = document.createElement('div');
         modal.className = 'modal-overlay show';
         modal.innerHTML = `
             <div class="modal-content result-card" style="max-width: 400px;">
                 <h2 class="result-title">本组练习完成！</h2>
-                <div class="result-score-large">${charsCompleted}</div>
-                <div class="result-percentage">个字完成</div>
+                <div class="result-score-large">${phrasesCompleted}</div>
+                <div class="result-percentage">个词组完成</div>
                 <p class="result-message">太棒了！继续保持！</p>
-                ${hasMoreCharacters ? `
+                ${hasMorePhrases ? `
                     <div style="padding: 12px; background: var(--tang-paper); border-radius: var(--scholar-radius); margin: 16px 0; color: var(--tang-ink-light); font-size: 0.9rem;">
-                        还有 ${this.totalCharactersInLesson - charsCompleted} 个字可以练习
+                        还有 ${this.totalPhrasesInLesson - phrasesCompleted} 个词组可以练习
                     </div>
                 ` : ''}
                 <div class="modal-actions">
-                    ${hasMoreCharacters ? `
+                    ${hasMorePhrases ? `
                         <button class="action-btn-large" id="xizi-continue-btn">继续练习</button>
                         <button class="text-btn" id="xizi-finish-btn">结束练习</button>
                     ` : `
@@ -357,22 +408,22 @@ export class XiziController {
     }
 
     private async continueWithNextChunk(): Promise<void> {
-        // Calculate how many characters we've already practiced
+        // Calculate how many phrases we've already practiced
         const completedCount = this.practiceQueue.length;
-        const remainingChars = this.allLessonCharacters.slice(completedCount);
+        const remainingPhrases = this.allLessonPhrases.slice(completedCount);
 
-        if (remainingChars.length === 0) {
-            // No more characters, finish
+        if (remainingPhrases.length === 0) {
+            // No more phrases, finish
             this.finishSession();
             return;
         }
 
-        // Get next chunk (up to 5 characters)
-        this.practiceQueue = remainingChars.slice(0, Math.min(5, remainingChars.length));
+        // Get next chunk (up to 5 phrases)
+        this.practiceQueue = remainingPhrases.slice(0, Math.min(5, remainingPhrases.length));
         this.currentQueueIndex = 0;
 
-        // Restart with first character of new chunk
-        await this.loadCurrentCharacter();
+        // Restart with first phrase of new chunk
+        await this.loadCurrentPhrase();
     }
 
     private finishSession(): void {
