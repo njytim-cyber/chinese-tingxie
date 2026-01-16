@@ -1,12 +1,9 @@
-/* Lesson Selection Feature */
 .lesson-select,
 .dictation-lesson-select {
     width: 100%;
     max-width: 600px;
     margin: 0 auto;
-    padding: 24px 20px 120px;
-    margin: 0 auto;
-    padding: 24px 20px 120px;
+    padding: 10px 20px 120px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -16,11 +13,21 @@
     overflow-x: hidden;
 }
 
-.lesson-select-title {
-    color: var(--primary);
-    font-size: 1.5rem;
-    text-align: center;
-    margin: 10px 0 15px 0;
+.lesson-select-title,
+.screen-title {
+    color: var(--ink-light);
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: left;
+    /* Align to left edge of cards */
+    width: 100%;
+    max-width: 500px;
+    /* Match card width */
+    margin: 0 auto 4px auto;
+    /* Tighter gap to list */
+    padding-left: 4px;
+    /* Optical alignment with card border */
+    opacity: 0.8;
 }
 
 .lesson-grid {
@@ -34,9 +41,9 @@
     margin: 0 auto;
 }
 
-/* Custom Scrollbar for Shan Shui Scroll */
+/* Custom Scrollbar */
 .lesson-grid::-webkit-scrollbar {
-    height: 6px;
+    width: 6px;
 }
 
 .lesson-grid::-webkit-scrollbar-track {
@@ -44,9 +51,8 @@
 }
 
 .lesson-grid::-webkit-scrollbar-thumb {
-    background: var(--ink-light);
-    border-radius: 3px;
-    opacity: 0.2;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
 }
 
 .lesson-grid .lesson-card {
@@ -116,8 +122,8 @@
 /* Lesson Card Internals */
 .lesson-progress-ring {
     position: relative;
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     flex-shrink: 0;
 }
 
@@ -127,18 +133,31 @@
     transform: rotate(-90deg);
 }
 
+/* ... existing SVG styles ... */
 .lesson-progress-ring .ring-bg {
     fill: none;
-    stroke: #334155;
+    stroke: #E2E8F0;
+    /* Lighter track */
     stroke-width: 3;
 }
 
 .lesson-progress-ring .ring-fill {
     fill: none;
-    stroke: var(--primary);
+    stroke: var(--tang-red);
     stroke-width: 3;
     stroke-linecap: round;
     transition: stroke-dasharray 0.5s ease;
+}
+
+.lesson-number {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--tang-ink);
+    z-index: 1;
 }
 
 .lesson-info {
@@ -156,6 +175,52 @@
 .lesson-meta {
     font-size: 0.85rem;
     color: var(--ink-faint);
+}
+
+/* Category Filter */
+.category-filter {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0 20px 0;
+    padding: 5px 10px;
+    width: 100%;
+    max-width: 500px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE 10+ */
+    -webkit-overflow-scrolling: touch;
+}
+
+.category-filter::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari */
+}
+
+.category-chip {
+    padding: 6px 16px;
+    border-radius: var(--scholar-radius);
+    background: var(--paper-dark);
+    color: var(--tang-ink);
+    font-size: 0.9rem;
+    white-space: nowrap;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+    opacity: 0.8;
+}
+
+.category-chip:hover {
+    background: var(--paper-warm);
+    opacity: 1;
+}
+
+.category-chip.active {
+    background: var(--cinnabar);
+    color: white;
+    opacity: 1;
+    box-shadow: 0 2px 8px rgba(185, 28, 28, 0.3);
 }
 
 @media (max-width: 600px) {

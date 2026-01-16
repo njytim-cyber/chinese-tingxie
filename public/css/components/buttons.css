@@ -8,7 +8,7 @@
     background: linear-gradient(135deg, var(--success), #22c55e);
     color: white;
     border: none;
-    border-radius: 16px;
+    border-radius: var(--scholar-radius);
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 16px rgba(74, 222, 128, 0.3);
@@ -31,7 +31,7 @@
     background: var(--tang-red);
     color: white;
     border: none;
-    border-radius: 12px;
+    border-radius: var(--scholar-radius);
     font-size: 1rem;
     font-family: 'KaiTi', var(--app-font), serif;
     cursor: pointer;
@@ -48,7 +48,7 @@
     background: transparent;
     color: var(--ink);
     border: 1px solid var(--tang-paper-dark);
-    border-radius: 12px;
+    border-radius: var(--scholar-radius);
     font-size: 1rem;
     font-family: 'KaiTi', var(--app-font), serif;
     cursor: pointer;
@@ -60,7 +60,7 @@
     border: none;
     font-size: 1.5rem;
     padding: 10px 14px;
-    border-radius: 12px;
+    border-radius: var(--scholar-radius);
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     min-width: 48px;
@@ -102,4 +102,123 @@
 
 .menu-btn:active {
     transform: scale(0.95);
+}
+
+/* Mode Selection Buttons */
+.mode-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mode-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-radius: var(--scholar-radius);
+    font-family: 'KaiTi', var(--app-font), serif;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+    text-align: left;
+}
+
+.mode-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mode-btn-icon {
+    font-size: 1.8rem;
+    flex-shrink: 0;
+}
+
+.mode-btn-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.mode-btn-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 2px;
+}
+
+.mode-btn-desc {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.mode-btn-arrow {
+    opacity: 0.4;
+    font-size: 1.2rem;
+    transition: transform 0.2s;
+}
+
+/* Primary Mode Button (Red) */
+.mode-btn-primary {
+    background: linear-gradient(135deg, var(--tang-red), #a83228);
+    color: white;
+    box-shadow: 0 4px 12px rgba(196, 64, 50, 0.25);
+}
+
+.mode-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(196, 64, 50, 0.35);
+}
+
+.mode-btn-primary:hover .mode-btn-arrow {
+    transform: translateX(4px);
+}
+
+.mode-btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(196, 64, 50, 0.25);
+}
+
+/* Secondary Mode Button (Outlined) */
+.mode-btn-secondary {
+    background: white;
+    color: var(--tang-ink);
+    border: 2px solid var(--tang-paper-dark);
+}
+
+.mode-btn-secondary:hover {
+    background: var(--tang-paper);
+    border-color: var(--tang-ink-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.mode-btn-secondary:hover .mode-btn-arrow {
+    transform: translateX(4px);
+}
+
+.mode-btn-secondary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.text-btn {
+    background: transparent;
+    border: none;
+    color: var(--tang-ink-light);
+    padding: 12px 16px;
+    font-family: 'KaiTi', var(--app-font), serif;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: var(--scholar-radius);
+}
+
+.text-btn:hover {
+    color: var(--tang-ink);
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.text-btn:active {
+    transform: scale(0.97);
 }

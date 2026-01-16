@@ -5,39 +5,43 @@
     position: relative;
     width: 100%;
     max-width: 500px;
-    height: 100px;
-    padding: 0 24px;
+    height: 64px;
+    padding: 0 16px;
     margin: 0 auto 8px;
-    background: #FFFFFF;
-    background-image: var(--texture-paper);
-    border: 1px solid var(--tang-paper-dark);
-    border-radius: 28px;
-    box-shadow: var(--shadow-tang);
+    /* 1. The Base Cream Color */
+    background-color: #FFFEFA;
+    /* 2. The Texture */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+    /* 3. Styling */
+    border: 1px solid #E5E0D8;
+    border-left: 4px solid var(--tang-red);
+    border-radius: var(--scholar-radius);
+    box-shadow: 0 4px 6px rgba(169, 50, 38, 0.05);
     display: flex;
     align-items: center;
     gap: 20px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s ease;
     overflow: hidden;
     box-sizing: border-box;
 }
 
 .lesson-card:hover {
-    box-shadow: var(--shadow-tang-lg);
-    transform: translateY(-3px) scale(1.02);
-    border-color: var(--tang-gold);
-    background: #FFFDF8;
+    box-shadow: 0 6px 12px rgba(169, 50, 38, 0.08);
+    transform: translateY(-2px);
+    background-color: #FDFCF7;
 }
 
-.lesson-card.active {
-    background: var(--tang-red-light);
-    border: 2px solid var(--tang-red);
-    box-shadow: var(--shadow-tang-hover);
+.lesson-card.active,
+.lesson-card:active {
+    background-color: #F9F7F0;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    transform: translateY(0);
 }
 
 .writing-card {
     background: var(--card-bg);
-    border-radius: 28px;
+    border-radius: var(--scholar-radius);
     border: 1px solid var(--tang-paper-dark);
     padding: 20px;
     width: 100%;
@@ -47,7 +51,7 @@
 
 .summary-card {
     background: var(--card-bg);
-    border-radius: 24px;
+    border-radius: var(--scholar-radius);
     padding: 24px;
     text-align: center;
     box-shadow: var(--shadow-tang-lg);

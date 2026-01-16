@@ -25,7 +25,7 @@
 .modal-content {
     background: var(--bg-canvas);
     border: 1px solid var(--tang-paper-dark);
-    border-radius: 24px;
+    border-radius: var(--scholar-radius);
     padding: 24px;
     width: 90%;
     max-width: 400px;
@@ -41,6 +41,16 @@
 
 .modal-overlay.show .modal-content {
     transform: translateY(0);
+}
+
+.modal-title {
+    color: var(--tang-ink);
+    font-family: var(--font-serif);
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-align: center;
+    margin: 0 0 20px 0;
+    width: 100%;
 }
 
 .avatar-selector-card h2 {
@@ -63,4 +73,60 @@
 
 .menu-actions button {
     width: 100%;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.modal-actions button {
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Scholar's Desk Primary Button (Confirm) */
+.modal-actions button:not(.text-btn):first-child {
+    background: var(--tang-red);
+    color: var(--tang-paper);
+    border: none;
+    box-shadow: 0 4px 6px rgba(196, 64, 50, 0.2);
+}
+
+.modal-actions button:not(.text-btn):first-child:hover {
+    background: var(--tang-red-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px rgba(196, 64, 50, 0.3);
+}
+
+/* Scholar's Desk Secondary Button (Cancel) */
+.modal-actions button:not(.text-btn):last-child,
+.modal-actions button.secondary-btn {
+    background: transparent;
+    color: var(--tang-ink-light);
+    border: 1px solid var(--tang-ink-light);
+    box-shadow: none;
+}
+
+.modal-actions button:not(.text-btn):last-child:hover,
+.modal-actions button.secondary-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--tang-ink);
+    border-color: var(--tang-ink);
+}
+
+.result-card .result-title {
+    font-family: var(--font-serif);
+    color: var(--tang-ink);
+    margin-bottom: 0.5rem;
+}
+
+.result-card .result-message {
+    color: var(--tang-ink-light);
 }

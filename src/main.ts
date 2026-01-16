@@ -2,7 +2,6 @@
  * Main Entry Point
  */
 
-// CSS Import (all styles from legacy monolith - TODO: gradually migrate to modular files)
 // CSS Import (Modular)
 import '../public/css/index.css';
 
@@ -10,7 +9,7 @@ import '../public/css/index.css';
 import { initVoices, unlockAudio } from './audio';
 import { initParticles } from './particles';
 import { Game } from './game';
-import { saveDataSync, getStats, getLessons } from './data';
+import { saveDataSync } from './data';
 
 // Expose to window for backward compatibility with onclick and debugging
 (window as any).Game = Game;
@@ -49,7 +48,6 @@ function init(): void {
                 }
             });
         }
-
 
         // Review button (进度 - Progress)
         const reviewBtn = document.getElementById('review-btn');
@@ -106,17 +104,34 @@ function init(): void {
 
         console.log('App initialized');
 
-        // Auto-show lesson select on startup (听写 by default)
-        // Only if this is a fresh page load (overlay exists)
+        // Splash Screen Logic & Auto-Start
+        const splash = document.getElementById('splash-screen');
+        const hasSeenSplash = sessionStorage.getItem('seenSplash');
+
+        // Handle Splash
+        if (splash) {
+            if (hasSeenSplash) {
+                // If already seen, hide usage immediately
+                splash.style.display = 'none';
+            } else {
+                // Show splash, then fade out
+                setTimeout(() => {
+                    splash.classList.add('hidden');
+                    // Remove from DOM after fade
+                    setTimeout(() => splash.remove(), 800);
+                    sessionStorage.setItem('seenSplash', 'true');
+                }, 2000);
+            }
+        }
+
+        // Auto-remove static overlay and start Game Logic
+        // This puts us into Lesson Select state
         const overlay = document.getElementById('start-overlay');
         if (overlay) {
-            unlockAudio();
-            overlay.style.opacity = '0';
-            setTimeout(() => {
-                overlay.remove();
-                Game.showLessonSelect();
-            }, 300);
+            overlay.remove();
+            Game.init(true);
         }
+
     } catch (error) {
         console.error('App initialization failed:', error);
     }

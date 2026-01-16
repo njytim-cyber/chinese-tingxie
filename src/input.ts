@@ -15,6 +15,7 @@ import type { InputHandler, InputResult } from './types';
 export class HanziWriterInput implements InputHandler {
     private writers: any[] = []; // HanziWriter instances
     private charElements: HTMLElement[] = [];
+    private indicatorsContainer: HTMLElement | null = null;
     private completedChars = 0;
     private mistakesMade = 0;
     private hintUsed = false;
@@ -22,12 +23,19 @@ export class HanziWriterInput implements InputHandler {
     private currentWord: PracticeWord | null = null;
     private currentCharIndex = 0;
     private validCharIndices: number[] = []; // Non-punctuation character indices
+    private chunks: { start: number; end: number; text: string }[] = [];
+    private currentChunkIndex = 0;
     // private navContainer: HTMLElement | null = null;
+
+    // Track event listeners for cleanup
+    private touchStartListener: ((e: TouchEvent) => void) | null = null;
+    private touchEndListener: ((e: TouchEvent) => void) | null = null;
 
 
     onComplete?: (result: InputResult) => void;
     onCharComplete?: (index: number) => void;
     onMistake?: (index: number) => void;
+    onChunkChange?: (chunkText: string, completedText: string) => void;
 
     private gridState: 'tian' | 'mi' | 'blank' = 'tian';
 
@@ -58,6 +66,38 @@ export class HanziWriterInput implements InputHandler {
                 this.validCharIndices.push(index);
             }
         });
+
+        // Split into chunks if sentence is long or contains punctuation
+        this.chunks = [];
+        const splitRegex = /([，。！？、：；“”‘’（）《》]+)/;
+        const parts = word.term.split(splitRegex);
+        let currentStart = 0;
+
+        for (let i = 0; i < parts.length; i += 2) {
+            const phrase = parts[i];
+            const punct = parts[i + 1] || "";
+            const fullChunk = phrase + punct;
+
+            if (phrase.trim()) {
+                this.chunks.push({
+                    start: currentStart,
+                    end: currentStart + phrase.length,
+                    text: phrase
+                });
+            }
+            currentStart += fullChunk.length;
+        }
+
+        // If no chunks were created (e.g. no punctuation), treat whole word as one chunk
+        if (this.chunks.length === 0) {
+            this.chunks.push({
+                start: 0,
+                end: word.term.length,
+                text: word.term
+            });
+        }
+
+        this.currentChunkIndex = 0;
 
         // Character boxes container (Directly utilize container for flex layout)
         const charData: { char: string; index: number; element: HTMLElement }[] = [];
@@ -93,6 +133,29 @@ export class HanziWriterInput implements InputHandler {
             this.charElements.push(charBox);
             charData.push({ char, index, element: div });
         });
+
+        // Add indicators for navigation
+        this.indicatorsContainer = document.createElement('div');
+        this.indicatorsContainer.className = 'dictation-indicators';
+        this.indicatorsContainer.id = 'spelling-indicators';
+        container.appendChild(this.indicatorsContainer);
+
+        // Add swipe support on indicators
+        let touchStartX = 0;
+        this.touchStartListener = (e: TouchEvent) => {
+            touchStartX = e.touches[0].clientX;
+        };
+        this.touchEndListener = (e: TouchEvent) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) this.nextCharacter();
+                else this.previousCharacter();
+            }
+        };
+
+        this.indicatorsContainer.addEventListener('touchstart', this.touchStartListener, { passive: true });
+        this.indicatorsContainer.addEventListener('touchend', this.touchEndListener, { passive: true });
 
         // Dynamic import for HanziWriter
         try {
@@ -180,15 +243,70 @@ export class HanziWriterInput implements InputHandler {
             }
         });
 
+        // Trigger chunk change callback
+        if (this.onChunkChange) {
+            const currentText = this.getCurrentChunkText();
+            const completedText = this.getCompletedText();
+            this.onChunkChange(currentText, completedText);
+        }
+
+        // Update Indicators (Dots for CURRENT CHUNK ONLY)
+        if (this.indicatorsContainer) {
+            this.indicatorsContainer.innerHTML = '';
+
+            const chunk = this.chunks[this.currentChunkIndex];
+            const chunkCharIndices = this.validCharIndices.filter(idx => idx >= chunk.start && idx < chunk.end);
+
+            chunkCharIndices.forEach((globalIndex) => {
+                const dot = document.createElement('div');
+                const isCurrent = this.validCharIndices[this.currentCharIndex] === globalIndex;
+                dot.className = `indicator-dot ${isCurrent ? 'active' : ''}`;
+                dot.style.cursor = 'pointer';
+
+                // Jump to the index in validCharIndices
+                dot.onclick = () => {
+                    const targetIdx = this.validCharIndices.indexOf(globalIndex);
+                    if (targetIdx !== -1) {
+                        this.currentCharIndex = targetIdx;
+                        this.updateCarouselView();
+                    }
+                };
+
+                // If it's correct, show a tick or different color
+                // We map globalIndex back to the index in charElements (which should match if we didn't skip punct in charElements)
+                // Wait, charElements skips punctuation. Let's find the correct index in charElements.
+                // this.charElements is built in order of non-punctuation chars.
+                const charElementIndex = this.validCharIndices.indexOf(globalIndex);
+                if (this.charElements[charElementIndex]?.querySelector('.char-slot')?.classList.contains('success')) {
+                    dot.classList.add('correct');
+                }
+
+                this.indicatorsContainer?.appendChild(dot);
+            });
+
+            // If there are multiple chunks, add a chunk indicator/counter
+            if (this.chunks.length > 1) {
+                const counter = document.createElement('div');
+                counter.className = 'chunk-counter';
+                counter.textContent = `${this.currentChunkIndex + 1} / ${this.chunks.length}`;
+                counter.style.fontSize = '0.8rem';
+                counter.style.marginTop = '10px';
+                counter.style.opacity = '0.7';
+                this.indicatorsContainer.appendChild(counter);
+            }
+        }
+
         // Update Global Pinyin Display
         const pinyinDisplay = document.getElementById('pinyin-display');
         if (pinyinDisplay && this.currentWord) {
             const pinyinSegments = this.currentWord.pinyin.split(' ');
-            // Need to map visual index back to original index if there was punctuation
-            // But simplified logic: assume pinyin segments match valid chars for now 
-            // OR better: use visual index
             const charIndex = this.validCharIndices[this.currentCharIndex];
-            pinyinDisplay.textContent = pinyinSegments[charIndex] || '';
+            // Add bounds checking for array access
+            if (charIndex !== undefined && charIndex >= 0 && charIndex < pinyinSegments.length) {
+                pinyinDisplay.textContent = pinyinSegments[charIndex] || '';
+            } else {
+                pinyinDisplay.textContent = '';
+            }
         }
 
         // Update Progress Bar
@@ -201,8 +319,7 @@ export class HanziWriterInput implements InputHandler {
         // Update Definition (Placeholder if empty)
         const defDisplay = document.getElementById('definition-display');
         if (defDisplay && this.currentWord) {
-            // Assuming definition is on term, or we use placeholder
-            defDisplay.textContent = (this.currentWord as any).definition || ''; // Need to add definition to types
+            defDisplay.textContent = (this.currentWord as any).definition || '';
         }
     }
 
@@ -210,6 +327,20 @@ export class HanziWriterInput implements InputHandler {
      * Clean up resources
      */
     destroy(): void {
+        // Clean up event listeners before removing DOM elements
+        if (this.indicatorsContainer) {
+            if (this.touchStartListener) {
+                this.indicatorsContainer.removeEventListener('touchstart', this.touchStartListener);
+                this.touchStartListener = null;
+            }
+            if (this.touchEndListener) {
+                this.indicatorsContainer.removeEventListener('touchend', this.touchEndListener);
+                this.touchEndListener = null;
+            }
+            this.indicatorsContainer.remove();
+            this.indicatorsContainer = null;
+        }
+
         this.writers.forEach(writer => {
             try {
                 if (writer && typeof writer.cancelQuiz === 'function') {
@@ -293,14 +424,35 @@ export class HanziWriterInput implements InputHandler {
             this.onCharComplete(index);
         }
 
-        // Auto-advance to next character
+        // Auto-advance logic
         if (this.currentCharIndex < this.validCharIndices.length - 1) {
-            setTimeout(() => {
-                this.currentCharIndex++;
-                this.updateCarouselView();
-            }, 600); // Slightly longer delay to see the success animation
+            const nextGlobalIdx = this.validCharIndices[this.currentCharIndex + 1];
+            const currentChunk = this.chunks[this.currentChunkIndex];
+
+            if (nextGlobalIdx < currentChunk.end) {
+                // Next char in SAME chunk
+                setTimeout(() => {
+                    this.currentCharIndex++;
+                    this.updateCarouselView();
+                }, 600);
+            } else {
+                // End of chunk reached
+                if (this.currentChunkIndex < this.chunks.length - 1) {
+                    // Advance to NEXT chunk
+                    setTimeout(() => {
+                        this.currentChunkIndex++;
+                        this.currentCharIndex++;
+                        this.updateCarouselView();
+                        // Optional: play audio for next chunk? 
+                        // For spelling, we usually play the whole sentence, but let's stick to dictation logic if possible.
+                    }, 600);
+                } else {
+                    // All chars in all chunks done
+                    setTimeout(() => this.notifyComplete(), 600);
+                }
+            }
         } else if (this.completedChars === this.validCharIndices.length) {
-            // All done - auto complete on last char
+            // All done (last char of last chunk)
             setTimeout(() => this.notifyComplete(), 600);
         }
 
@@ -365,6 +517,77 @@ export class HanziWriterInput implements InputHandler {
                 slot.classList.add(`grid-${this.gridState}`);
             }
         });
+    }
+
+    /**
+     * Reveal current character
+     */
+    revealCharacter(): void {
+        this.hintUsed = true;
+
+        const writerIndex = this.currentCharIndex;
+        const writer = this.writers[writerIndex];
+        if (!writer) return;
+
+        writer.showCharacter();
+
+        // Hide after 1 second to give user a "glimpse"
+        setTimeout(() => {
+            try {
+                (writer as any).hideCharacter?.();
+            } catch (e) {
+                // Ignore
+            }
+        }, 1000);
+
+        // Mark hint as used for penalty in SRS
+        this.mistakesMade += 2; // Penalty for using reveal
+
+        // No auto-advance, user must write it out
+        this.updateCarouselView();
+    }
+
+    /**
+     * Get all chunks
+     */
+    getChunks(): { start: number; end: number; text: string }[] {
+        return this.chunks;
+    }
+
+    /**
+     * Get text of current active chunk
+     */
+    getCurrentChunkText(): string {
+        if (this.chunks.length > 0 && this.currentChunkIndex < this.chunks.length) {
+            return this.chunks[this.currentChunkIndex].text;
+        }
+        return this.currentWord ? this.currentWord.term : '';
+    }
+
+    /**
+     * Get text completed SO FAR (for UI display)
+     */
+    private getCompletedText(): string {
+        if (!this.currentWord) return '';
+        if (this.chunks.length <= 1) return ''; // Don't show partial for single chunk words
+
+        // Return text of all PREVIOUS chunks
+        let text = '';
+        for (let i = 0; i < this.currentChunkIndex; i++) {
+            // Include punctuation between chunks if needed (simplified: just concat chunk text for now, 
+            // but chunks usually include punctuation if regex split correctly? 
+            // Our regex split kept punctuation as separate parts then merged. 
+            // Wait, logic says: fullChunk = phrase + punct. 
+            // this.chunks stores 'phrase', but effectively we skip punctuation in indices.
+            // Let's reconstruct from Chunks data or source word?)
+
+            // Actually, best to rebuild from source word using indices.
+            const chunk = this.chunks[i];
+            // We want the text including punctuation that followed it
+            const nextChunkStart = (i + 1 < this.chunks.length) ? this.chunks[i + 1].start : this.currentWord.term.length;
+            text += this.currentWord.term.substring(chunk.start, nextChunkStart);
+        }
+        return text;
     }
 }
 

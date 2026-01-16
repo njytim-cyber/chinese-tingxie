@@ -23,6 +23,7 @@ export interface Phrase {
 export interface Lesson {
     id: number;
     title: string;
+    category?: string;
     phrases: Phrase[];
 }
 
@@ -35,6 +36,14 @@ export interface WordState {
     timesMistaken: number;
 }
 
+export interface CharacterState {
+    char: string;
+    level: number; // 0-5 (0=New, 5=Mastered)
+    nextReview: string;
+    lastPracticed: string;
+    stagesCompleted: number; // For tracking 5-stage progress within a session (or persistent for long term)
+}
+
 export interface PlayerStats {
     totalXP: number;
     dailyStreak: number;
@@ -44,6 +53,7 @@ export interface PlayerStats {
     totalSessions: number;
     achievements: string[];
     currentLessonId: number;
+    charsMastery?: Record<string, CharacterState>; // Character-level tracking
 }
 
 export interface Achievement {
@@ -106,12 +116,28 @@ export interface InputHandler {
      * Toggle the grid style (Tian -> Mi -> Blank)
      */
     toggleGrid?(): void;
+    /**
+     * Reveal current character
+     */
+    revealCharacter?(): void;
+    /**
+     * Get chunks if input is split (for audio syncing)
+     */
+    getChunks?(): { start: number; end: number; text: string }[];
+    /**
+     * Get text of current active chunk
+     */
+    getCurrentChunkText?(): string;
+    /**
+     * Callback when active chunk changes (for auto-audio)
+     */
+    onChunkChange?: (chunkText: string, completedText: string) => void;
 }
 
 /**
  * Game view types
  */
-export type GameView = 'lesson-select' | 'practice-select' | 'progress' | 'game' | 'dictation-select' | 'dictation';
+export type GameView = 'lesson-select' | 'practice-select' | 'progress' | 'game' | 'dictation-select' | 'dictation' | 'xizi-setup';
 
 /**
  * Progress dot status
@@ -219,6 +245,17 @@ export interface IUIManager {
     toggleActiveGameUI(visible: boolean): void;
     transitionView(renderFn: () => void): void;
     updateDashboardStats(): void;
+    updateHud(score: number, streak: number): void;
+    toggleAvatar(visible: boolean): void;
+    showLessonSelect(onSelect: (id: number, limit: number, mode?: 'tingxie' | 'xizi') => void, onProgressClick?: () => void, onPracticeClick?: () => void): void;
+    showProgress(): void;
+    showDictationSelect(onStart: (passage: any) => void): void;
+    showDictationResult(score: number, total: number, onContinue: () => void): void;
+    showFeedback(text: string, color: string): void;
+    updateStatsDisplay(): void;
+    showSessionComplete(wordsCompleted: number, score: number, startTime: number, onRestart: () => void, onShare: () => void): void;
+    showMenu(onResume: () => void, onRestart: () => void): void;
+    showConfirm(title: string, message: string, onConfirm: () => void): void;
 }
 
 // Dictation Types

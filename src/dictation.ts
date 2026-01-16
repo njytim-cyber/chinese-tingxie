@@ -212,7 +212,8 @@ export class DictationManager {
                     onPlayAudio: () => this.toggleAudio(),
                     onToggleGrid: () => this.ui.dictationRenderer.toggleGrid(),
                     onShowHint: () => this.showHint(),
-                    onReveal: () => this.revealCurrentChunk()
+                    onReveal: () => this.revealCurrentChunk(),
+                    onJumpTo: (index: number) => this.goToChar(index)
                 }
             );
 
@@ -276,6 +277,20 @@ export class DictationManager {
     }
 
     /**
+     * Navigate to a specific character
+     */
+    private goToChar(index: number): void {
+        if (index >= 0 && index < this.validCharIndices.length) {
+            this.currentCharIndex = index;
+            this.ui.dictationRenderer.updateCarouselView(
+                this.currentCharIndex,
+                this.validCharIndices,
+                this.charBoxes
+            );
+        }
+    }
+
+    /**
      * Initialize HanziWriters for current chunk
      */
     private initWritersForChunk(): void {
@@ -302,9 +317,9 @@ export class DictationManager {
                     height: 234,
                     padding: 15,
                     showOutline: false, // Unseen dictation mode
-                    strokeColor: '#38bdf8',
-                    radicalColor: '#f472b6',
-                    outlineColor: '#334155',
+                    strokeColor: '#2B2B2B', // Synchronized with spelling mode
+                    radicalColor: '#C44032',
+                    outlineColor: '#E5E0D6',
                     drawingWidth: 12,
                     showCharacter: false,
                     drawingFadeDuration: 300,
@@ -501,7 +516,7 @@ export class DictationManager {
     }
 
     /**
-     * Reveal current chunk answers
+     * Reveal current chunk characters temporarily
      */
     revealCurrentChunk(): void {
         this.notifyReveal();
@@ -509,16 +524,17 @@ export class DictationManager {
         // Show all characters in current chunk
         this.writers.forEach(writer => {
             writer.showCharacter();
+            // Hide after 1 second to give user a "glimpse"
+            setTimeout(() => {
+                try {
+                    (writer as any).hideCharacter?.();
+                } catch (e) {
+                    // Fallback or ignore
+                }
+            }, 1000);
         });
 
-        // Logic: Mark as populated
-        const chunk = this.chunks[this.currentChunkIndex];
-        for (let i = chunk.start; i < chunk.end; i++) {
-            const box = this.charBoxes[i];
-            if (box.isBlank) {
-                box.isCorrect = true; // Mark as "correct" so nextChunk checks pass
-            }
-        }
+        // DO NOT mark as correct, user must still write it out
     }
 
     destroy(): void {
@@ -543,6 +559,15 @@ export class DictationManager {
  * Load dictation data
  */
 export async function loadDictationData(): Promise<DictationData> {
-    const response = await fetch('/dictation.json');
-    return response.json();
+    try {
+        const response = await fetch('/dictation.json');
+        if (!response.ok) {
+            throw new Error(`Failed to load dictation data: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error loading dictation data:', error);
+        throw new Error('无法加载听写数据，请检查网络连接');
+    }
 }

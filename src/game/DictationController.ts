@@ -36,10 +36,13 @@ export class DictationController {
         container.innerHTML = '';
         container.style.opacity = '1'; // Ensure visible
 
-        // Ensure HUD is in correct state (transparent bg for seamless feel)
-        this.ui.toggleMainHeader(true);
-        this.ui.toggleBackBtn(true);
+        // Ensure HUD is in correct state (minimal game HUD)
+        this.ui.toggleActiveGameUI(true);
+        this.ui.showControls();
+        this.ui.toggleAvatar(false); // Remove avatar from dictation input page
         this.ui.setHudTransparent(false);
+        this.ui.toggleBackBtn(true);
+        this.ui.updateHeaderTitle(''); // No title in dictation game
 
         // Hide standard HUD controls if they exist (Dictation manages its own)
         const hudControls = document.querySelector('.hud-controls');
@@ -52,17 +55,31 @@ export class DictationController {
         }
 
         // Dynamically import and create dictation manager
-        const { DictationManager } = await import('../dictation');
-        const dictation = new DictationManager(this.ui);
-        this.dictationManager = dictation;
+        try {
+            const { DictationManager } = await import('../dictation');
+            const dictation = new DictationManager(this.ui);
+            this.dictationManager = dictation;
 
+            dictation.onComplete = (score, total) => {
+                this.handleComplete(dictation, passage, score, total, sessionStartTime);
+            };
 
+            dictation.init(passage, container);
+        } catch (error) {
+            console.error('Failed to load DictationManager:', error);
+            // Log full stack trace
+            if (error instanceof Error) {
+                console.error(error.stack);
+            }
+            this.ui.showFeedback('加载练习模块失败，请检查控制台', '#ef4444');
+            // Restore UI state or go back
+            this.ui.toggleActiveGameUI(false);
+            const hudControls = document.querySelector('.hud-controls');
+            if (hudControls) (hudControls as HTMLElement).style.display = '';
 
-        dictation.onComplete = (score, total) => {
-            this.handleComplete(dictation, passage, score, total, sessionStartTime);
-        };
-
-        dictation.init(passage, container);
+            // FIXME: Commenting out redirection to debug the error
+            // this.onSelectCtx();
+        }
     }
 
     private handleComplete(

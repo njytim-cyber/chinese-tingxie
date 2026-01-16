@@ -16,7 +16,7 @@ export class StatsRenderer {
      * Show progress view with Tabs (Progress & Achievements)
      */
     show(): void {
-        this.manager.updateHeaderTitle('心织笔耕');
+        this.manager.updateHeaderTitle('学习进度');
         this.manager.toggleMainHeader(true);
         this.manager.toggleBackBtn(false);
         this.manager.toggleHeaderStats(false);
@@ -24,12 +24,10 @@ export class StatsRenderer {
         const content = document.createElement('div');
         content.className = 'progress-view';
 
-        const title = document.createElement('h2');
-        title.className = 'screen-title';
-        title.innerText = '学习进度';
-        content.appendChild(title);
+        // Title removed as it's now in the header
 
-        // 1. Hero Section (Level & Main Stats)
+
+        // 1. Consolidated Hero Card
         const level = getLevel();
         const levelProgress = Math.min(100, getLevelProgress());
         const stats = getStats();
@@ -38,42 +36,35 @@ export class StatsRenderer {
         heroCard.className = 'progress-hero-card';
         heroCard.innerHTML = `
             <div class="hero-header">
-                <div class="hero-level-badge">Lv.${level}</div>
-                <div class="hero-xp-text">${Math.floor(stats.totalXP)} XP / 下一级</div>
+                <div class="hero-level-stamp">Lv.${level}</div>
+                <div class="hero-overall-meta">
+                    已学 ${stats.wordsLearned} 字 · 成就 ${Math.floor(stats.totalXP / 100)}
+                </div>
             </div>
+            
+            <div class="hero-main">
+                <div class="hero-streak">
+                    <span class="hero-streak-num">${stats.dailyStreak}</span>
+                    <span class="hero-streak-text">天连胜 <span class="stat-emoji">🔥</span></span>
+                </div>
+                <div class="hero-xp-info">
+                    ${Math.floor(stats.totalXP)} XP
+                </div>
+            </div>
+
             <div class="hero-xp-bar-container">
                 <div class="hero-xp-bar">
                     <div class="hero-xp-fill" style="width: ${levelProgress}%"></div>
                 </div>
             </div>
-            <div class="hero-stats-grid">
-                <div class="hero-stat-item">
-                    <span class="hero-stat-val">🔥 ${stats.dailyStreak}</span>
-                    <span class="hero-stat-label">连胜</span>
-                </div>
-                <div class="hero-stat-item">
-                    <span class="hero-stat-val">⭐ ${stats.wordsLearned}</span>
-                    <span class="hero-stat-label">已学</span>
-                </div>
-                <div class="hero-stat-item">
-                    <span class="hero-stat-val">🏆 ${Math.floor(stats.totalXP / 100)}</span>
-                    <span class="hero-stat-label">成就</span>
-                </div>
+
+            <div class="hero-divider"></div>
+
+            <div id="daily-summary-footer" class="hero-daily-footer">
+                <!-- Populated by updateDailySummaryView -->
             </div>
         `;
         content.appendChild(heroCard);
-
-        // 2. Daily Summary Grid
-        const summarySection = document.createElement('div');
-        summarySection.className = 'section-header';
-        summarySection.innerHTML = `<h3>今日概览</h3>`;
-        content.appendChild(summarySection);
-
-        const dailyDeck = document.createElement('div');
-        dailyDeck.id = 'daily-summary-deck';
-        dailyDeck.className = 'stats-grid-2'; // 2-column grid
-        // Content rendered by helper
-        content.appendChild(dailyDeck);
 
         // 3. Recent Activity List
         const activitySection = document.createElement('div');
@@ -86,14 +77,36 @@ export class StatsRenderer {
         activityList.innerHTML = this.renderActivityLogs();
         content.appendChild(activityList);
 
+        // 4. Character Mastery Section (New)
+        const charSection = document.createElement('div');
+        charSection.className = 'section-header';
+        charSection.innerHTML = `<h3>汉字精通</h3>`;
+        content.appendChild(charSection);
+
+        const charGrid = document.createElement('div');
+        charGrid.className = 'char-mastery-grid';
+        charGrid.innerHTML = this.renderCharacterMastery();
+        content.appendChild(charGrid);
+
+
+
         this.manager.transitionView(() => {
             const app = document.querySelector('.game-stage');
             if (app) {
-                // Remove existing list if any
-                const existingList = app.querySelector('.lesson-select, .dictation-lesson-select, .progress-view');
-                if (existingList) existingList.remove();
-
+                // Clear all game UI and content to prevent overlap
                 this.manager.toggleActiveGameUI(false);
+
+                // Remove all existing views
+                const existingViews = app.querySelectorAll('.lesson-select, .dictation-lesson-select, .progress-view, #writing-card, .bottom-action-area, .dictation-container');
+                existingViews.forEach(view => view.remove());
+
+                // Clear footer progress bar from dictation mode
+                const footerProgress = document.getElementById('footer-progress');
+                if (footerProgress) {
+                    footerProgress.innerHTML = '';
+                    footerProgress.style.display = 'none';
+                }
+
                 app.appendChild(content);
             }
 
@@ -129,60 +142,23 @@ export class StatsRenderer {
         });
         const accuracy = totalWords > 0 ? Math.round((correctWords / totalWords) * 100) : 0;
 
-        return `
-            <div class="stat-card card-effort">
-                <div class="stat-icon">⏱️</div>
-                <div class="stat-info">
-                    <div class="stat-value">${minutes}<span class="unit">分</span></div>
-                    <div class="stat-label">今日时长</div>
-                </div>
-            </div>
-            <div class="stat-card card-count">
-                <div class="stat-icon">📚</div>
-                <div class="stat-info">
-                    <div class="stat-value">${todayLogs.length}<span class="unit">次</span></div>
-                    <div class="stat-label">完成练习</div>
-                </div>
-            </div>
-            <div class="stat-card card-accuracy">
-                <div class="stat-icon">🎯</div>
-                <div class="stat-info">
-                    <div class="stat-value">${accuracy}<span class="unit">%</span></div>
-                    <div class="stat-label">准确率</div>
-                </div>
-            </div>
-            <div class="stat-card card-words">
-                <div class="stat-icon">✍️</div>
-                <div class="stat-info">
-                    <div class="stat-value">${totalWords}<span class="unit">字</span></div>
-                    <div class="stat-label">复习字数</div>
-                </div>
-            </div>
-        `;
+        if (todayLogs.length === 0) {
+            return `开始第一课以查看今日统计！`;
+        }
+        return `今日: ${minutes}分 · ${accuracy}% 准确率 · ${totalWords}字`;
     }
 
     /**
      * Update the daily summary view in place
      */
     updateDailySummaryView(): void {
-        const deck = document.getElementById('daily-summary-deck');
-        if (deck) {
-            deck.innerHTML = this.renderDailySummaryHTML();
+        const footer = document.getElementById('daily-summary-footer');
+        if (footer) {
+            footer.innerHTML = this.renderDailySummaryHTML();
         }
     }
 
-    /**
-     * Setup handlers for daily summary card (swipe and click)
-     */
-    setupDailySummaryHandlers(): void {
-        const deck = document.getElementById('daily-summary-deck');
-        if (!deck) return;
 
-        deck.onclick = () => {
-            this.currentDailyStatsIndex = (this.currentDailyStatsIndex + 1) % 2;
-            this.updateDailySummaryView();
-        };
-    }
 
     /**
      * Render activity logs
@@ -201,11 +177,11 @@ export class StatsRenderer {
             return `
                 <div class="activity-item">
                     <div class="activity-icon ${log.mode === 'dictation' ? 'icon-dictation' : 'icon-spelling'}">
-                        ${log.mode === 'dictation' ? '📝' : '✍️'}
+                        <span class="stat-emoji">${log.mode === 'dictation' ? '📝' : '✍️'}</span>
                     </div>
                     <div class="activity-info">
                         <div class="activity-title">${log.lessonTitle}</div>
-                        <div class="activity-time">${timeStr} · ${log.mode === 'dictation' ? '默写' : '听写'}</div>
+                        <div class="activity-time">${timeStr} · ${log.mode === 'dictation' ? '篇章' : '听写'}</div>
                     </div>
                     <div class="activity-score ${log.totalScore >= 80 ? 'good' : ''}">
                         ${Math.round(log.totalScore)}%
@@ -213,5 +189,22 @@ export class StatsRenderer {
                 </div>
             `;
         }).join('');
+    }
+
+    private renderCharacterMastery(): string {
+        const stats = getStats();
+        const mastery = stats.charsMastery || {};
+        const chars = Object.values(mastery).sort((a, b) => b.level - a.level || a.char.localeCompare(b.char));
+
+        if (chars.length === 0) {
+            return `<div class="empty-state">完成习字练习以追踪汉字进度</div>`;
+        }
+
+        return chars.map(c => `
+            <div class="char-mastery-item level-${c.level}">
+                <div class="char-mastery-seal">${c.char}</div>
+                <div class="char-mastery-level">Lv.${c.level}</div>
+            </div>
+        `).join('');
     }
 }

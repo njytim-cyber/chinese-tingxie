@@ -19,6 +19,7 @@ import { HanziWriterInput } from './input';
 import { initDOMCache, type GameState, type DOMCache, type InputHandler, type DictationPassage } from './types';
 import { GameLogic } from './game/GameLogic';
 import { DictationController } from './game/DictationController';
+import { XiziController } from './game/XiziController';
 
 const PLAYER_NAME_KEY = 'tingxie_player_name';
 
@@ -33,6 +34,7 @@ let inputHandler: InputHandler;
 
 // Dictation Controller instance
 let dictationController: DictationController | null = null;
+let xiziController: XiziController | null = null;
 
 // Game state
 const state: GameState = {
@@ -81,6 +83,7 @@ export const Game = {
             inputHandler.onCharComplete = handleCharComplete;
             inputHandler.onMistake = handleMistake;
             inputHandler.onComplete = handleInputComplete;
+            inputHandler.onChunkChange = handleChunkChange;
         }
 
         // Always reset session stats
@@ -131,6 +134,13 @@ export const Game = {
      */
     setInputMode(_mode: string): void {
         // No-op
+    },
+
+    /**
+     * Update header title
+     */
+    updateHeaderTitle(title: string): void {
+        ui.updateHeaderTitle(title);
     },
 
     /**
@@ -197,7 +207,7 @@ export const Game = {
             }
 
             ui.showLessonSelect(
-                (lessonId, wordLimit) => Game.selectLesson(lessonId, wordLimit),
+                (lessonId, wordLimit, mode) => Game.selectLesson(lessonId, wordLimit, mode),
                 () => Game.showProgress(),
                 () => Game.showPracticeSelect()
             );
@@ -214,8 +224,15 @@ export const Game = {
     /**
      * Select a lesson and start practicing
      */
-    selectLesson(lessonId: number, wordLimit = 0): void {
+    selectLesson(lessonId: number, wordLimit = 0, mode: 'tingxie' | 'xizi' = 'tingxie'): void {
+        console.log(`Starting lesson ${lessonId} in ${mode} mode`);
         setCurrentLesson(lessonId);
+
+        if (mode === 'xizi') {
+            Game.startXizi(lessonId);
+            return;
+        }
+
         let words = getWordsForPractice();
 
         if (wordLimit > 0 && words.length > wordLimit) {
@@ -238,6 +255,7 @@ export const Game = {
 
         // Update lesson display in HUD
         const lesson = getCurrentLesson();
+        ui.updateHeaderTitle(lesson.title);
         if (domCache.lessonLabel) {
             domCache.lessonLabel.textContent = lesson.title;
         }
@@ -347,6 +365,8 @@ export const Game = {
             location.reload();
         } else if (state.currentView === 'dictation') {
             Game.showDictationSelect(); // Back to dictation select
+        } else if (state.currentView === 'game') {
+            Game.showLessonSelect(); // Back to spelling select (with confirmation)
         } else {
             Game.showMenu();
         }
@@ -371,6 +391,16 @@ export const Game = {
         }
 
         if (!state.currentWord) return;
+
+        // Check for active chunk
+        if (inputHandler && inputHandler.getCurrentChunkText) {
+            const chunkText = inputHandler.getCurrentChunkText();
+            if (chunkText) {
+                speakWord(chunkText);
+                return;
+            }
+        }
+
         speakWord(state.currentWord.term);
     },
 
@@ -440,6 +470,11 @@ export const Game = {
         console.log('Game.startDictation called with passage:', passage.id, passage.title);
         state.currentView = 'dictation';
 
+        // Update header title to passage name (Cleared for game)
+        ui.updateHeaderTitle('');
+        ui.toggleMainHeader(true);
+        ui.toggleBackBtn(true);
+
         if (!dictationController) {
             console.log('Creating new DictationController');
             dictationController = new DictationController(ui, () => this.showDictationSelect());
@@ -459,9 +494,12 @@ export const Game = {
         // but triggered via buttons handled there. 
         // If this is called from keyboard shortcut, we redirect.
         if (state.currentView === 'dictation' && dictationController) {
-            // Logic moved to Controller/Manager interactions via UI buttons.
-            // For simplicity, we can ignore keyboard reveal in dictation or forward it if needed.
-            // But existing code had 'revealBtn.onclick', not Game.revealPhrase().
+            return;
+        }
+
+        // In spelling mode, we prefer to reveal the character in-place
+        if (state.currentView === 'game' && inputHandler && inputHandler.revealCharacter) {
+            inputHandler.revealCharacter();
             return;
         }
 
@@ -498,6 +536,29 @@ export const Game = {
         modal.addEventListener('click', dismiss);
         document.addEventListener('keydown', dismiss);
     },
+
+    /**
+     * Start Xizi (Character Practice) Mode
+     */
+    async startXizi(lessonId: number): Promise<void> {
+        state.currentView = 'game'; // Re-use game view for now, or add 'xizi' view
+
+        // Hide standard game UI elements that might conflict
+        ui.toggleActiveGameUI(false);
+        ui.toggleMainHeader(true);
+        ui.toggleBackBtn(true);
+
+        // Use lesson title
+        const lesson = getCurrentLesson();
+        ui.updateHeaderTitle(lesson.title);
+
+        if (!xiziController) {
+            xiziController = new XiziController(ui, () => Game.showLessonSelect());
+        }
+
+        state.sessionStartTime = Date.now();
+        await xiziController.start(lessonId, state.sessionStartTime);
+    }
 };
 
 /**
@@ -517,6 +578,7 @@ function loadLevel(): void {
 
     // UI Reset
     ui.clearWritingArea();
+    ui.gameRenderer.updateCompletedText(''); // Reset completed text
     ui.hideNextButton();
     ui.resetFeedback();
 
@@ -594,6 +656,20 @@ function handleInputComplete(result?: { success: boolean; mistakeCount: number; 
         return;
     }
     handleWordSuccess(result);
+}
+
+/**
+ * Handle chunk change (autplay audio and update UI)
+ */
+function handleChunkChange(chunkText: string, completedText: string): void {
+    // Update completed text UI
+    ui.gameRenderer.updateCompletedText(completedText);
+
+    // Play audio for new chunk
+    // We delay slightly to allow UI to settle
+    setTimeout(() => {
+        speakWord(chunkText);
+    }, 200);
 }
 
 /**

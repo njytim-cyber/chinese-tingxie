@@ -4,6 +4,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 1,
         title: "一起看电视",
+        category: "小学三年级",
         phrases: [
             { term: "播放新闻", pinyin: "bō fàng xīn wén", definition: "Broadcast news" },
             { term: "刚才", pinyin: "gāng cái", definition: "Just now; a moment ago" },
@@ -25,6 +26,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 2,
         title: "我们是兄弟姐妹",
+        category: "小学三年级",
         phrases: [
             { term: "苹果", pinyin: "píng guǒ" },
             { term: "害怕", pinyin: "hài pà" },
@@ -51,6 +53,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 3,
         title: "妈妈，对不起",
+        category: "小学三年级",
         phrases: [
             { term: "警察", pinyin: "jǐng chá" },
             { term: "煮饭", pinyin: "zhǔ fàn" },
@@ -74,6 +77,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 4,
         title: "今天我值日",
+        category: "2026 纲要",
         phrases: [
             { term: "保证完成", pinyin: "bǎo zhèng wán chéng" },
             { term: "皱眉", pinyin: "zhòu méi" },
@@ -98,6 +102,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 5,
         title: "我不怕打针",
+        category: "2026 纲要",
         phrases: [
             { term: "课室", pinyin: "kè shì" },
             { term: "打针", pinyin: "dǎ zhēn" },
@@ -120,6 +125,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 6,
         title: "我要参加什么活动呢",
+        category: "2026 纲要",
         phrases: [
             { term: "所以", pinyin: "suǒ yǐ" },
             { term: "辛苦", pinyin: "xīn kǔ" },
@@ -144,6 +150,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 7,
         title: "他的脸红了",
+        category: "2026 纲要",
         phrases: [
             { term: "耐心", pinyin: "nài xīn" },
             { term: "车厢", pinyin: "chē xiāng" },
@@ -164,6 +171,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 8,
         title: "马路如虎口",
+        category: "2026 纲要",
         phrases: [
             { term: "另外", pinyin: "lìng wài" },
             { term: "流血", pinyin: "liú xiě" },
@@ -184,6 +192,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 9,
         title: "爱心无障碍",
+        category: "2026 纲要",
         phrases: [
             { term: "炸鸡", pinyin: "zhá jī" },
             { term: "饮料", pinyin: "yǐn liào" },
@@ -205,6 +214,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 10,
         title: "这样才对",
+        category: "小学三年级",
         phrases: [
             { term: "花洒", pinyin: "huā sǎ" },
             { term: "米粉", pinyin: "mǐ fěn" },
@@ -225,6 +235,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 11,
         title: "天天运动身体好",
+        category: "小学三年级",
         phrases: [
             { term: "欢呼", pinyin: "huān hū" },
             { term: "优秀", pinyin: "yōu xiù" },
@@ -247,6 +258,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 12,
         title: "我是小导游",
+        category: "小学三年级",
         phrases: [
             { term: "握手", pinyin: "wò shǒu" },
             { term: "士兵", pinyin: "shì bīng" },
@@ -268,6 +280,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 13,
         title: "美猴王孙悟空",
+        category: "小学三年级",
         phrases: [
             { term: "一只猴子", pinyin: "yì zhī hóu zi" },
             { term: "几个男孩", pinyin: "jǐ gè nán hái" },
@@ -288,6 +301,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 14,
         title: "这个主意真棒",
+        category: "小学三年级",
         phrases: [
             { term: "竟然", pinyin: "jìng rán" },
             { term: "来到厨房", pinyin: "lái dào chú fáng" },
@@ -308,6 +322,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 15,
         title: "一年四季好风光",
+        category: "小学三年级",
         phrases: [
             { term: "堆雪人", pinyin: "duī xuě rén" },
             { term: "寄出信件", pinyin: "jì chū xìn jiàn" },
@@ -327,6 +342,7 @@ export const LESSONS: Lesson[] = [
     {
         id: 16,
         title: "多彩的动物世界",
+        category: "小学三年级",
         phrases: [
             { term: "小丑", pinyin: "xiǎo chǒu" },
             { term: "蹲下", pinyin: "dūn xià" },

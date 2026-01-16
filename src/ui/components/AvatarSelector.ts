@@ -31,12 +31,18 @@ export class AvatarSelector {
         content.className = 'modal-content avatar-selector-card';
         content.style.maxWidth = '400px';
         content.innerHTML = `
-            <h2>选择头像</h2>
-            <div class="avatar-grid" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; max-height: 400px; overflow-y: auto;">
-                <!-- Avatars will be injected here -->
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 20px; position: relative;">
+                <!-- Standardized Back Button -->
+                <button id="close-avatar-btn" class="header-back-btn" style="opacity: 1; pointer-events: auto; position: static;">❮</button>
+                
+                <!-- Centered Title -->
+                <h2 style="margin: 0; font-size: 1.5rem; color: var(--tang-ink); font-weight: bold;">选择头像</h2>
+                
+                <!-- Spacer for Balance -->
+                <div style="width: 40px;"></div>
             </div>
-            <div class="modal-actions" style="margin-top: 15px;">
-                <button class="action-btn-secondary" id="close-avatar-btn">关闭</button>
+            <div class="avatar-grid" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; max-height: 400px; overflow-y: auto; padding-bottom: 10px;">
+                <!-- Avatars will be injected here -->
             </div>
         `;
 

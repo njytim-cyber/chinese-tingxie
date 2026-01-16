@@ -146,6 +146,17 @@ export class GameRenderer {
     }
 
     /**
+     * Update completed text display (for long sentence chunking)
+     */
+    updateCompletedText(text: string): void {
+        const el = document.getElementById('completed-text');
+        if (el) {
+            el.textContent = text;
+            el.style.display = text ? 'block' : 'none';
+        }
+    }
+
+    /**
      * Ensure Game View exists (recreate if nuked by LessonRenderer)
      */
     showGameView(): void {
@@ -179,6 +190,7 @@ export class GameRenderer {
         card.id = 'writing-card';
         card.innerHTML = `
             <div class="card-header">
+                <div id="completed-text" class="dictation-completed-phrases" style="min-height: 24px;"></div>
                 <div id="definition-display" class="definition-display"></div>
             </div>
             <div class="card-body">
@@ -198,9 +210,6 @@ export class GameRenderer {
                 </button>
                 <button class="tool-btn" id="btn-reveal" title="显示" aria-label="显示完整词语">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/></svg>
-                </button>
-                <button class="tool-btn" id="btn-skip" title="跳过" aria-label="跳过当前词语">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 4 15 12 5 20 5 4" fill="currentColor"/><line x1="19" y1="5" x2="19" y2="19" stroke-width="3"/></svg>
                 </button>
             </div>
             <div class="card-progress">
