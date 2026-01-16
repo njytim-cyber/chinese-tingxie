@@ -21,3 +21,19 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+
+# Temporary development files
+*.py
+nul
+*.backup
+
+# Documentation drafts
+NAVIGATION_MAP.md
+TABBED_NAVIGATION_IMPLEMENTATION.md
+
+# Reference materials
+*.pdf
+
+# Local settings
+.claude/settings.local.json
+tsconfig.tsbuildinfo
