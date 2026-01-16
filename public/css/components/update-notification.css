@@ -1,0 +1,137 @@
+/* Update Notification Component */
+.update-notification {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-120%);
+    z-index: 9999;
+    max-width: 90%;
+    width: 420px;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+}
+
+.update-notification.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.update-content {
+    background: linear-gradient(135deg, #FFFEFA 0%, #FFF8E7 100%);
+    border: 2px solid var(--tang-gold);
+    border-radius: var(--scholar-radius);
+    padding: 16px 20px;
+    box-shadow: 0 8px 32px rgba(169, 50, 38, 0.25);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.update-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.update-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.update-text strong {
+    display: block;
+    font-size: 1.1rem;
+    color: var(--tang-red);
+    margin-bottom: 4px;
+    font-weight: 700;
+}
+
+.update-text p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--tang-ink);
+}
+
+.update-btn {
+    background: var(--tang-red);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: var(--app-font);
+}
+
+.update-btn:hover {
+    background: var(--tang-red-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(169, 50, 38, 0.3);
+}
+
+.update-btn:active {
+    transform: translateY(0);
+}
+
+.update-dismiss {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: var(--tang-ink-light);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.update-dismiss:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--tang-ink);
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+    .update-notification {
+        top: 60px;
+        width: calc(100% - 30px);
+    }
+
+    .update-content {
+        padding: 12px 16px;
+        gap: 10px;
+    }
+
+    .update-icon {
+        font-size: 1.5rem;
+    }
+
+    .update-text strong {
+        font-size: 1rem;
+    }
+
+    .update-text p {
+        font-size: 0.85rem;
+    }
+
+    .update-btn {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+}

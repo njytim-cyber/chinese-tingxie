@@ -4,6 +4,7 @@
 
 // CSS Import (Modular)
 import '../public/css/index.css';
+import '../public/css/components/update-notification.css';
 
 // Module Imports
 import { initVoices, unlockAudio } from './audio';
@@ -11,6 +12,7 @@ import { initParticles } from './particles';
 import { injectGlobalSVGDefs } from './utils/svg';
 import { Game } from './game';
 import { saveDataSync } from './data';
+import { checkVersion } from './utils/versionChecker';
 
 // Expose to window for backward compatibility with onclick and debugging
 (window as any).Game = Game;
@@ -19,8 +21,11 @@ import { saveDataSync } from './data';
  * Initialize application
  */
 function init(): void {
-    console.log('Initializing app (v1.21.13)...');
+    console.log('Initializing app (v1.21.21)...');
     try {
+        // Check for app version updates
+        checkVersion();
+
         // Initialize global SVG definitions (for shared gradients)
         injectGlobalSVGDefs();
 
