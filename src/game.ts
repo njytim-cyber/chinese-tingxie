@@ -628,6 +628,9 @@ function loadLevel(): void {
     state.hintUsed = false;
     state.hintStrokeIndex = [];
 
+    // Reset chunk tracking so audio plays for first chunk of new word
+    lastChunkText = null;
+
     // UI Reset
     ui.clearWritingArea();
     ui.gameRenderer.updateCompletedText(''); // Reset completed text
@@ -650,10 +653,9 @@ function loadLevel(): void {
     // Update header progress bar
     ui.renderSpellingProgress(state.currentWordIndex, state.practiceWords.length);
 
-    // Play audio after animations settle
+    // Audio is now handled by handleChunkChange callback during init
+    // Scroll to the first active character if on mobile
     setTimeout(() => {
-        Game.playCurrentAudio();
-        // Scroll to the first active character if on mobile
         const activeChar = document.querySelector('.char-slot.active') as HTMLElement;
         if (activeChar) {
             scrollToActiveChar(activeChar);
@@ -716,15 +718,19 @@ function handleInputComplete(result?: { success: boolean; mistakeCount: number; 
 /**
  * Handle chunk change (autplay audio and update UI)
  */
+let lastChunkText: string | null = null;
 function handleChunkChange(chunkText: string, completedText: string): void {
     // Update completed text UI
     ui.gameRenderer.updateCompletedText(completedText);
 
-    // Play audio for new chunk
-    // We delay slightly to allow UI to settle
-    setTimeout(() => {
-        speakWord(chunkText);
-    }, 200);
+    // Play audio ONLY when chunk actually changes
+    if (chunkText !== lastChunkText) {
+        lastChunkText = chunkText;
+        // We delay slightly to allow UI to settle
+        setTimeout(() => {
+            speakWord(chunkText);
+        }, 200);
+    }
 }
 
 /**
