@@ -870,9 +870,14 @@ function showSessionComplete(): void {
     };
     logAttempt(attempt);
 
+    // Calculate percentage for display
+    const percentage = state.sessionResults.length > 0
+        ? Math.round((correctCount / state.sessionResults.length) * 100)
+        : 0;
+
     ui.showSessionComplete(
         state.wordsCompletedThisSession,
-        state.score,
+        percentage,
         state.sessionStartTime || Date.now(),
         () => {
             state.currentWordIndex = 0;
