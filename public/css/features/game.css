@@ -711,7 +711,8 @@
 .dictation-container .writing-card {
     width: 95%;
     max-width: min(400px, 90vw);
-    margin-top: 5px;
+    margin-top: 0;
+    /* Remove top margin to reduce whitespace */
     padding: 15px;
     /* Add internal padding */
 }
@@ -758,6 +759,15 @@
     opacity: 0.6;
     /* Fade completed text for better focus on current character */
     transition: opacity 0.3s ease;
+}
+
+/* When hidden, remove all spacing to prevent whitespace */
+.dictation-completed-phrases[style*="display: none"],
+.dictation-completed-phrases[style*="display:none"] {
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 0 !important;
 }
 
 .spelling-carousel {
@@ -978,7 +988,8 @@
 .dictation-header-progress {
     width: 95%;
     max-width: min(400px, 90vw);
-    margin: 8px auto 15px;
+    margin: 5px auto 8px;
+    /* Reduced margins to minimize whitespace */
     touch-action: pan-y;
     /* Allow vertical scrolling through progress bar */
 }
