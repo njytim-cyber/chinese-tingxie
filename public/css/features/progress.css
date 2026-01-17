@@ -4,10 +4,88 @@
     width: 100%;
     max-width: 600px;
     margin: 0 auto;
-    padding: 24px 20px 120px;
+    padding: 20px 20px calc(100px + env(safe-area-inset-bottom, 0px));
     height: 100%;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     font-family: var(--app-font);
+    box-sizing: border-box;
+    min-height: 100vh;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 600px) {
+    .progress-view {
+        padding: 16px 16px calc(120px + env(safe-area-inset-bottom, 0px));
+        /* Increased bottom padding for mobile to clear tab bar */
+    }
+
+    .progress-hero-card {
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+
+    .hero-streak-num {
+        font-size: 3rem;
+    }
+
+    .hero-streak-text {
+        font-size: 1.1rem;
+    }
+
+    .hero-level-stamp {
+        font-size: 1rem;
+        padding: 5px 12px;
+    }
+
+    .hero-overall-meta {
+        font-size: 0.85rem;
+    }
+
+    .section-header {
+        margin-top: 24px;
+        /* Reduced from 32px for better mobile spacing */
+    }
+
+    .section-header h3 {
+        font-size: 1.05rem;
+    }
+
+    .activity-item {
+        padding: 12px 14px;
+        min-height: 60px;
+        /* Ensure touch-friendly height */
+    }
+
+    .activity-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
+    }
+
+    .char-mastery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+        gap: 10px;
+        padding-bottom: 20px;
+        /* Extra padding for scroll clearance */
+    }
+
+    .char-mastery-item {
+        padding: 10px;
+        min-height: 100px;
+        /* Ensure touch-friendly size */
+    }
+
+    .char-mastery-seal {
+        width: 42px;
+        height: 42px;
+        font-size: 1.7rem;
+    }
+
+    .activity-list {
+        padding-bottom: 20px;
+        /* Extra padding for scroll clearance */
+    }
 }
 
 .screen-title {
@@ -15,22 +93,26 @@
     color: var(--primary);
     font-size: 1.8rem;
     margin-bottom: 24px;
-    font-family: var(--font-serif);
+    font-family: var(--app-font);
     font-weight: bold;
 }
 
 /* Sections */
 .section-header {
-    margin-top: 30px;
-    margin-bottom: 15px;
-    border-bottom: 1px solid var(--tang-paper-dark);
-    padding-bottom: 8px;
+    margin-top: 32px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--tang-red);
+    background: linear-gradient(to right, rgba(153, 27, 27, 0.08) 0%, transparent 100%);
+    padding: 10px 12px;
+    border-radius: var(--scholar-radius) var(--scholar-radius) 0 0;
 }
 
 .section-header h3 {
-    font-family: var(--font-serif);
-    color: var(--ink);
-    font-size: 1.2rem;
+    font-family: var(--app-font);
+    color: var(--tang-red);
+    font-size: 1.15rem;
+    font-weight: 700;
     margin: 0;
     display: flex;
     align-items: center;
@@ -39,104 +121,107 @@
 
 /* 1. Hero Card (Consolidated) */
 .progress-hero-card {
-    background: transparent;
-    padding: 20px 0;
-    border-bottom: 2px solid rgba(43, 43, 43, 0.05);
-    margin-bottom: 30px;
+    background: white;
+    padding: 20px;
+    border-radius: var(--scholar-radius);
+    border: 2px solid var(--tang-paper-dark);
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-tang);
 }
 
 .hero-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--tang-paper-dark);
 }
 
 .hero-level-stamp {
-    background: rgba(153, 27, 27, 0.08);
-    /* Subtle Seal Tint */
-    color: var(--tang-red);
-    padding: 4px 12px;
-    border: 1.5px solid var(--tang-red);
-    /* Cinnabar Seal Border */
+    background: var(--tang-red);
+    color: white;
+    padding: 6px 14px;
     border-radius: var(--scholar-radius);
     font-weight: 800;
     font-size: 1.1rem;
     line-height: 1;
+    box-shadow: 0 2px 6px rgba(153, 27, 27, 0.3);
 }
 
 .hero-overall-meta {
-    color: var(--ink-wash);
-    font-size: 0.85rem;
-    font-weight: 500;
-    letter-spacing: 0.02rem;
+    color: var(--ink-light);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: right;
+    line-height: 1.4;
 }
 
 .hero-main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .hero-streak {
     display: flex;
     align-items: baseline;
-    gap: 8px;
-    margin-bottom: 2px;
+    gap: 10px;
+    margin-bottom: 8px;
 }
 
 .hero-streak-num {
-    font-size: 4rem;
-    /* Prominent Focus */
+    font-size: 3.5rem;
     font-weight: 900;
-    color: var(--ink);
+    color: var(--tang-red);
     line-height: 1;
 }
 
 .hero-streak-text {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     color: var(--ink);
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .hero-xp-info {
     color: var(--ink-wash);
-    font-size: 0.9rem;
-    font-weight: 500;
-    margin-top: 4px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-top: 6px;
 }
 
 .hero-xp-bar-container {
-    height: 4px;
-    background: rgba(43, 43, 43, 0.05);
-    /* Faint Ink Track */
-    border-radius: 2px;
-    margin-bottom: 25px;
+    height: 6px;
+    background: var(--tang-paper-dark);
+    border-radius: 3px;
+    margin-bottom: 16px;
     overflow: hidden;
+    border: 1px solid rgba(43, 43, 43, 0.1);
 }
 
 .hero-xp-fill {
     height: 100%;
-    background: var(--tang-jade);
-    border-radius: 2px;
+    background: linear-gradient(90deg, var(--tang-jade), #10b981);
+    border-radius: 3px;
     transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
 }
 
 .hero-divider {
     height: 1px;
-    background: rgba(43, 43, 43, 0.08);
-    width: 80%;
-    margin: 0 auto 20px;
+    background: var(--tang-paper-dark);
+    margin: 16px 0;
 }
 
 .hero-daily-footer {
     text-align: center;
-    color: var(--ink-light);
-    font-size: 1rem;
-    font-weight: 500;
-    font-style: italic;
-    /* Journal Entry Style */
+    color: var(--ink);
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 8px 12px;
+    background: rgba(153, 27, 27, 0.05);
+    border-radius: var(--scholar-radius);
 }
 
 .stat-emoji {
@@ -154,133 +239,145 @@
 .activity-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .activity-item {
     display: flex;
     align-items: center;
-    background: transparent;
-    padding: 12px 15px;
-    border-bottom: 1px solid rgba(43, 43, 43, 0.05);
-    /* Thin Ink Underline */
-    border-radius: 0;
+    background: white;
+    padding: 14px 16px;
+    border: 1px solid var(--tang-paper-dark);
+    border-radius: var(--scholar-radius);
+    transition: all 0.2s ease;
+}
+
+.activity-item:hover {
+    box-shadow: var(--shadow-tang);
+    border-color: var(--tang-red);
+    transform: translateX(4px);
 }
 
 .activity-icon {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-right: 12px;
-    background: transparent;
-}
-
-.activity-icon.icon-dictation {
-    /* Special colors removed for immersion */
+    margin-right: 14px;
+    background: rgba(153, 27, 27, 0.08);
+    border-radius: 50%;
+    font-size: 1.3rem;
 }
 
 .activity-info {
     flex: 1;
+    min-width: 0;
 }
 
 .activity-title {
-    font-weight: 500;
+    font-weight: 600;
     color: var(--ink);
     font-size: 1rem;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .activity-time {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: var(--ink-light);
+    font-weight: 500;
 }
 
 .activity-score {
-    font-weight: bold;
+    font-weight: 700;
     color: var(--ink-light);
-    font-size: 1rem;
+    font-size: 1.1rem;
+    padding: 4px 10px;
+    background: var(--tang-paper-dark);
+    border-radius: var(--scholar-radius);
 }
 
 .activity-score.good {
-    color: var(--tang-jade);
+    color: white;
+    background: var(--tang-jade);
 }
 
 .empty-state {
     text-align: center;
     color: var(--ink-light);
-    padding: 20px;
-    background: var(--bg-canvas);
+    padding: 32px 20px;
+    background: white;
     border-radius: var(--scholar-radius);
     border: 2px dashed var(--tang-paper-dark);
-}
-
-@media (min-width: 768px) {
-    .stats-grid-2 {
-        gap: 0;
-    }
+    font-weight: 600;
+    font-size: 1rem;
 }
 
 /* Character Mastery Grid */
 .char-mastery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    gap: 15px;
-    padding: 10px 0;
+    grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+    gap: 12px;
+    padding: 0;
 }
 
 .char-mastery-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    padding: 10px;
+    gap: 10px;
+    padding: 12px;
     background: white;
-    border: 1px solid var(--ink-wash);
+    border: 2px solid var(--tang-paper-dark);
     border-radius: var(--scholar-radius);
-    transition: transform 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .char-mastery-item:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-tang);
+    border-color: var(--tang-red);
 }
 
 .char-mastery-seal {
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
-    font-family: var(--font-kaiti);
+    font-size: 1.9rem;
+    font-family: var(--app-font);
     color: var(--tang-red);
     border: 2px solid var(--tang-red);
-    background: rgba(185, 28, 28, 0.05);
-    /* Very light cinnabar tint */
-    border-radius: 4px;
-    /* Square seal look */
+    background: rgba(153, 27, 27, 0.08);
+    border-radius: 6px;
     position: relative;
 }
 
 .char-mastery-level {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--ink-light);
-    font-family: var(--font-sans);
+    font-weight: 700;
 }
 
 /* Level Specifics */
 .char-mastery-item.level-0 .char-mastery-seal {
-    opacity: 0.3;
+    opacity: 0.4;
     border-style: dashed;
+    color: var(--ink-light);
 }
 
 .char-mastery-item.level-5 .char-mastery-seal {
-    box-shadow: 0 0 8px rgba(185, 28, 28, 0.2);
+    box-shadow: 0 0 12px rgba(153, 27, 27, 0.4);
     border-width: 3px;
+    background: var(--tang-red);
+    color: white;
 }
 
 .char-mastery-item.level-5 .char-mastery-level {
     color: var(--tang-gold);
-    font-weight: bold;
+    font-weight: 800;
 }

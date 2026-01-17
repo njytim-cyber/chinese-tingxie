@@ -84,4 +84,19 @@ body {
     * {
         -ms-overflow-style: none;
     }
+
+    /* Prevent double-tap zoom on buttons and interactive elements */
+    button, a, input, select, textarea {
+        touch-action: manipulation;
+    }
+}
+
+/* Reduced Motion Support - Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

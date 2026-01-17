@@ -45,8 +45,12 @@
     flex-direction: column;
     align-items: center;
     padding: 20px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
     box-sizing: border-box;
     transition: opacity 0.3s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Game Stage */
@@ -60,7 +64,7 @@
     max-width: 100%;
     margin: 0 auto;
     position: relative;
-    padding: 10px 20px calc(80px + env(safe-area-inset-bottom, 0px));
+    padding: 10px 20px calc(100px + env(safe-area-inset-bottom, 0px));
     gap: 15px;
     overflow-y: auto;
     overflow-x: hidden;

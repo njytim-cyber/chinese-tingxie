@@ -212,6 +212,7 @@
     cursor: pointer;
     transition: all 0.2s;
     border-radius: var(--scholar-radius);
+    min-height: 48px;
 }
 
 .text-btn:hover {
@@ -221,4 +222,23 @@
 
 .text-btn:active {
     transform: scale(0.97);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 600px) {
+    .action-btn-primary,
+    .action-btn-secondary {
+        min-height: 48px;
+        padding: 14px 20px;
+    }
+
+    .mode-btn {
+        min-height: 72px;
+        /* Ensure touch-friendly size */
+    }
+
+    .action-btn-large {
+        min-height: 52px;
+        padding: 16px 20px;
+    }
 }
