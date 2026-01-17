@@ -12,40 +12,43 @@
 .tabs-container {
     flex-shrink: 0;
     background: var(--tang-paper);
-    border-bottom: 1px solid var(--tang-ink-lighter);
-    padding: 0 var(--spacing-md);
+    border-bottom: 2px solid var(--tang-paper-dark);
+    padding: 0 16px;
 }
 
 .tabs-wrapper {
     position: relative;
     display: flex;
-    gap: var(--spacing-sm);
+    gap: 8px;
     max-width: 600px;
     margin: 0 auto;
 }
 
 .tab-item {
     flex: 1;
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: 12px 20px;
     background: transparent;
     border: none;
-    font-family: var(--font-chinese), var(--font-family);
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--tang-ink-light);
+    font-family: var(--app-font);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--ink-light);
     cursor: pointer;
-    transition: color 0.2s ease;
+    transition: all 0.2s ease;
     position: relative;
     white-space: nowrap;
+    border-radius: var(--scholar-radius) var(--scholar-radius) 0 0;
 }
 
 .tab-item:hover {
     color: var(--tang-ink);
+    background: rgba(169, 50, 38, 0.05);
 }
 
 .tab-item.active {
     color: var(--tang-red);
-    font-weight: 600;
+    font-weight: 700;
+    background: rgba(169, 50, 38, 0.08);
 }
 
 .tab-indicator {
@@ -53,7 +56,8 @@
     bottom: 0;
     left: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--tang-red), var(--tang-red-dark));
+    background: var(--tang-red);
+    box-shadow: 0 1px 4px rgba(169, 50, 38, 0.4);
     border-radius: 3px 3px 0 0;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -100,12 +104,12 @@
 /* Responsive adjustments */
 @media (max-width: 480px) {
     .tabs-container {
-        padding: 0 var(--spacing-sm);
+        padding: 0 12px;
     }
 
     .tab-item {
-        padding: var(--spacing-sm) var(--spacing-md);
-        font-size: 0.9rem;
+        padding: 10px 14px;
+        font-size: 1rem;
     }
 }
 
@@ -134,22 +138,25 @@
 @media (prefers-color-scheme: dark) {
     .tabs-container {
         background: var(--tang-ink);
-        border-bottom-color: var(--tang-ink-light);
+        border-bottom-color: var(--ink-light);
     }
 
     .tab-item {
-        color: var(--tang-paper-dim);
+        color: var(--ink-faint);
     }
 
     .tab-item:hover {
         color: var(--tang-paper);
+        background: rgba(255, 215, 0, 0.1);
     }
 
     .tab-item.active {
         color: var(--tang-gold);
+        background: rgba(255, 215, 0, 0.15);
     }
 
     .tab-indicator {
-        background: linear-gradient(90deg, var(--tang-gold), var(--tang-gold-bright));
+        background: var(--tang-gold);
+        box-shadow: 0 1px 4px rgba(255, 215, 0, 0.5);
     }
 }
