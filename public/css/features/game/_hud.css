@@ -1,0 +1,85 @@
+/* HUD (Heads-Up Display) - Timer, Score, Lives */
+
+.hud {
+    width: 100%;
+    padding: 12px 15px;
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+    background: var(--bg-canvas);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--tang-paper-dark);
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+    touch-action: auto;
+}
+
+.hud.hud-minimal {
+    background: transparent;
+    border-bottom: none;
+    padding: 12px 15px;
+}
+
+.hud-stats {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 1rem;
+    color: var(--tang-ink);
+}
+
+.hud-inner {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.hud-controls,
+.hud-center,
+.hud-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.score-box {
+    font-size: 1.1rem;
+    display: none; /* Hidden - using header stats instead */
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    padding: 6px 0;
+    /* Align with unboxed header */
+    color: var(--ink);
+    font-weight: 700;
+}
+
+.streak-badge {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ffa07a 100%);
+    color: white;
+    padding: 6px 12px;
+    border-radius: var(--scholar-radius);
+    font-weight: 600;
+    font-size: 0.9rem;
+    transform: scale(0);
+    transition: transform 0.4s;
+    box-shadow: 0 2px 6px rgba(255, 107, 107, 0.2);
+}
+
+.streak-badge.active {
+    transform: scale(1);
+}
