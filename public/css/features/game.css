@@ -14,7 +14,7 @@
     position: sticky !important;
     top: 0 !important;
     z-index: 9999 !important;
-    touch-action: none;
+    touch-action: auto;
 }
 
 .hud.hud-minimal {
@@ -429,8 +429,8 @@
 
 @media (max-width: 600px) {
     .char-slot {
-        width: min(220px, 65vw);
-        height: min(220px, 65vw);
+        width: min(180px, 50vw);
+        height: min(180px, 50vw);
     }
 
     .hud {
@@ -440,6 +440,8 @@
     .game-stage {
         padding: 10px 8px calc(100px + env(safe-area-inset-bottom, 0px));
         /* Increased bottom padding for mobile */
+        touch-action: pan-y pinch-zoom;
+        /* Allow vertical scrolling on mobile */
     }
 
     .game-stage #completed-text {
@@ -562,8 +564,10 @@
 
 @media (max-width: 600px) {
     .dictation-container {
-        padding: 10px 8px 30px !important;
-        /* Extra bottom padding for mobile */
+        padding: 10px 8px calc(120px + env(safe-area-inset-bottom, 0px)) !important;
+        /* Increased bottom padding for mobile buttons */
+        touch-action: pan-y pinch-zoom;
+        /* Allow vertical scrolling */
     }
 
     .dictation-container .writing-card {
@@ -584,6 +588,8 @@
         /* Tighter spacing on mobile */
         margin-bottom: 30px;
         /* Extra bottom margin */
+        touch-action: auto;
+        /* Allow touch events to bubble up for scrolling */
     }
 
     .tool-btn {
@@ -596,12 +602,12 @@
 /* Extra small screens */
 @media (max-width: 380px) {
     .char-slot {
-        width: min(200px, 70vw);
-        height: min(200px, 70vw);
+        width: min(160px, 48vw);
+        height: min(160px, 48vw);
     }
 
     .dictation-container {
-        padding: 8px 5px 40px !important;
+        padding: 8px 5px calc(130px + env(safe-area-inset-bottom, 0px)) !important;
         /* Increased bottom padding for very small screens */
     }
 
