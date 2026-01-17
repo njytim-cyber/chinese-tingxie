@@ -150,12 +150,13 @@ export class HanziWriterInput implements InputHandler {
             const HanziWriterModule = await import('hanzi-writer');
             const HanziWriter = HanziWriterModule.default;
 
-            // Create HanziWriters AFTER DOM insertion (elements must be visible)
-            charData.forEach(({ char, index }) => {
-                // Get actual container size for proper centering
-                const container = document.getElementById(`char-${index}`);
-                const size = container?.offsetWidth || 240;
+            // Calculate consistent size for all characters based on CSS: min(240px, 60vw)
+            // This ensures all characters use the same size regardless of visibility
+            const viewportWidth = window.innerWidth;
+            const size = Math.min(240, viewportWidth * 0.6);
 
+            // Create HanziWriters AFTER DOM insertion
+            charData.forEach(({ char, index }) => {
                 const writer = HanziWriter.create(`char-${index}`, char, {
                     width: size,
                     height: size,

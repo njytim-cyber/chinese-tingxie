@@ -707,8 +707,8 @@
 
 @media (max-width: 600px) {
     .dictation-container {
-        padding: 10px 8px calc(140px + env(safe-area-inset-bottom, 0px)) !important;
-        /* Increased bottom padding for mobile buttons and tab bar */
+        padding: 10px 8px calc(180px + env(safe-area-inset-bottom, 0px)) !important;
+        /* Increased bottom padding for mobile buttons and tab bar - ensures card is fully visible */
         touch-action: pan-y pinch-zoom;
         /* Allow vertical scrolling */
         min-height: 100dvh;
