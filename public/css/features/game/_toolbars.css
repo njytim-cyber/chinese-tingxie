@@ -1,0 +1,43 @@
+/* Toolbar and Action Buttons */
+
+.card-toolbar {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 15px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.tool-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid var(--outline-variant);
+    background: var(--bg-surface, #fff);
+    color: var(--on-surface, #333);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tool-btn:active {
+    background: var(--primary-container);
+    transform: scale(0.95);
+}
+
+.tool-btn.audio-playing {
+    background: var(--tang-red);
+    color: white;
+    animation: pulse-audio 1.5s ease-in-out infinite;
+}
+
+.tool-btn svg {
+    width: 24px;
+    height: 24px;
+}
