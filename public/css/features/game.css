@@ -93,6 +93,8 @@
     justify-content: center;
     margin: 20px 0;
     padding: 10px;
+    touch-action: auto;
+    /* Allow scrolling in this container */
 }
 
 .char-box {
@@ -118,7 +120,7 @@
     align-items: center;
     overflow: hidden;
     touch-action: none;
-    /* Prevent scroll interference */
+    /* Prevent touch interference with character drawing - users can scroll via surrounding areas */
 }
 
 .char-slot.loading {
@@ -637,6 +639,8 @@
     overflow: visible;
     /* Allow content to overflow so parent can scroll */
     padding-bottom: 20px !important;
+    touch-action: auto;
+    /* Allow scrolling in dictation container */
 }
 
 /* White card wrapper for dictation mode */
