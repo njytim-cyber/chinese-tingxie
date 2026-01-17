@@ -552,19 +552,32 @@ export class DictationManager {
 
     /**
      * Reveal current chunk characters temporarily
+     *
+     * IMPORTANT: hideCharacter MUST be called with {duration} option in quiz mode
+     * Otherwise strokes become invisible after reveal (regression bug)
      */
     revealCurrentChunk(): void {
         this.notifyReveal();
 
         // Show all characters in current chunk
         this.writers.forEach(writer => {
-            writer.showCharacter();
+            // First ensure character is hidden (safety reset)
+            try {
+                writer.hideCharacter({ duration: 0 });
+            } catch (e) {
+                // Ignore - character might already be hidden
+            }
+
+            // Show character briefly
+            writer.showCharacter({ duration: 400 });
+
             // Hide after 1 second to give user a "glimpse"
             setTimeout(() => {
                 try {
-                    (writer as any).hideCharacter?.();
+                    // CRITICAL: Must use {duration} option or strokes won't show after reveal
+                    writer.hideCharacter({ duration: 200 });
                 } catch (e) {
-                    // Fallback or ignore
+                    console.warn('Error hiding character:', e);
                 }
             }, 1000);
         });

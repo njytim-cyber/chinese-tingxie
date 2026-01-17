@@ -575,6 +575,9 @@ export class HanziWriterInput implements InputHandler {
 
     /**
      * Reveal current character
+     *
+     * IMPORTANT: hideCharacter MUST be called with {duration} option in quiz mode
+     * Otherwise strokes become invisible after reveal (regression bug)
      */
     revealCharacter(): void {
         this.hintUsed = true;
@@ -583,12 +586,20 @@ export class HanziWriterInput implements InputHandler {
         const writer = this.writers[writerIndex];
         if (!writer) return;
 
+        // First ensure character is hidden (safety reset)
+        try {
+            writer.hideCharacter({ duration: 0 });
+        } catch (e) {
+            // Ignore - character might already be hidden
+        }
+
+        // Show character briefly
         writer.showCharacter({ duration: 400 });
 
         // Hide after 1 second to give user a "glimpse"
         setTimeout(() => {
             try {
-                // Properly hide the character
+                // CRITICAL: Must use {duration} option or strokes won't show after reveal
                 writer.hideCharacter({ duration: 200 });
             } catch (e) {
                 console.warn('Error hiding character:', e);
