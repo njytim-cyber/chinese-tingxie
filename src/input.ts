@@ -152,10 +152,14 @@ export class HanziWriterInput implements InputHandler {
 
             // Create HanziWriters AFTER DOM insertion (elements must be visible)
             charData.forEach(({ char, index }) => {
+                // Get actual container size for proper centering
+                const container = document.getElementById(`char-${index}`);
+                const size = container?.offsetWidth || 240;
+
                 const writer = HanziWriter.create(`char-${index}`, char, {
-                    width: 200, // Match CSS .char-slot
-                    height: 200,
-                    padding: 10,
+                    width: size,
+                    height: size,
+                    padding: size * 0.1, // 10% padding for better centering
                     showOutline: false,
                     strokeColor: '#2B2B2B', // Dark Charcoal (Soot Black)
                     radicalColor: '#C44032', // Cinnabar Red for radicals (optional refinement)
@@ -260,12 +264,9 @@ export class HanziWriterInput implements InputHandler {
                     }
                 };
 
-                // If it's correct, show a tick or different color
-                // We map globalIndex back to the index in charElements (which should match if we didn't skip punct in charElements)
-                // Wait, charElements skips punctuation. Let's find the correct index in charElements.
-                // this.charElements is built in order of non-punctuation chars.
-                const charElementIndex = this.validCharIndices.indexOf(globalIndex);
-                if (this.charElements[charElementIndex]?.querySelector('.char-slot')?.classList.contains('success')) {
+                // Check if this character is completed by looking at the DOM element directly
+                const charSlot = document.getElementById(`char-${globalIndex}`);
+                if (charSlot?.classList.contains('success')) {
                     dot.classList.add('correct');
                 }
 
