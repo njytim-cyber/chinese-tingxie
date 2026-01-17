@@ -551,12 +551,18 @@
 
     .game-stage #completed-text {
         width: 98%;
-        margin-bottom: 8px !important;
-        padding: 0 8px;
+        margin-bottom: 12px !important;
+        padding: 12px 8px;
+        min-height: 48px;
+        /* Ensure enough area to grab for scrolling */
+        touch-action: pan-y;
+        /* Explicitly allow vertical scrolling */
     }
 
     .game-stage #writing-card {
         width: 98%;
+        margin: 20px 0;
+        /* Add margins for scroll area */
     }
 }
 
@@ -622,6 +628,12 @@
     /* More compact padding */
     min-height: auto;
     /* Let content determine height */
+    width: 100%;
+    height: auto;
+    flex-shrink: 0;
+    /* Don't shrink - allow parent to scroll */
+    overflow: visible;
+    /* Allow content to overflow so parent can scroll */
     padding-bottom: 20px !important;
 }
 
@@ -650,6 +662,8 @@
     font-family: var(--app-font);
     text-align: center;
     padding: 0 10px;
+    touch-action: pan-y;
+    /* Allow vertical scrolling */
 }
 
 .game-stage #writing-card {
@@ -691,26 +705,33 @@
         /* Increased bottom padding for mobile buttons */
         touch-action: pan-y pinch-zoom;
         /* Allow vertical scrolling */
+        min-height: 100vh;
+        /* Ensure container is always scrollable */
     }
 
     .dictation-container .writing-card {
         width: 98%;
         padding: 10px;
-        margin-bottom: 20px;
-        /* Add bottom margin to ensure visibility */
+        margin: 20px 0;
+        /* Add top and bottom margin for scroll area */
     }
 
     .dictation-completed-phrases {
         width: 98%;
-        margin-bottom: 8px !important;
-        padding: 0 8px;
+        margin-bottom: 12px !important;
+        padding: 12px 8px;
+        /* Increase padding for easier touch scrolling */
+        min-height: 48px;
+        /* Ensure enough area to grab for scrolling */
+        touch-action: pan-y;
+        /* Explicitly allow vertical scrolling */
     }
 
     .card-toolbar {
         gap: 12px;
         /* Tighter spacing on mobile */
-        margin-bottom: 30px;
-        /* Extra bottom margin */
+        margin: 20px 0 40px;
+        /* Increased margins for scroll area */
         touch-action: auto;
         /* Allow touch events to bubble up for scrolling */
     }
@@ -719,6 +740,12 @@
         width: 44px;
         height: 44px;
         /* Slightly smaller on mobile */
+    }
+
+    /* Ensure char-box containers don't block scrolling */
+    .spelling-chars-container {
+        margin: 15px 0;
+        /* Add margins for scroll area */
     }
 }
 
@@ -887,6 +914,8 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border-radius: 4px;
     margin: 8px auto 15px;
+    touch-action: pan-y;
+    /* Allow vertical scrolling through progress bar */
 }
 
 .dictation-progress-fill {
