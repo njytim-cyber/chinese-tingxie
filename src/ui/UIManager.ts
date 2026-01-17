@@ -463,6 +463,14 @@ export class UIManager implements IUIManager {
         });
     }
 
+    /**
+     * Cleanup UI renderers and event listeners
+     */
+    cleanupRenderers(): void {
+        this.lessonRenderer.destroy();
+        this.dictationRenderer.destroy();
+    }
+
     private setupEventListeners(): void {
         const avatarEl = document.getElementById('player-avatar');
         if (avatarEl) {

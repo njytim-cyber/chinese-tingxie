@@ -29,6 +29,10 @@ export class DictationRenderer {
     private manager: IUIManager;
     private tabbedNav: TabbedNav | null = null;
 
+    // Touch event tracking for cleanup
+    private touchElements: HTMLElement[] = [];
+    private touchHandlers: { element: HTMLElement; start: (e: TouchEvent) => void; end: (e: TouchEvent) => void }[] = [];
+
     constructor(manager: IUIManager) {
         this.manager = manager;
     }
@@ -460,6 +464,18 @@ export class DictationRenderer {
         card.addEventListener('touchstart', handleTouchStart, { passive: true });
         card.addEventListener('touchend', handleTouchEnd, { passive: true });
 
+        // Track for cleanup
+        this.touchHandlers.push({
+            element: indicators,
+            start: handleTouchStart,
+            end: handleTouchEnd
+        });
+        this.touchHandlers.push({
+            element: card,
+            start: handleTouchStart,
+            end: handleTouchEnd
+        });
+
         // Initial view update
         this.updateCarouselView(currentCharIndex, validCharIndices, charBoxes, callbacks.onJumpTo);
     }
@@ -657,5 +673,24 @@ export class DictationRenderer {
 
         // Fallback: simple truncation
         return title.substring(0, MAX_LEN) + '...';
+    }
+
+    /**
+     * Cleanup resources and event listeners
+     */
+    destroy(): void {
+        // Remove touch event listeners
+        this.touchHandlers.forEach(({ element, start, end }) => {
+            element.removeEventListener('touchstart', start);
+            element.removeEventListener('touchend', end);
+        });
+        this.touchHandlers = [];
+        this.touchElements = [];
+
+        // Clean up tabbed nav
+        if (this.tabbedNav) {
+            this.tabbedNav.destroy();
+            this.tabbedNav = null;
+        }
     }
 }

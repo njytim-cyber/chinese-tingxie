@@ -170,6 +170,9 @@ export const Game = {
             if (progressBar) progressBar.remove();
         }
 
+        // Clean up UI renderers (removes event listeners)
+        ui.cleanupRenderers();
+
         // Note: XiziController doesn't have a destroy method - it cleans up naturally
         // when the DOM is replaced during view transitions
     },

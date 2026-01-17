@@ -218,4 +218,14 @@ export class LessonRenderer {
             if (e.target === modal) close();
         };
     }
+
+    /**
+     * Cleanup resources and event listeners
+     */
+    destroy(): void {
+        if (this.tabbedNav) {
+            this.tabbedNav.destroy();
+            this.tabbedNav = null;
+        }
+    }
 }

@@ -139,3 +139,14 @@ export function initParticles(): void {
     resizeCanvas();
     // Don't start animation loop immediately - it will start when particles are spawned
 }
+
+/**
+ * Cleanup particle system
+ * Removes event listeners and stops animation
+ */
+export function destroyParticles(): void {
+    window.removeEventListener('resize', resizeCanvas);
+    stopParticles();
+    canvas = null;
+    ctx = null;
+}
