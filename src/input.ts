@@ -524,22 +524,6 @@ export class HanziWriterInput implements InputHandler {
             try {
                 // Properly hide the character
                 writer.hideCharacter({ duration: 200 });
-
-                // Additionally, ensure all character SVG paths are hidden
-                const globalIdx = this.validCharIndices[writerIndex];
-                const container = document.getElementById(`dictation-char-${globalIdx}`) ||
-                                document.getElementById(`char-${globalIdx}`);
-
-                if (container) {
-                    // Hide all character display paths to ensure they don't block input
-                    const svg = container.querySelector('svg');
-                    if (svg) {
-                        const charGroup = svg.querySelector('g[data-test="character"]');
-                        if (charGroup) {
-                            (charGroup as HTMLElement).style.opacity = '0';
-                        }
-                    }
-                }
             } catch (e) {
                 console.warn('Error hiding character:', e);
             }
