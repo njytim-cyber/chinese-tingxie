@@ -4,20 +4,25 @@
     width: 100%;
     max-width: 600px;
     margin: 0 auto;
-    padding: 20px 20px 120px;
+    padding: 20px 20px calc(100px + env(safe-area-inset-bottom, 0px));
     height: 100%;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     font-family: var(--app-font);
+    box-sizing: border-box;
+    min-height: 100vh;
 }
 
 /* Mobile responsive adjustments */
 @media (max-width: 600px) {
     .progress-view {
-        padding: 16px 16px 120px;
+        padding: 16px 16px calc(120px + env(safe-area-inset-bottom, 0px));
+        /* Increased bottom padding for mobile to clear tab bar */
     }
 
     .progress-hero-card {
         padding: 16px;
+        margin-bottom: 20px;
     }
 
     .hero-streak-num {
@@ -37,12 +42,19 @@
         font-size: 0.85rem;
     }
 
+    .section-header {
+        margin-top: 24px;
+        /* Reduced from 32px for better mobile spacing */
+    }
+
     .section-header h3 {
         font-size: 1.05rem;
     }
 
     .activity-item {
         padding: 12px 14px;
+        min-height: 60px;
+        /* Ensure touch-friendly height */
     }
 
     .activity-icon {
@@ -54,16 +66,25 @@
     .char-mastery-grid {
         grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
         gap: 10px;
+        padding-bottom: 20px;
+        /* Extra padding for scroll clearance */
     }
 
     .char-mastery-item {
         padding: 10px;
+        min-height: 100px;
+        /* Ensure touch-friendly size */
     }
 
     .char-mastery-seal {
         width: 42px;
         height: 42px;
         font-size: 1.7rem;
+    }
+
+    .activity-list {
+        padding-bottom: 20px;
+        /* Extra padding for scroll clearance */
     }
 }
 
