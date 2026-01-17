@@ -19,7 +19,8 @@
 .tabs-wrapper {
     position: relative;
     display: flex;
-    gap: 8px;
+    gap: 0;
+    /* Remove gap to fix indicator alignment - use margin on tabs instead */
     max-width: 600px;
     margin: 0 auto;
 }
@@ -38,6 +39,13 @@
     position: relative;
     white-space: nowrap;
     border-radius: var(--scholar-radius) var(--scholar-radius) 0 0;
+    box-sizing: border-box;
+    /* Ensure consistent sizing for indicator alignment */
+}
+
+.tab-item + .tab-item {
+    margin-left: 8px;
+    /* Add spacing between tabs without affecting indicator positioning */
 }
 
 .tab-item:hover {
@@ -132,31 +140,4 @@
 .tabbed-nav-container.hide-tabs .tabs-container,
 .tabs-container.hidden {
     display: none !important;
-}
-
-/* Dark mode support (if needed in the future) */
-@media (prefers-color-scheme: dark) {
-    .tabs-container {
-        background: var(--tang-ink);
-        border-bottom-color: var(--ink-light);
-    }
-
-    .tab-item {
-        color: var(--ink-faint);
-    }
-
-    .tab-item:hover {
-        color: var(--tang-paper);
-        background: rgba(255, 215, 0, 0.1);
-    }
-
-    .tab-item.active {
-        color: var(--tang-gold);
-        background: rgba(255, 215, 0, 0.15);
-    }
-
-    .tab-indicator {
-        background: var(--tang-gold);
-        box-shadow: 0 1px 4px rgba(255, 215, 0, 0.5);
-    }
 }
