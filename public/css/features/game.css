@@ -434,7 +434,8 @@
     }
 
     .hud {
-        padding: 8px 10px;
+        padding: 6px 10px;
+        /* More compact on mobile to save vertical space */
     }
 
     .game-stage {
@@ -487,9 +488,24 @@
     transform: scale(0.95);
 }
 
+.tool-btn.audio-playing {
+    background: var(--tang-red);
+    color: white;
+    animation: pulse-audio 1.5s ease-in-out infinite;
+}
+
 .tool-btn svg {
     width: 24px;
     height: 24px;
+}
+
+@keyframes pulse-audio {
+    0%, 100% {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(169, 50, 38, 0.3);
+    }
 }
 
 /* Dictation Mode Layout Extensions */
@@ -628,8 +644,9 @@
     }
 
     .tool-btn {
-        width: 40px;
-        height: 40px;
+        width: 48px;
+        height: 48px;
+        /* Meet 48px minimum touch target for accessibility */
     }
 
     .indicator-dot {
@@ -659,17 +676,47 @@
     height: 10px;
     border-radius: 50%;
     background: var(--outline-variant);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .indicator-dot.active {
     background: var(--tang-red);
     transform: scale(1.4);
+    animation: pulse-dot 1.5s ease-in-out infinite;
 }
 
 .indicator-dot.correct {
     background: var(--tang-jade);
+    border-color: var(--tang-jade);
+    animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.indicator-dot.hint-used {
+    background: #fbbf24;
+    /* Yellow for hint used */
+    border-color: #f59e0b;
+}
+
+@keyframes pulse-dot {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(169, 50, 38, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(169, 50, 38, 0);
+    }
+}
+
+@keyframes pop-in {
+    0% {
+        transform: scale(0);
+    }
+    70% {
+        transform: scale(1.3);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 /* Header Progress Bar for Dictation */

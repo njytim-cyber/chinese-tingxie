@@ -389,6 +389,12 @@ export const Game = {
      * Handle back navigation
      */
     handleBackNavigation(): void {
+        // Confirm before leaving active practice
+        if (state.currentView === 'dictation' || state.currentView === 'game' || state.currentView === 'xizi') {
+            const confirmed = window.confirm('确定要离开当前练习吗？你的进度将不会被保存。');
+            if (!confirmed) return;
+        }
+
         if (state.currentView === 'practice-select' || state.currentView === 'progress' || state.currentView === 'dictation-select') {
             Game.showLessonSelect(); // Return to main menu (SPA mode)
         } else if (state.currentView === 'lesson-select') {

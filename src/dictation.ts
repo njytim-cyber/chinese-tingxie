@@ -8,6 +8,7 @@ import HanziWriter from 'hanzi-writer';
 import { SoundFX } from './audio';
 import { UIManager } from './ui/UIManager';
 import { splitTextByPunctuation } from './utils/text';
+import { hapticLight, hapticSuccess, hapticChunkComplete, hapticError } from './utils/haptics';
 
 import type { DictationPassage, DictationData, CharBox, DictationChunk } from './types';
 
@@ -148,8 +149,20 @@ export class DictationManager {
         utterance.rate = 0.8;
 
         this._isPlaying = true;
+
+        // Add playing visual state
+        const audioBtn = document.querySelector('.card-toolbar .tool-btn') as HTMLElement;
+        if (audioBtn) {
+            audioBtn.classList.add('audio-playing');
+        }
+
         utterance.onend = () => {
             this._isPlaying = false;
+
+            // Remove playing visual state when done
+            if (audioBtn) {
+                audioBtn.classList.remove('audio-playing');
+            }
         };
 
         window.speechSynthesis.speak(utterance);
@@ -158,6 +171,12 @@ export class DictationManager {
     stopAudio(): void {
         window.speechSynthesis.cancel();
         this._isPlaying = false;
+
+        // Remove playing visual state
+        const audioBtn = document.querySelector('.card-toolbar .tool-btn') as HTMLElement;
+        if (audioBtn) {
+            audioBtn.classList.remove('audio-playing');
+        }
     }
 
     toggleAudio(): boolean {
@@ -166,6 +185,17 @@ export class DictationManager {
         } else {
             this.playAudio();
         }
+
+        // Update audio button visual state
+        const audioBtn = document.querySelector('.card-toolbar .tool-btn') as HTMLElement;
+        if (audioBtn) {
+            if (this._isPlaying) {
+                audioBtn.classList.add('audio-playing');
+            } else {
+                audioBtn.classList.remove('audio-playing');
+            }
+        }
+
         return this._isPlaying;
     }
 
@@ -321,13 +351,15 @@ export class DictationManager {
                     highlightOnComplete: true,
                     onCorrectStroke: () => {
                         SoundFX.correctStroke();
+                        hapticLight(); // Light vibration for correct stroke
                     },
                     onMistake: () => {
-                        // Shake?
+                        hapticError(); // Error vibration pattern
                     },
                     onComplete: () => {
                         box.isCorrect = true;
                         box.userInput = box.char;
+                        hapticSuccess(); // Success vibration for completed character
 
                         // Check if ALL chars in chunk are correct (Auto-Verify)
                         const currentChunkState = this.chunks[this.currentChunkIndex];
@@ -335,6 +367,7 @@ export class DictationManager {
 
                         if (allCorrect) {
                             SoundFX.success(); // Play success sound
+                            hapticChunkComplete(); // Chunk complete vibration pattern
 
                             // Auto-advance after small delay
                             setTimeout(() => {

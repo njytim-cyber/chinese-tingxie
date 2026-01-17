@@ -411,20 +411,35 @@ export class DictationRenderer {
         card.appendChild(carousel);
         container.appendChild(card);
 
-        // Swipe support on indicators
+        // Enhanced swipe support for easier navigation
         let touchStartX = 0;
-        indicators.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX;
-        }, { passive: true });
+        let touchStartY = 0;
 
-        indicators.addEventListener('touchend', (e) => {
+        const handleTouchStart = (e: TouchEvent) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        };
+
+        const handleTouchEnd = (e: TouchEvent) => {
             const touchEndX = e.changedTouches[0].clientX;
-            const diff = touchStartX - touchEndX;
-            if (Math.abs(diff) > 50) {
-                if (diff > 0) callbacks.onNext();
+            const touchEndY = e.changedTouches[0].clientY;
+            const diffX = touchStartX - touchEndX;
+            const diffY = touchStartY - touchEndY;
+
+            // Only trigger swipe if horizontal movement is dominant
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                if (diffX > 0) callbacks.onNext();
                 else callbacks.onPrev();
             }
-        }, { passive: true });
+        };
+
+        // Add swipe to indicators
+        indicators.addEventListener('touchstart', handleTouchStart, { passive: true });
+        indicators.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+        // Add swipe to card area for easier swiping
+        card.addEventListener('touchstart', handleTouchStart, { passive: true });
+        card.addEventListener('touchend', handleTouchEnd, { passive: true });
 
         // Initial view update
         this.updateCarouselView(currentCharIndex, validCharIndices, charBoxes, callbacks.onJumpTo);
@@ -445,6 +460,17 @@ export class DictationRenderer {
                 box.classList.remove('spelling-hidden');
                 box.classList.add('spelling-active');
                 box.querySelector('.char-slot')?.classList.add('active');
+
+                // Auto-scroll to active character on mobile
+                if (window.innerWidth <= 600) {
+                    setTimeout(() => {
+                        box.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center',
+                            inline: 'center'
+                        });
+                    }, 100);
+                }
             } else {
                 box.classList.add('spelling-hidden');
                 box.classList.remove('spelling-active');
