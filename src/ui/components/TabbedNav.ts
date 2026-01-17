@@ -72,7 +72,8 @@ export class TabbedNav {
         tabsWrapper.appendChild(indicator);
 
         container.appendChild(tabsWrapper);
-        this.updateIndicator();
+        // Don't update indicator yet - wait until it's in the DOM
+        // Will be called after container is appended
 
         return container;
     }
@@ -113,7 +114,13 @@ export class TabbedNav {
 
             if (activeTab && indicator) {
                 const tabsWrapper = this.tabsContainer.querySelector('.tabs-wrapper') as HTMLElement;
-                const offsetLeft = activeTab.offsetLeft - (tabsWrapper?.offsetLeft || 0);
+
+                // Calculate position accounting for margins
+                // offsetLeft includes the element's left position including margins
+                const wrapperRect = tabsWrapper.getBoundingClientRect();
+                const tabRect = activeTab.getBoundingClientRect();
+                const offsetLeft = tabRect.left - wrapperRect.left;
+
                 indicator.style.transform = `translateX(${offsetLeft}px)`;
                 indicator.style.width = `${activeTab.offsetWidth}px`;
             }
@@ -194,6 +201,10 @@ export class TabbedNav {
      * Get the container element
      */
     getElement(): HTMLElement {
+        // Trigger indicator update after DOM is rendered and styled
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => this.updateIndicator());
+        });
         return this.container;
     }
 
