@@ -96,7 +96,7 @@ export class LessonRenderer {
                 title: lesson.title,
                 metaText: `${lesson.phrases.length} 词`,
                 progress: getLessonProgress(lesson.id),
-                onClick: () => this.showModeSelectionModal(lesson.id, lesson.title, onLessonSelect)
+                onClick: () => this.showModeSelectionModal(lesson.id, lesson.title, lesson.phrases.length, onLessonSelect)
             });
 
             lessonGrid.appendChild(card);
@@ -148,6 +148,7 @@ export class LessonRenderer {
     private showModeSelectionModal(
         lessonId: number,
         lessonTitle: string,
+        phraseCount: number,
         onSelect: (lessonId: number, limit: number, mode: 'tingxie' | 'xizi') => void
     ): void {
         console.log('showModeSelectionModal called for lesson:', lessonId, lessonTitle);
@@ -206,12 +207,99 @@ export class LessonRenderer {
 
         document.getElementById('mode-tingxie')?.addEventListener('click', () => {
             close();
-            onSelect(lessonId, 0, 'tingxie');
+            // Show word count selection modal for tingxie mode
+            this.showWordCountModal(lessonId, lessonTitle, phraseCount, onSelect);
         });
 
         document.getElementById('mode-xizi')?.addEventListener('click', () => {
             close();
             onSelect(lessonId, 0, 'xizi');
+        });
+
+        modal.onclick = (e) => {
+            if (e.target === modal) close();
+        };
+    }
+
+    /**
+     * Show word count selection modal for tingxie mode
+     */
+    private showWordCountModal(
+        lessonId: number,
+        lessonTitle: string,
+        totalWords: number,
+        onSelect: (lessonId: number, limit: number, mode: 'tingxie' | 'xizi') => void
+    ): void {
+        const modalId = 'word-count-modal';
+        let modal = document.getElementById(modalId);
+
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = modalId;
+            modal.className = 'modal-overlay';
+            document.body.appendChild(modal);
+        }
+
+        // Create button options based on available words
+        const options = [];
+
+        if (totalWords >= 5) {
+            options.push({ limit: 5, label: '5 词', desc: '快速练习' });
+        }
+
+        if (totalWords >= 10) {
+            options.push({ limit: 10, label: '10 词', desc: '标准练习' });
+        }
+
+        options.push({ limit: 0, label: `全部 ${totalWords} 词`, desc: '完整掌握' });
+
+        const optionsHTML = options.map((opt, index) => `
+            <button class="mode-btn ${index === options.length - 1 ? 'mode-btn-primary' : 'mode-btn-secondary'}" data-limit="${opt.limit}">
+                <div class="mode-btn-content">
+                    <span class="mode-btn-icon">${index === 0 ? '⚡' : index === 1 ? '📚' : '🎯'}</span>
+                    <div class="mode-btn-text">
+                        <div class="mode-btn-title">${opt.label}</div>
+                        <div class="mode-btn-desc">${opt.desc}</div>
+                    </div>
+                </div>
+            </button>
+        `).join('');
+
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 400px;">
+                <h2 class="modal-title">${lessonTitle}</h2>
+                <p style="text-align: center; color: var(--tang-ink-light); margin-bottom: 20px; font-size: 0.95rem;">
+                    选择练习数量
+                </p>
+                <div class="mode-options">
+                    ${optionsHTML}
+                </div>
+            </div>
+        `;
+
+        // Show back button to close modal
+        this.manager.toggleBackBtn(true);
+
+        modal.classList.add('show');
+
+        // Handlers
+        const close = () => {
+            modal?.classList.remove('show');
+            this.manager.toggleBackBtn(false);
+        };
+
+        // Wire back button to close modal
+        const backBtn = document.getElementById('header-back-btn');
+        const backHandler = () => close();
+        backBtn?.addEventListener('click', backHandler, { once: true });
+
+        // Add click handlers to all option buttons
+        modal.querySelectorAll('[data-limit]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const limit = parseInt((btn as HTMLElement).dataset.limit || '0');
+                close();
+                onSelect(lessonId, limit, 'tingxie');
+            });
         });
 
         modal.onclick = (e) => {

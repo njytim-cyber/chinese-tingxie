@@ -23,6 +23,7 @@ export class HanziWriterInput implements InputHandler {
     private hintStrokeIndex: number[] = [];
     private currentWord: PracticeWord | null = null;
     private currentCharIndex = 0;
+    private previousCharIndex = 0; // Track for animation direction
     private validCharIndices: number[] = []; // Non-punctuation character indices
     private chunks: { start: number; end: number; text: string }[] = [];
     private currentChunkIndex = 0;
@@ -128,21 +129,55 @@ export class HanziWriterInput implements InputHandler {
         this.indicatorsContainer.id = 'spelling-indicators';
         container.appendChild(this.indicatorsContainer);
 
-        // Add swipe support on indicators
+        // Add enhanced swipe support on indicators with smooth animations
         let touchStartX = 0;
+        let touchStartY = 0;
+        let isSwiping = false;
+
         this.touchStartListener = (e: TouchEvent) => {
             touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            isSwiping = false;
         };
+
+        const touchMoveListener = (e: TouchEvent) => {
+            if (!touchStartX) return;
+
+            const touchX = e.touches[0].clientX;
+            const touchY = e.touches[0].clientY;
+            const deltaX = touchX - touchStartX;
+            const deltaY = touchY - touchStartY;
+
+            // Detect horizontal swipe (more horizontal than vertical)
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+                isSwiping = true;
+                // Prevent vertical scrolling while swiping horizontally on indicators
+                e.preventDefault();
+            }
+        };
+
         this.touchEndListener = (e: TouchEvent) => {
+            if (!isSwiping || !touchStartX) {
+                touchStartX = 0;
+                touchStartY = 0;
+                return;
+            }
+
             const touchEndX = e.changedTouches[0].clientX;
             const diff = touchStartX - touchEndX;
+
             if (Math.abs(diff) > 50) {
                 if (diff > 0) this.nextCharacter();
                 else this.previousCharacter();
             }
+
+            touchStartX = 0;
+            touchStartY = 0;
+            isSwiping = false;
         };
 
         this.indicatorsContainer.addEventListener('touchstart', this.touchStartListener, { passive: true });
+        this.indicatorsContainer.addEventListener('touchmove', touchMoveListener, { passive: false });
         this.indicatorsContainer.addEventListener('touchend', this.touchEndListener, { passive: true });
 
         // Dynamic import for HanziWriter
@@ -221,20 +256,49 @@ export class HanziWriterInput implements InputHandler {
      * Update the carousel view to show current character
      */
     private updateCarouselView(): void {
-        // Hide all, show active
+        // Determine animation direction
+        const direction = this.currentCharIndex > this.previousCharIndex ? 'next' : 'prev';
+
+        // Hide all, show active with animations
         this.charElements.forEach((el, i) => {
+            // Remove all animation classes first
+            el.classList.remove('slide-in-left', 'slide-in-right', 'slide-out-left', 'slide-out-right');
+
             if (i === this.currentCharIndex) {
+                // Showing this element - slide in from appropriate direction
                 el.style.display = 'flex';
                 el.classList.remove('spelling-hidden');
                 el.classList.add('spelling-active');
+
+                // Add slide-in animation
+                requestAnimationFrame(() => {
+                    el.classList.add(direction === 'next' ? 'slide-in-right' : 'slide-in-left');
+                });
+
                 el.querySelector('.char-slot')?.classList.add('active');
+            } else if (i === this.previousCharIndex && this.previousCharIndex !== this.currentCharIndex) {
+                // Hiding previous element - slide out in opposite direction
+                el.classList.add(direction === 'next' ? 'slide-out-left' : 'slide-out-right');
+
+                // Hide after animation completes
+                setTimeout(() => {
+                    el.style.display = 'none';
+                    el.classList.add('spelling-hidden');
+                    el.classList.remove('spelling-active');
+                }, 300); // Match animation duration
+
+                el.querySelector('.char-slot')?.classList.remove('active');
             } else {
+                // Already hidden elements
                 el.style.display = 'none';
                 el.classList.add('spelling-hidden');
                 el.classList.remove('spelling-active');
                 el.querySelector('.char-slot')?.classList.remove('active');
             }
         });
+
+        // Update previous index for next transition
+        this.previousCharIndex = this.currentCharIndex;
 
         // Trigger chunk change callback
         if (this.onChunkChange) {
