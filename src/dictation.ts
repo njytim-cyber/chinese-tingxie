@@ -9,6 +9,7 @@ import { SoundFX } from './audio';
 import { UIManager } from './ui/UIManager';
 import { splitTextByPunctuation } from './utils/text';
 import { hapticLight, hapticSuccess, hapticChunkComplete, hapticError } from './utils/haptics';
+import { revealCharacterSafely } from './utils/hanziWriterHelpers';
 
 import type { DictationPassage, DictationData, CharBox, DictationChunk } from './types';
 
@@ -553,33 +554,19 @@ export class DictationManager {
     /**
      * Reveal current chunk characters temporarily
      *
-     * IMPORTANT: hideCharacter MUST be called with {duration} option in quiz mode
-     * Otherwise strokes become invisible after reveal (regression bug)
+     * Uses centralized utility to prevent regression bugs with stroke visibility.
+     * See: src/utils/hanziWriterHelpers.ts for implementation details.
      */
     revealCurrentChunk(): void {
         this.notifyReveal();
 
-        // Show all characters in current chunk
+        // Show all characters in current chunk using safe helper
         this.writers.forEach(writer => {
-            // First ensure character is hidden (safety reset)
-            try {
-                writer.hideCharacter({ duration: 0 });
-            } catch (e) {
-                // Ignore - character might already be hidden
-            }
-
-            // Show character briefly
-            writer.showCharacter({ duration: 400 });
-
-            // Hide after 1 second to give user a "glimpse"
-            setTimeout(() => {
-                try {
-                    // CRITICAL: Must use {duration} option or strokes won't show after reveal
-                    writer.hideCharacter({ duration: 200 });
-                } catch (e) {
-                    console.warn('Error hiding character:', e);
-                }
-            }, 1000);
+            revealCharacterSafely(writer, {
+                showDuration: 400,
+                hideDuration: 200,
+                displayTime: 1000
+            });
         });
 
         // DO NOT mark as correct, user must still write it out

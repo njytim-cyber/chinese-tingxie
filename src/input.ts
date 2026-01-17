@@ -6,6 +6,7 @@
 // import HanziWriter from 'hanzi-writer'; // Lazy loaded
 import { SoundFX } from './audio';
 import { splitTextByPunctuation } from './utils/text';
+import { revealCharacterSafely } from './utils/hanziWriterHelpers';
 import type { PracticeWord } from './types';
 import type { InputHandler, InputResult } from './types';
 
@@ -576,8 +577,8 @@ export class HanziWriterInput implements InputHandler {
     /**
      * Reveal current character
      *
-     * IMPORTANT: hideCharacter MUST be called with {duration} option in quiz mode
-     * Otherwise strokes become invisible after reveal (regression bug)
+     * Uses centralized utility to prevent regression bugs with stroke visibility.
+     * See: src/utils/hanziWriterHelpers.ts for implementation details.
      */
     revealCharacter(): void {
         this.hintUsed = true;
@@ -586,25 +587,12 @@ export class HanziWriterInput implements InputHandler {
         const writer = this.writers[writerIndex];
         if (!writer) return;
 
-        // First ensure character is hidden (safety reset)
-        try {
-            writer.hideCharacter({ duration: 0 });
-        } catch (e) {
-            // Ignore - character might already be hidden
-        }
-
-        // Show character briefly
-        writer.showCharacter({ duration: 400 });
-
-        // Hide after 1 second to give user a "glimpse"
-        setTimeout(() => {
-            try {
-                // CRITICAL: Must use {duration} option or strokes won't show after reveal
-                writer.hideCharacter({ duration: 200 });
-            } catch (e) {
-                console.warn('Error hiding character:', e);
-            }
-        }, 1000);
+        // Use safe reveal helper to prevent invisible strokes after reveal
+        revealCharacterSafely(writer, {
+            showDuration: 400,
+            hideDuration: 200,
+            displayTime: 1000
+        });
 
         // Mark hint as used for penalty in SRS
         this.mistakesMade += 2; // Penalty for using reveal
