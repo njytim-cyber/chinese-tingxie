@@ -9,8 +9,10 @@ import {
     checkAchievements,
     getCurrentLesson, setCurrentLesson,
     getUnmasteredWords,
+    getWordState,
     logAttempt,
-    type AttemptLog
+    type AttemptLog,
+    type PracticeWord
 } from './data';
 import { SoundFX, speakWord } from './audio';
 import { spawnParticles } from './particles';
@@ -261,7 +263,16 @@ export const Game = {
             return;
         }
 
-        let words = getWordsForPractice();
+        // For tingxie mode, practice ALL words in the lesson (ignore SRS)
+        // This ensures users can practice the full lesson content
+        const lesson = getCurrentLesson();
+        let words: PracticeWord[] = lesson.phrases.map((phrase, index) => ({
+            term: phrase.term,
+            pinyin: phrase.pinyin,
+            level: Math.ceil((index + 1) / 3),
+            lessonId: lesson.id,
+            ...getWordState(phrase.term)
+        }));
 
         if (wordLimit > 0 && words.length > wordLimit) {
             words = words.slice(0, wordLimit);
@@ -283,7 +294,6 @@ export const Game = {
         ui.renderProgressDots(state.practiceWords.length);
 
         // Update lesson display in HUD
-        const lesson = getCurrentLesson();
         ui.updateHeaderTitle(lesson.title);
         if (domCache.lessonLabel) {
             domCache.lessonLabel.textContent = lesson.title;

@@ -274,9 +274,12 @@ export class UIManager implements IUIManager {
         // Calculate progress percentage
         const progress = total > 0 ? ((currentIndex + 1) / total) * 100 : 0;
 
-        // Update progress bar
+        // Update progress bar with count indicator
         progressContainer.innerHTML = `
-            <div class="dictation-progress-fill" style="width: ${progress}%"></div>
+            <div class="progress-bar-wrapper">
+                <div class="dictation-progress-fill" style="width: ${progress}%"></div>
+                <div class="progress-count">${currentIndex + 1} / ${total}</div>
+            </div>
         `;
     }
 
