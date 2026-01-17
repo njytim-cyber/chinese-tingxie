@@ -7,7 +7,7 @@ import { Lesson } from '../types';
 export const LESSONS_SET_B: Lesson[] = [
     {
         id: 1,
-        title: "第1课",
+        title: "第一课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -38,7 +38,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 2,
-        title: "第2课",
+        title: "第二课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -66,7 +66,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 3,
-        title: "第3课",
+        title: "第三课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -92,7 +92,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 4,
-        title: "第4课",
+        title: "第四课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -124,7 +124,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 5,
-        title: "第5课",
+        title: "第五课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -156,7 +156,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 6,
-        title: "第6课",
+        title: "第六课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -188,7 +188,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 7,
-        title: "第7课",
+        title: "第七课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -215,7 +215,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 8,
-        title: "第8课",
+        title: "第八课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -244,7 +244,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 9,
-        title: "第9课",
+        title: "第九课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -275,7 +275,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 10,
-        title: "第10课",
+        title: "第十课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -304,7 +304,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 11,
-        title: "第11课",
+        title: "第十一课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -336,7 +336,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 12,
-        title: "第12课",
+        title: "第十二课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -366,7 +366,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 13,
-        title: "第13课",
+        title: "第十三课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -401,7 +401,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 14,
-        title: "第14课",
+        title: "第十四课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -433,7 +433,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 15,
-        title: "第15课",
+        title: "第十五课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [
@@ -460,7 +460,7 @@ export const LESSONS_SET_B: Lesson[] = [
     },
     {
         id: 16,
-        title: "第16课",
+        title: "第十六课",
         category: "四年级高才合班",
         setId: "B",
         phrases: [

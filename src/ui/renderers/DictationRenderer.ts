@@ -5,6 +5,24 @@ import { TabbedNav } from '../components/TabbedNav';
 import { getDictationPassagesBySet, getAvailableSets } from '../../data/sets';
 
 /**
+ * Convert Chinese numerals to Arabic numbers
+ */
+function chineseToNumber(chinese: string): number {
+    const map: Record<string, number> = {
+        '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
+        '六': 6, '七': 7, '八': 8, '九': 9, '十': 10
+    };
+
+    // Handle cases like 十一, 十二, etc.
+    if (chinese.startsWith('十')) {
+        if (chinese.length === 1) return 10;
+        return 10 + (map[chinese[1]] || 0);
+    }
+
+    return map[chinese] || parseInt(chinese, 10) || 0;
+}
+
+/**
  * Renders the dictation selection and game screens
  */
 export class DictationRenderer {
@@ -179,14 +197,15 @@ export class DictationRenderer {
         const groups = new Map<number, { title: string; passages: DictationPassage[] }>();
 
         passages.forEach((passage) => {
-            // Extract lesson number from title like "第1课 - 高兴/笑"
-            const match = passage.title.match(/第(\d+)课\s*-\s*(.+?)(?:\s*\(\d+\))?$/);
+            // Extract lesson number from title like "第一课 - 高兴/笑" or "第1课 - 高兴/笑"
+            const match = passage.title.match(/第([一二三四五六七八九十]+|\d+)课\s*-\s*(.+?)(?:\s*\(\d+\))?$/);
             if (match) {
-                const lessonNum = parseInt(match[1], 10);
+                const lessonNum = chineseToNumber(match[1]);
                 const theme = match[2];
+                const lessonTitle = match[1]; // Keep original format (Chinese or Arabic)
 
                 if (!groups.has(lessonNum)) {
-                    groups.set(lessonNum, { title: `第${lessonNum}课 - ${theme}`, passages: [] });
+                    groups.set(lessonNum, { title: `第${lessonTitle}课 - ${theme}`, passages: [] });
                 }
                 groups.get(lessonNum)!.passages.push(passage);
             }

@@ -8,6 +8,24 @@ import { logAttempt, type AttemptLog } from '../data';
 import type { DictationPassage } from '../types';
 import { DictationRenderer } from '../ui/renderers/DictationRenderer';
 
+/**
+ * Convert Chinese numerals to Arabic numbers
+ */
+function chineseToNumber(chinese: string): number {
+    const map: Record<string, number> = {
+        '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
+        '六': 6, '七': 7, '八': 8, '九': 9, '十': 10
+    };
+
+    // Handle cases like 十一, 十二, etc.
+    if (chinese.startsWith('十')) {
+        if (chinese.length === 1) return 10;
+        return 10 + (map[chinese[1]] || 0);
+    }
+
+    return map[chinese] || parseInt(chinese, 10) || 0;
+}
+
 export class DictationController {
     private ui: UIManager;
     private dictationManager: import('../dictation').DictationManager | null = null;
@@ -51,10 +69,10 @@ export class DictationController {
         let displayTitle = DictationRenderer.shortenTitle(passage.title);
         if (passage.setId === 'B') {
             // Extract lesson number and passage index from title
-            // Title format: "第1课 - 高兴/笑 (2)" or "第1课 - 高兴/笑"
-            const match = passage.title.match(/第(\d+)课.*?(?:\((\d+)\))?$/);
+            // Title format: "第一课 - 高兴/笑 (2)" or "第一课 - 高兴/笑"
+            const match = passage.title.match(/第([一二三四五六七八九十]+|\d+)课.*?(?:\((\d+)\))?$/);
             if (match) {
-                const lessonNum = match[1];
+                const lessonNum = chineseToNumber(match[1]);
                 const passageIndex = match[2] || '1';
                 displayTitle = `默写 ${lessonNum}.${passageIndex}`;
             }
