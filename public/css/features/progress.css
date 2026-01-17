@@ -10,7 +10,8 @@
     -webkit-overflow-scrolling: touch;
     font-family: var(--app-font);
     box-sizing: border-box;
-    min-height: 100vh;
+    min-height: 100dvh;
+    /* Use dvh for iOS Safari compatibility */
 }
 
 /* Mobile responsive adjustments */

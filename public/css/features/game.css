@@ -547,8 +547,8 @@
         /* Increased bottom padding for mobile to clear tab bar */
         touch-action: pan-y pinch-zoom;
         /* Allow vertical scrolling on mobile */
-        min-height: 100vh;
-        /* Ensure always scrollable */
+        min-height: 100dvh;
+        /* Ensure always scrollable, use dvh for iOS Safari compatibility */
     }
 
     .game-stage #completed-text {
@@ -707,8 +707,8 @@
         /* Increased bottom padding for mobile buttons and tab bar */
         touch-action: pan-y pinch-zoom;
         /* Allow vertical scrolling */
-        min-height: 100vh;
-        /* Ensure container is always scrollable */
+        min-height: 100dvh;
+        /* Ensure container is always scrollable, use dvh for iOS Safari compatibility */
     }
 
     .dictation-container .writing-card {
@@ -1029,5 +1029,90 @@
 
     .wordlist-term {
         font-size: 1.3rem;
+    }
+}
+
+/* Tablet Breakpoints (601px - 1024px) */
+@media (min-width: 601px) and (max-width: 1024px) {
+    .char-slot {
+        width: 220px;
+        height: 220px;
+    }
+
+    .writing-card {
+        max-width: 700px;
+        padding: 30px;
+    }
+
+    .tool-btn {
+        width: 52px;
+        height: 52px;
+        /* Slightly larger touch targets for tablets */
+    }
+
+    .card-toolbar {
+        gap: 20px;
+    }
+
+    .dictation-container {
+        max-width: 800px;
+        padding: 20px 16px calc(100px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .spelling-carousel {
+        max-width: 500px;
+    }
+
+    .indicator-dot {
+        width: 12px;
+        height: 12px;
+        /* Larger dots for better visibility on tablets */
+    }
+}
+
+/* Very Small Devices (320px - 360px) */
+@media (max-width: 360px) {
+    .char-slot {
+        width: min(140px, 44vw);
+        height: min(140px, 44vw);
+        /* Smaller for very small screens */
+    }
+
+    .writing-card {
+        padding: 12px 8px;
+        margin: 15px 4px;
+    }
+
+    .tool-btn {
+        width: 42px;
+        height: 42px;
+        font-size: 0.95rem;
+    }
+
+    .card-toolbar {
+        gap: 6px;
+        margin-bottom: 35px;
+    }
+
+    .indicator-dot {
+        width: 9px;
+        height: 9px;
+    }
+
+    .dictation-indicators {
+        margin-top: 6px;
+        margin-bottom: 18px;
+    }
+
+    .pinyin-display-large {
+        font-size: 1.1rem;
+    }
+
+    #definition-display {
+        font-size: 0.8rem;
+    }
+
+    .game-stage {
+        padding: 8px 4px calc(130px + env(safe-area-inset-bottom, 0px));
     }
 }
