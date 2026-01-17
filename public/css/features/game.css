@@ -501,7 +501,7 @@
 @keyframes slideInLeft {
     from {
         opacity: 0;
-        transform: translateX(-50px);
+        transform: translateX(-20px);
     }
     to {
         opacity: 1;
@@ -512,7 +512,7 @@
 @keyframes slideInRight {
     from {
         opacity: 0;
-        transform: translateX(50px);
+        transform: translateX(20px);
     }
     to {
         opacity: 1;
@@ -527,7 +527,7 @@
     }
     to {
         opacity: 0;
-        transform: translateX(-50px);
+        transform: translateX(-20px);
     }
 }
 
@@ -538,24 +538,24 @@
     }
     to {
         opacity: 0;
-        transform: translateX(50px);
+        transform: translateX(20px);
     }
 }
 
 .slide-in-left {
-    animation: slideInLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideInLeft 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slide-in-right {
-    animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideInRight 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slide-out-left {
-    animation: slideOutLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideOutLeft 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slide-out-right {
-    animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideOutRight 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes stamp-slam {

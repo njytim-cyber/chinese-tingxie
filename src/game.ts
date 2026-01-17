@@ -679,6 +679,17 @@ function loadLevel(): void {
     const container = ui.getWritingArea();
     if (container && state.currentWord) {
         inputHandler.init(state.currentWord, container);
+
+        // Hide completed text div if there's only one chunk (single character word)
+        const completedTextDiv = document.getElementById('completed-text');
+        if (completedTextDiv && inputHandler.getChunks) {
+            const chunks = inputHandler.getChunks();
+            if (chunks && chunks.length <= 1) {
+                completedTextDiv.style.display = 'none';
+            } else {
+                completedTextDiv.style.display = 'block';
+            }
+        }
     }
 
     // Update progress dots
