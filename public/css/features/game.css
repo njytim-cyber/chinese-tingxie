@@ -121,6 +121,26 @@
     /* Prevent scroll interference */
 }
 
+.char-slot.loading {
+    background: linear-gradient(
+        90deg,
+        var(--bg-canvas) 25%,
+        #f0f0f0 50%,
+        var(--bg-canvas) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
 /* Grids - Beautiful Xizi Style */
 .char-slot.grid-tian::before,
 .char-slot.grid-mi::before {
@@ -567,6 +587,9 @@
     font-family: var(--app-font);
     text-align: center;
     padding: 0 10px;
+    opacity: 0.6;
+    /* Fade completed text for better focus on current character */
+    transition: opacity 0.3s ease;
 }
 
 .spelling-carousel {
@@ -716,6 +739,56 @@
     }
     100% {
         transform: scale(1);
+    }
+}
+
+/* Landscape Mode Optimization */
+@media (max-width: 900px) and (orientation: landscape) {
+    .dictation-container {
+        flex-direction: row !important;
+        justify-content: center !important;
+        align-items: flex-start !important;
+        gap: 20px !important;
+        padding: 10px !important;
+    }
+
+    .dictation-container .writing-card {
+        flex: 0 0 auto;
+        max-width: 45vh;
+        /* Use viewport height for sizing in landscape */
+        margin-top: 0;
+    }
+
+    .dictation-completed-phrases {
+        flex: 1;
+        max-width: 40%;
+        align-self: center;
+        font-size: clamp(1rem, 3vh, 1.8rem) !important;
+        /* Scale with viewport height */
+    }
+
+    .char-slot {
+        width: min(35vh, 200px) !important;
+        height: min(35vh, 200px) !important;
+    }
+
+    .card-toolbar {
+        flex-wrap: nowrap;
+        gap: 8px;
+    }
+
+    .tool-btn {
+        width: 40px !important;
+        height: 40px !important;
+    }
+
+    .dictation-indicators {
+        margin-top: 8px;
+        margin-bottom: 10px;
+    }
+
+    .hud {
+        padding: 4px 10px !important;
     }
 }
 

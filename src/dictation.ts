@@ -37,6 +37,7 @@ export class DictationManager {
     // HanziWriter instances for current chunk
     private writers: HanziWriter[] = [];
     private _isPlaying = false;
+    private _audioSpeed = 0.8; // Default speed
 
     // Valid char indices for current chunk (non-punctuation)
     private validCharIndices: number[] = [];
@@ -146,7 +147,7 @@ export class DictationManager {
 
         const utterance = new SpeechSynthesisUtterance(textToRead);
         utterance.lang = 'zh-CN';
-        utterance.rate = 0.8;
+        utterance.rate = this._audioSpeed;
 
         this._isPlaying = true;
 
@@ -197,6 +198,17 @@ export class DictationManager {
         }
 
         return this._isPlaying;
+    }
+
+    /**
+     * Cycle through audio playback speeds: 0.5x -> 0.8x -> 1.0x -> 1.2x
+     */
+    cycleAudioSpeed(): number {
+        const speeds = [0.5, 0.8, 1.0, 1.2];
+        const currentIndex = speeds.indexOf(this._audioSpeed);
+        const nextIndex = (currentIndex + 1) % speeds.length;
+        this._audioSpeed = speeds[nextIndex];
+        return this._audioSpeed;
     }
 
     /**
