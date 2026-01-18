@@ -263,7 +263,9 @@
         /* Center content vertically */
     }
 
-    .dictation-container .writing-card {
+    .dictation-container .writing-card,
+    .game-stage .writing-card,
+    .writing-card {
         margin: auto 0;
         /* Center vertically within available space */
     }
