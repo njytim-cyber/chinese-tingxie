@@ -16,6 +16,11 @@
     flex-direction: column;
     align-items: center;
     gap: 10px;
+
+    /* Carousel Item Props */
+    width: 100%;
+    flex-shrink: 0;
+    justify-content: center;
 }
 
 .char-slot {
@@ -38,12 +43,10 @@
 }
 
 .char-slot.loading {
-    background: linear-gradient(
-        90deg,
-        var(--bg-canvas) 25%,
-        #f0f0f0 50%,
-        var(--bg-canvas) 75%
-    );
+    background: linear-gradient(90deg,
+            var(--bg-canvas) 25%,
+            #f0f0f0 50%,
+            var(--bg-canvas) 75%);
     background-size: 200% 100%;
     animation: skeleton-loading 1.5s ease-in-out infinite;
 }
@@ -52,6 +55,7 @@
     0% {
         background-position: 200% 0;
     }
+
     100% {
         background-position: -200% 0;
     }

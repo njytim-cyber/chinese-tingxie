@@ -246,6 +246,12 @@ export class DictationManager {
                     onToggleGrid: () => this.ui.dictationRenderer.toggleGrid(),
                     onShowHint: () => this.showHint(),
                     onReveal: () => this.revealCurrentChunk(),
+                    onNextChunk: () => {
+                        this.nextChunk();
+                        // Hide button immediately after clicking
+                        const btn = document.getElementById('btn-next-chunk');
+                        if (btn) btn.style.display = 'none';
+                    },
                     onJumpTo: (index: number) => this.goToChar(index)
                 }
             );
@@ -386,6 +392,10 @@ export class DictationManager {
                             setTimeout(() => {
                                 this.nextChunk();
                             }, 800);
+
+                            // Also show the button immediately in case auto-advance fails or user is impatient
+                            const btn = document.getElementById('btn-next-chunk');
+                            if (btn) btn.style.display = 'block';
                         }
 
                         // Auto-advance to next char in carousel

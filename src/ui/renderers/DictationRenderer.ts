@@ -317,6 +317,9 @@ export class DictationRenderer {
             onToggleGrid: () => void;
             onShowHint: () => void;
             onReveal: () => void;
+            onShowHint: () => void;
+            onReveal: () => void;
+            onNextChunk: () => void;
             onJumpTo: (index: number) => void;
         }
     ): void {
@@ -366,7 +369,7 @@ export class DictationRenderer {
             // We use standard HTML structure that DictationManager expects for HanziWriter
             const charBox = document.createElement('div');
             // Initial classes set here, but updateCarouselView handles visibility
-            charBox.className = 'char-box spelling-hidden';
+            charBox.className = 'char-box';
             charBox.id = `dictation-box-${globalIdx}`;
 
             const slot = document.createElement('div');
@@ -432,6 +435,25 @@ export class DictationRenderer {
 
         carousel.appendChild(toolbar);
 
+        // 5. Next Chunk Button (Initially Hidden)
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'action-btn-primary';
+        nextBtn.id = 'btn-next-chunk';
+        nextBtn.innerHTML = '继续 &rarr;';
+        nextBtn.style.display = 'none'; // Hidden by default
+        nextBtn.style.marginTop = '10px';
+        nextBtn.style.marginBottom = '10px';
+        nextBtn.style.width = '100%';
+        nextBtn.onclick = callbacks.onNextChunk;
+
+        // Append Next button below toolbar
+        const nextBtnContainer = document.createElement('div');
+        nextBtnContainer.style.width = '100%';
+        nextBtnContainer.style.padding = '0 10px';
+        nextBtnContainer.appendChild(nextBtn);
+
+        carousel.appendChild(nextBtnContainer);
+
         // Append carousel to card, then card to container
         card.appendChild(carousel);
         container.appendChild(card);
@@ -491,26 +513,19 @@ export class DictationRenderer {
         charBoxes: CharBox[],
         onJumpTo?: (index: number) => void
     ): void {
+        const container = document.querySelector('.spelling-chars-container') as HTMLElement;
         const boxes = document.querySelectorAll('.spelling-chars-container .char-box');
-        boxes.forEach((box, i) => {
-            if (i === currentCharIndex) {
-                box.classList.remove('spelling-hidden');
-                box.classList.add('spelling-active');
-                box.querySelector('.char-slot')?.classList.add('active');
 
-                // Auto-scroll to active character on mobile
-                if (window.innerWidth <= 600) {
-                    setTimeout(() => {
-                        box.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'center',
-                            inline: 'center'
-                        });
-                    }, 100);
-                }
+        if (container) {
+            const offset = currentCharIndex * -100;
+            container.style.transform = `translateX(${offset}%)`;
+        }
+
+        boxes.forEach((box, i) => {
+            // For sliding we don't hide items, just activate/deactivate styles if needed
+            if (i === currentCharIndex) {
+                box.querySelector('.char-slot')?.classList.add('active');
             } else {
-                box.classList.add('spelling-hidden');
-                box.classList.remove('spelling-active');
                 box.querySelector('.char-slot')?.classList.remove('active');
             }
         });

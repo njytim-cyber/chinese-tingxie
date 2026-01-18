@@ -82,6 +82,19 @@
     width: 100%;
     gap: 15px;
     padding: 0 5px;
+    overflow: hidden;
+    /* Mask off-screen characters */
+    position: relative;
+}
+
+.spelling-chars-container {
+    display: flex;
+    /* Horizontal layout */
+    flex-direction: row;
+    width: 100%;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    /* Smooth slide */
+    will-change: transform;
 }
 
 /* Indicators */
