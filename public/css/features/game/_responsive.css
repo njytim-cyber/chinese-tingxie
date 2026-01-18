@@ -3,26 +3,17 @@
 /* Mobile - 600px and below */
 @media (max-width: 600px) {
     .dictation-container {
-        padding: 0 8px calc(180px + env(safe-area-inset-bottom, 0px)) !important;
-        /* Zero top padding for mobile - maximizes visible content */
-        touch-action: pan-y pinch-zoom;
-        /* Allow vertical scrolling */
-        min-height: 100dvh;
-        /* Ensure container is always scrollable, use dvh for iOS Safari compatibility */
-        justify-content: flex-start !important;
-        /* Force top alignment for better control */
-        padding-top: 20px !important;
-        /* Give some initial breathing room */
-    }
+        /* Balanced padding for optical vertical centering */
+        /* Top: 60px to clear header area */
+        /* Bottom: 140px to clear footer + give lift */
+        padding: 60px 8px calc(140px + env(safe-area-inset-bottom, 0px)) !important;
 
-    /* Optimization for taller phones (iPhone XR/11/12/13/14 Pro Max) */
-    @media (min-height: 800px) {
-        .dictation-container {
-            justify-content: center !important;
-            /* Revert to center but with offset */
-            padding-bottom: 20vh !important;
-            /* Push visual center upwards */
-        }
+        touch-action: pan-y pinch-zoom;
+        min-height: 100dvh;
+
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
     }
 
     .dictation-container .writing-card {
