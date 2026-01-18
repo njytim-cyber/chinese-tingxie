@@ -169,6 +169,38 @@ export class XiziController {
         `;
         container.appendChild(this.pinyinEl);
 
+        // Next phrase button (initially hidden)
+        const nextBtnContainer = document.createElement('div');
+        nextBtnContainer.className = 'next-phrase-container';
+        nextBtnContainer.style.cssText = `
+            width: 100%;
+            padding: 16px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 60px;
+        `;
+
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'action-btn-primary';
+        nextBtn.id = 'btn-next-phrase';
+        nextBtn.innerHTML = '继续 &rarr;';
+        nextBtn.style.cssText = `
+            width: 100%;
+            min-height: 44px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            display: none;
+        `;
+        nextBtn.onclick = () => {
+            nextBtn.style.display = 'none';
+            this.currentQueueIndex++;
+            this.loadCurrentPhrase();
+        };
+
+        nextBtnContainer.appendChild(nextBtn);
+        container.appendChild(nextBtnContainer);
+
         app.appendChild(container);
         this.phraseContainer = writerTarget;
     }
@@ -217,10 +249,13 @@ export class XiziController {
                 this.ui.showFeedback('完成!', '#4ade80');
             }
 
-            setTimeout(() => {
-                this.currentQueueIndex++;
-                this.loadCurrentPhrase();
-            }, 1000);
+            // Show next button instead of auto-advancing
+            const nextBtn = document.getElementById('btn-next-phrase') as HTMLButtonElement;
+            if (nextBtn) {
+                setTimeout(() => {
+                    nextBtn.style.display = 'block';
+                }, 500); // Short delay after feedback
+            }
             return;
         }
 
