@@ -199,10 +199,17 @@ export class StatsRenderer {
             return '';
         }
 
+        // Convert level to visual dots (max 5 levels)
+        const levelToDots = (level: number): string => {
+            const maxDots = 5;
+            const filled = Math.min(level, maxDots);
+            return Array(maxDots).fill(0).map((_, i) => i < filled ? '●' : '○').join('');
+        };
+
         return chars.map(c => `
             <div class="char-mastery-item level-${c.level}">
                 <div class="char-mastery-seal">${c.char}</div>
-                <div class="char-mastery-level">Lv.${c.level}</div>
+                <div class="char-mastery-level">${levelToDots(c.level)}</div>
             </div>
         `).join('');
     }
