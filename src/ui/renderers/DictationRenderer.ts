@@ -474,13 +474,25 @@ export class DictationRenderer {
         // Enhanced swipe support for easier navigation
         let touchStartX = 0;
         let touchStartY = 0;
+        let touchStartedOnCharBox = false;
 
         const handleTouchStart = (e: TouchEvent) => {
+            // Check if touch started on character box - ignore if so (let HanziWriter handle it)
+            const target = e.target as HTMLElement;
+            if (target.closest('.char-slot')) {
+                touchStartedOnCharBox = true;
+                return;
+            }
+            touchStartedOnCharBox = false;
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
         };
 
         const handleTouchEnd = (e: TouchEvent) => {
+            // Ignore if touch started on character box
+            if (touchStartedOnCharBox) {
+                return;
+            }
             const touchEndX = e.changedTouches[0].clientX;
             const touchEndY = e.changedTouches[0].clientY;
             const diffX = touchStartX - touchEndX;
