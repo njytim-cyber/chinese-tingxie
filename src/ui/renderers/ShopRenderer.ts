@@ -18,6 +18,36 @@ export class ShopRenderer {
     }
 
     /**
+     * Update header to show only yuanbao
+     */
+    private updateShopHeaderStats(): void {
+        const yuanbao = getYuanbaoBalance();
+        const headerStats = document.getElementById('header-stats');
+        if (headerStats) {
+            headerStats.innerHTML = `
+                <span class="stat-pill">
+                    <svg viewBox="0 0 24 24" width="22" height="22" style="vertical-align: middle; margin-right: 2px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));">
+                        <defs>
+                            <linearGradient id="y-body-shop" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#B45309"/>
+                                <stop offset="50%" stop-color="#fbbf24"/>
+                                <stop offset="100%" stop-color="#B45309"/>
+                            </linearGradient>
+                            <linearGradient id="y-top-shop" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#FEF3C7"/>
+                                <stop offset="100%" stop-color="#F59E0B"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M7,11.5 A5,4 0 0,1 17,11.5" fill="url(#y-top-shop)"/>
+                        <path d="M2,11.5 Q12,14.5 22,11.5 Q21,19.5 12,19.5 Q3,19.5 2,11.5 Z" fill="url(#y-body-shop)"/>
+                    </svg>
+                    ${yuanbao}
+                </span>
+            `;
+        }
+    }
+
+    /**
      * Show shop screen
      */
     show(): void {
@@ -26,7 +56,10 @@ export class ShopRenderer {
             this.manager.updateHeaderTitle('商店');
             this.manager.toggleMainHeader(true);
             this.manager.toggleBackBtn(false);
-            this.manager.toggleHeaderStats(true); // Show yuanbao balance in header
+            this.manager.toggleHeaderStats(true);
+
+            // Show only yuanbao in header
+            this.updateShopHeaderStats();
 
             // Create tabbed navigation for categories
             const categories = getCategories();
@@ -86,11 +119,7 @@ export class ShopRenderer {
         const shopContainer = document.createElement('div');
         shopContainer.className = 'shop-container';
 
-        // Balance header
-        const balanceHeader = this.createBalanceHeader();
-        shopContainer.appendChild(balanceHeader);
-
-        // Items grid
+        // Items grid (no balance header)
         const itemsGrid = document.createElement('div');
         itemsGrid.className = 'shop-items-grid';
 
@@ -216,10 +245,6 @@ export class ShopRenderer {
             card.appendChild(countBadge);
         }
 
-        // Content wrapper (icon + info horizontal)
-        const content = document.createElement('div');
-        content.className = 'item-content';
-
         // Item icon
         const icon = document.createElement('div');
         icon.className = 'item-icon';
@@ -230,7 +255,7 @@ export class ShopRenderer {
             icon.classList.add('emoji-icon');
             icon.textContent = item.icon;
         }
-        content.appendChild(icon);
+        card.appendChild(icon);
 
         // Item info
         const info = document.createElement('div');
@@ -246,17 +271,13 @@ export class ShopRenderer {
         desc.textContent = item.description;
         info.appendChild(desc);
 
-        content.appendChild(info);
-        card.appendChild(content);
+        card.appendChild(info);
 
-        // Price and buy button
-        const footer = document.createElement('div');
-        footer.className = 'item-footer';
-
+        // Price (inline on right)
         const price = document.createElement('div');
         price.className = 'item-price';
         price.innerHTML = `
-            <svg viewBox="0 0 24 24" width="16" height="16" style="filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));">
+            <svg viewBox="0 0 24 24" width="18" height="18" style="filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15));">
                 <defs>
                     <linearGradient id="price-ingot-body-${item.id}" x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stop-color="#B45309"/>
@@ -273,21 +294,12 @@ export class ShopRenderer {
             </svg>
             <span>${item.price}</span>
         `;
-        footer.appendChild(price);
+        card.appendChild(price);
 
-        const buyBtn = document.createElement('button');
-        buyBtn.className = 'item-buy-btn';
-
-        if (owned && !item.stackable) {
-            buyBtn.textContent = '已拥有';
-            buyBtn.disabled = true;
-        } else {
-            buyBtn.textContent = '购买';
-            buyBtn.onclick = () => this.showPurchaseConfirmation(item);
+        // Make whole card clickable (unless owned)
+        if (!owned || item.stackable) {
+            card.onclick = () => this.showPurchaseConfirmation(item);
         }
-
-        footer.appendChild(buyBtn);
-        card.appendChild(footer);
 
         return card;
     }
@@ -347,7 +359,8 @@ export class ShopRenderer {
             this.manager.showFeedback(result.message, '#4ade80');
             // Refresh the current category to update UI
             this.renderItemsForCategory(this.currentCategory);
-            this.manager.updateDashboardStats(); // Update header balance
+            // Update shop header to show new balance
+            this.updateShopHeaderStats();
         } else {
             this.manager.showFeedback(result.message, '#ef4444');
         }
