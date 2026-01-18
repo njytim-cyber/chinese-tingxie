@@ -1,5 +1,288 @@
 # Claude Code Session Notes
 
+## Session: 2026-01-18 (Final) - v2.1.0 Release - Shop System 🏪
+
+### Major Features
+
+#### Complete Shop System with Yuan bao (元宝) Currency
+
+**Problem**: Gold ingot icons were purely decorative, representing XP/stats with no actual currency system. Users had no way to spend in-game rewards or customize their experience.
+
+**Solution**: Implemented a comprehensive shop system with spendable yuanbao currency, 30 purchasable items, and multiple earning mechanics.
+
+---
+
+### 🪙 Currency System
+
+**Earning Yuanbao**:
+- **Word Completion**: 1-2 元宝 based on quality (Perfect: 2, Good: 1)
+- **Session Completion**: 5-20 元宝 (scales with words: 5 + words, max 20)
+- **Daily Login**: 5 元宝 (once per day)
+- **Achievements**: 10-150 元宝 (tier-based rewards)
+  - First Word: 10
+  - 3/7/30-day streaks: 20/50/100
+  - Level 5/10: 30/50
+  - 10/50/all words learned: 25/50/150
+  - Perfect 10/1000 XP/lesson complete: 40/30/35
+- **Retroactive Bonus**: Existing players receive yuanbao based on current progress (one-time)
+
+**Display**: Header shows `🔥 streak · 元宝 balance · 📚 words learned`
+
+---
+
+### 🛍️ Shop Items (30 Total)
+
+#### Appearance (11 items)
+**Stroke Effects** (50-80 元宝):
+- 星光笔迹 (Sparkle trail)
+- 彩虹笔迹 (Rainbow gradient)
+- 毛笔效果 (Traditional brush)
+- 霓虹笔迹 (Neon glow)
+
+**Ink Colors** (90-100 元宝):
+- 金墨 (Gold)
+- 翡翠墨 (Jade green)
+- 朱砂墨 (Crimson)
+- 紫薇墨 (Purple)
+
+**Card Themes** (120-150 元宝):
+- 绸缎主题 (Silk texture)
+- 竹简主题 (Bamboo scroll)
+- 莲花主题 (Lotus decoration)
+
+#### Power-ups (6 items - Consumables)
+- 提示符 (10 元宝) - Hint token, stackable
+- 提示包 5个 (40 元宝) - 5-pack bundle
+- 学习加速 (30 元宝) - 2x XP for 1 session
+- 学习加速 3场 (75 元宝) - 2x XP for 3 sessions
+- 品质护盾 (25 元宝) - Mistakes don't reduce quality
+- 完美保险 (35 元宝) - Auto-correct first error
+
+#### Tools (5 items - Permanent Unlocks)
+- 自定义词单 (200 元宝) - Custom word lists
+- 高级统计 (150 元宝) - Advanced analytics dashboard
+- 简繁切换 (100 元宝) - Simplified/Traditional toggle
+- 随机模式 (80 元宝) - Full shuffle practice
+- 夜间模式 (120 元宝) - Dark theme with auto-switching
+
+#### Content (4 items - Unlockable Sets)
+- 丁集 Set D (250 元宝) - 20 additional dictation passages
+- 戊集 Set E (300 元宝) - 20 advanced passages
+- 成语专辑 (180 元宝) - 50 common idioms
+- 诗词专辑 (200 元宝) - Classic Tang/Song poetry
+
+---
+
+### 🎨 UI/UX
+
+**Navigation**:
+- New "商店" tab in main nav (4-tab layout: 听写 | 默写 | 商店 | 进度)
+- Categorized browsing: 全部 (All) / 外观 (Appearance) / 道具 (Power-ups) / 工具 (Tools) / 内容 (Content)
+
+**Item Cards**:
+- Icon, name, description, price
+- Purchase button (disabled if owned for non-stackables)
+- "已拥有" badge for owned items
+- "x{count}" badge for stackable items
+- Responsive grid layout (1 col mobile, 2-4 cols desktop)
+
+**Purchase Flow**:
+- Confirmation modal with item details and balance check
+- Real-time balance updates after purchase
+- Toast notifications for success/errors
+
+**Styling**:
+- Tang Dynasty aesthetic maintained
+- Gold ingot SVG icons throughout
+- Hover animations and smooth transitions
+- Mobile-optimized touch targets
+
+---
+
+### 🛠️ Technical Implementation
+
+**Data Layer**:
+- **PlayerStats** extended with:
+  - `yuanbao: number` - Currency balance
+  - `lastLoginDate: string | null` - Daily reward tracking
+  - `purchasedItems: string[]` - Owned item IDs
+  - `activeEffects: Record<string, number>` - Active power-up expiry timestamps
+  - `shopInitialized?: boolean` - Retroactive bonus flag
+- **shopItems.ts**: Item database with metadata (id, name, desc, price, type, category, icon, data)
+
+**Game Integration**:
+- `GameLogic.calculateYuanbao(quality)` - Earn 0-2 per word
+- `GameLogic.calculateSessionBonus(wordsCompleted)` - Scaled session rewards
+- `WordCompletionHandler` - Auto-award yuanbao on completion, show in feedback
+- `SessionManager` - Award session completion bonus
+- `achievements.ts` - Modified `checkAchievements()` to award yuanbao on unlock
+
+**Shop Functions** ([src/data/manager.ts](src/data/manager.ts)):
+- `grantRetroactiveBonus()` - One-time bonus for existing players
+- `checkDailyLoginReward()` - Daily 5 yuanbao claim
+- `addYuanbao(amount, reason?)` - Add currency with logging
+- `purchaseItem(itemId)` - Validation, balance check, inventory update
+- `ownsItem(itemId)` / `getItemCount(itemId)` - Ownership queries
+- `useConsumableItem(itemId)` - Decrement stackable items
+- `activatePowerUp/deactivatePowerUp/isPowerUpActive` - Effect management
+- `cleanupExpiredPowerUps()` - Remove stale effects
+
+**UI Components**:
+- **ShopRenderer** ([src/ui/renderers/ShopRenderer.ts](src/ui/renderers/ShopRenderer.ts))
+  - Uses `TabbedNav` for category switching
+  - Item grid with `createItemCard()` for each item
+  - Balance header with SVG gold ingot
+  - Purchase confirmation via `UIManager.showConfirm()`
+- **HUDController** ([src/ui/HUDController.ts](src/ui/HUDController.ts))
+  - `updateDashboardStats()` now shows: 🔥 streak · 元宝 balance · 📚 words
+  - Calls `getYuanbaoBalance()` which auto-cleans expired effects
+- **shop.css** ([public/css/features/shop.css](public/css/features/shop.css))
+  - Responsive grid (280-320px cards)
+  - Tang Dynasty color scheme
+  - Owned/count badges
+  - Purchase modal styling
+
+**Module Resolution Fix**:
+- Changed from `export *` to explicit named exports in `src/data/index.ts`
+- Imported shop functions directly from `'../data/manager'` where needed
+- Resolved TypeScript barrel export detection issues
+
+---
+
+### ⚡ Performance Optimizations
+
+1. **Session Bonus Scaling**:
+   - Changed from flat 5 yuanbao to `min(5 + wordsCompleted, 20)`
+   - Rewards longer practice sessions: 10 words = 15 元宝, 15+ = 20 元宝
+
+2. **Proper Initialization Flag**:
+   - Replaced magic string `'__retroactive_bonus_granted__'` in purchasedItems[]
+   - Added `shopInitialized: boolean` field to PlayerStats
+   - Cleaner code, no pollution of inventory array
+
+3. **Proactive Power-Up Cleanup**:
+   - Added `cleanupExpiredPowerUps()` calls in:
+     - `getYuanbaoBalance()` - before displaying shop
+     - `purchaseItem()` - before processing purchases
+     - `useConsumableItem()` - before using items
+   - Previously only ran on `loadData()`, now runs at key interaction points
+
+---
+
+### 📦 Files Changed
+
+**Created**:
+- [src/data/shopItems.ts](src/data/shopItems.ts) - 30-item database
+- [src/ui/renderers/ShopRenderer.ts](src/ui/renderers/ShopRenderer.ts) - Shop UI renderer
+- [public/css/features/shop.css](public/css/features/shop.css) - Shop styling
+
+**Modified**:
+- [src/types.ts](src/types.ts) - Extended PlayerStats, added ShopItem/Category types
+- [src/data/manager.ts](src/data/manager.ts) - Shop functions (12 new exports)
+- [src/data/index.ts](src/data/index.ts) - Explicit named exports
+- [src/data/stats.ts](src/data/stats.ts) - Default stats with shop fields
+- [src/data/achievements.ts](src/data/achievements.ts) - Yuanbao rewards on unlock
+- [src/game/GameLogic.ts](src/game/GameLogic.ts) - Yuanbao calculation functions
+- [src/game/WordCompletionHandler.ts](src/game/WordCompletionHandler.ts) - Award yuanbao
+- [src/game/SessionManager.ts](src/game/SessionManager.ts) - Session completion bonus
+- [src/game.ts](src/game.ts) - `navigateToShop()` method
+- [src/ui/HUDController.ts](src/ui/HUDController.ts) - 3-stat header display
+- [src/ui/UIManager.ts](src/ui/UIManager.ts) - `showShop()` integration
+- [src/main.ts](src/main.ts) - Shop button event handler
+- [index.html](index.html) - Shop navigation button
+- [public/css/index.css](public/css/index.css) - Import shop.css
+
+---
+
+### 🎯 Build Metrics
+
+- **Build size**: ~260 kB (unchanged from v2.0.2)
+- **CSS**: 55.04 kB
+- **UI chunk**: 108.42 kB (includes ShopRenderer)
+- **Game logic**: 44.54 kB
+- **Compilation**: ~1 second
+
+---
+
+### 🚀 Deployment Notes
+
+**Migration**:
+- Retroactive bonus automatically granted on first load post-update
+- Existing players receive yuanbao based on:
+  - 10 per level
+  - 50 per achievement
+  - 20 per 7-day streak milestone
+- No breaking changes to existing data structures
+- Backward compatible
+
+**Testing Checklist**:
+- [x] Build succeeds with no TypeScript errors
+- [x] Shop tab appears in navigation
+- [x] Categories filter items correctly
+- [x] Purchase flow validates funds and ownership
+- [x] Yuanbao balance updates in header
+- [x] Daily login rewards work
+- [x] Session/word completion awards yuanbao
+- [x] Achievement unlocks award yuanbao
+- [x] Retroactive bonus grants correctly (one-time)
+- [x] Power-up cleanup runs proactively
+
+---
+
+### 📊 Current Status
+
+**Branch**: master
+**Version**: 2.1.0 🏪
+**Latest Commits**:
+- ae2d51a - refactor: optimize shop system performance and code quality
+- 74669c7 - feat: add complete shop system with yuanbao currency (v2.1.0)
+- e5c7496 - docs: update CLAUDE.md with v2.0.2 session notes
+- 37824e8 - feat: replace 'Lv.X' text with visual dots in character mastery
+- 80fdd93 - chore: bump version to 2.0.2 with cache-clearing reload
+
+**Deployment**: https://chinese-tingxie.pages.dev/
+**CI Status**: ✅ Passing (Node 20)
+
+**What's Live**:
+- Complete shop system with 30 items
+- Yuanbao currency earning & spending
+- Daily login rewards (5 元宝)
+- Quality-based word rewards (1-2 元宝)
+- Session completion bonuses (5-20 元宝)
+- Achievement rewards (10-150 元宝)
+- Retroactive bonus for existing players
+
+**Next Steps**:
+- Item effects are data-only (cosmetics/power-ups not yet implemented)
+- Shop items ready for future feature integration
+- Achievement gallery still shows "under development" toast
+
+---
+
+### 🎯 Notes for Future Development
+
+1. **Shop System**:
+   - Items purchasable but effects not implemented yet
+   - Power-up system ready for integration (`activatePowerUp`, `isPowerUpActive`, etc.)
+   - Cosmetic effects (stroke styles, ink colors, themes) need renderer integration
+
+2. **Currency Balance**:
+   - Users earn yuanbao consistently across all game modes
+   - Economy tested at ~15-25 yuanbao per session for typical performance
+   - High performers can earn 35-50 yuanbao with perfect streaks
+
+3. **Module Pattern**:
+   - Use explicit named exports in barrel files (avoid `export *`)
+   - Import shop functions from `'../data/manager'` directly when needed
+   - Maintains TypeScript module resolution compatibility
+
+4. **Performance**:
+   - Power-up cleanup happens proactively at key interaction points
+   - Session bonuses scale with effort to reward longer practice
+   - Shop UI uses responsive grid optimized for mobile
+
+---
+
 ## Session: 2026-01-18 (Continued) - v2.0.2 Release
 
 ### Major Improvements
