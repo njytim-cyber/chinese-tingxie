@@ -15,7 +15,12 @@
       "Bash(gh run view:*)",
       "Bash(git show:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(gh pr list:*)",
+      "Bash(git restore:*)",
+      "Bash(find:*)",
+      "Bash(curl:*)",
+      "Bash(node -e:*)"
     ],
     "deny": [],
     "ask": []

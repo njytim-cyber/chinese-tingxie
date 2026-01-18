@@ -3,11 +3,22 @@
  * This preserves localStorage while ensuring users see the latest version
  */
 
-const APP_VERSION = '2.0.1'; // Synced by scripts/sync-version.js
+const APP_VERSION = '2.0.2'; // Synced by scripts/sync-version.js
 const VERSION_KEY = 'app_version';
 
 // Release notes for current version
 const RELEASE_NOTES = {
+    '2.0.2': {
+        title: '体验优化: 多项改进',
+        features: [
+            '新增丙 (Set C) 默写内容',
+            '习字模式进度显示优化（用点替代文字）',
+            '修复触控滑动手势冲突',
+            '修复平板/手机无法垂直滚动问题',
+            '修复默写轮播动画垂直抖动',
+            '活动记录现在正确显示"默写"标签'
+        ]
+    },
     '2.0.1': {
         title: 'UX改进: 统一操作体验',
         features: [
@@ -88,7 +99,13 @@ function showUpdateNotification(oldVersion: string, newVersion: string): void {
         setTimeout(() => notification.remove(), 300);
     };
 
-    document.getElementById('refresh-btn')?.addEventListener('click', () => {
+    document.getElementById('refresh-btn')?.addEventListener('click', async () => {
+        // Clear all caches to ensure fresh content
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+        // Hard reload with cache bypass
         window.location.reload();
     });
 
