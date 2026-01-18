@@ -180,7 +180,7 @@ export class StatsRenderer {
                     </div>
                     <div class="activity-info">
                         <div class="activity-title">${log.lessonTitle}</div>
-                        <div class="activity-time">${timeStr} · ${log.mode === 'dictation' ? '篇章' : '听写'}</div>
+                        <div class="activity-time">${timeStr} · ${log.mode === 'dictation' ? '默写' : '听写'}</div>
                     </div>
                     <div class="activity-score ${log.totalScore >= 80 ? 'good' : ''}">
                         ${Math.round(log.totalScore)}%
