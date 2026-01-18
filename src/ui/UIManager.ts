@@ -8,6 +8,7 @@ import { LessonRenderer } from './renderers/LessonRenderer';
 import { StatsRenderer } from './renderers/StatsRenderer';
 import { DictationRenderer } from './renderers/DictationRenderer';
 import { GameRenderer } from './renderers/GameRenderer';
+import { ShopRenderer } from './renderers/ShopRenderer';
 import { HUDController } from './HUDController';
 import { AvatarSelector } from './components/AvatarSelector';
 
@@ -22,6 +23,7 @@ export class UIManager implements IUIManager {
     private statsRenderer: StatsRenderer;
     public dictationRenderer: DictationRenderer; // Public for DictationManager access
     public gameRenderer: GameRenderer; // Public for Game access
+    private shopRenderer: ShopRenderer;
     private hudController: HUDController;
 
     // Transition state to prevent race conditions
@@ -37,6 +39,7 @@ export class UIManager implements IUIManager {
         this.statsRenderer = new StatsRenderer(this);
         this.dictationRenderer = new DictationRenderer(this);
         this.gameRenderer = new GameRenderer(this);
+        this.shopRenderer = new ShopRenderer(this);
 
         this.setupEventListeners();
     }
@@ -203,6 +206,10 @@ export class UIManager implements IUIManager {
 
     showDictationSelect(onStart: (passage: any) => void): void {
         this.dictationRenderer.showSelect(onStart);
+    }
+
+    showShop(): void {
+        this.shopRenderer.show();
     }
 
     hideAllTabs(): void {

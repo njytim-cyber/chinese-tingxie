@@ -55,6 +55,11 @@ export interface PlayerStats {
     achievements: string[];
     currentLessonId: number;
     charsMastery?: Record<string, CharacterState>; // Character-level tracking
+    // Shop system
+    yuanbao: number; // In-game currency (gold ingots)
+    lastLoginDate: string | null; // For daily login rewards
+    purchasedItems: string[]; // IDs of owned items
+    activeEffects: Record<string, number>; // Active power-up effects with expiry timestamps
 }
 
 export interface Achievement {
@@ -138,7 +143,7 @@ export interface InputHandler {
 /**
  * Game view types
  */
-export type GameView = 'lesson-select' | 'practice-select' | 'progress' | 'game' | 'dictation-select' | 'dictation' | 'xizi-setup' | 'xizi';
+export type GameView = 'lesson-select' | 'practice-select' | 'progress' | 'game' | 'dictation-select' | 'dictation' | 'xizi-setup' | 'xizi' | 'shop';
 
 /**
  * Progress dot status
@@ -292,4 +297,22 @@ export interface DictationChunk {
     hintUsed: boolean;
     revealUsed: boolean;
     score: number;
+}
+
+// Shop System Types
+export type ShopItemType = 'cosmetic' | 'consumable' | 'permanent' | 'content';
+export type ShopCategory = 'appearance' | 'powerup' | 'tool' | 'content';
+
+export interface ShopItem {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    type: ShopItemType;
+    category: ShopCategory;
+    icon: string;
+    /** Whether item can be purchased multiple times (consumables) */
+    stackable?: boolean;
+    /** Item-specific data (e.g., color values, effect duration) */
+    data?: Record<string, any>;
 }

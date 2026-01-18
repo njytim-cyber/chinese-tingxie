@@ -126,6 +126,27 @@ export function createAchievements(
 }
 
 /**
+ * Get yuanbao reward for an achievement
+ */
+function getAchievementYuanbaoReward(achievementId: string): number {
+    // Tier-based rewards
+    if (achievementId === 'first_word') return 10;
+    if (achievementId === 'streak_3') return 20;
+    if (achievementId === 'streak_7') return 50;
+    if (achievementId === 'streak_30') return 100;
+    if (achievementId === 'level_5') return 30;
+    if (achievementId === 'level_10') return 50;
+    if (achievementId === 'learned_10') return 25;
+    if (achievementId === 'learned_50') return 50;
+    if (achievementId === 'learned_all') return 150;
+    if (achievementId === 'perfect_10') return 40;
+    if (achievementId === 'xp_1000') return 30;
+    if (achievementId === 'lesson_complete') return 35;
+
+    return 20; // Default reward
+}
+
+/**
  * Check and unlock achievements
  * @param playerStats - Mutable player stats object
  * @param achievements - Achievement definitions
@@ -141,6 +162,11 @@ export function checkAchievements(
         if (!playerStats.achievements.includes(ach.id) && ach.check()) {
             playerStats.achievements.push(ach.id);
             newAchievements.push(ach);
+
+            // Award yuanbao for achievement unlock
+            const yuanbaoReward = getAchievementYuanbaoReward(ach.id);
+            playerStats.yuanbao += yuanbaoReward;
+            console.log(`[Achievement] ${ach.name} unlocked! +${yuanbaoReward} 元宝`);
         }
     });
 

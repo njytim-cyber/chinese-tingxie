@@ -236,6 +236,14 @@ export const Game = {
         }
     },
 
+    navigateToShop(): void {
+        if (this.isInActiveSession()) {
+            this.confirmExitSession(() => ui.showShop());
+        } else {
+            ui.showShop();
+        }
+    },
+
     isInActiveSession(): boolean {
         return state.currentView === 'game' ||
                state.currentView === 'xizi' ||

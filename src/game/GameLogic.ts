@@ -37,6 +37,25 @@ export class GameLogic {
     }
 
     /**
+     * Calculate yuanbao (gold ingots) earned for a word
+     */
+    static calculateYuanbao(quality: number): number {
+        if (quality === 5) {
+            return 2; // Perfect completion: 2 yuanbao
+        } else if (quality === 4) {
+            return 1; // Good completion: 1 yuanbao
+        }
+        return 0; // Pass or below: no yuanbao
+    }
+
+    /**
+     * Calculate session completion bonus yuanbao
+     */
+    static calculateSessionBonus(wordsCompleted: number): number {
+        return 5; // Flat 5 yuanbao per completed session
+    }
+
+    /**
      * Check if player leveled up
      */
     static checkLevelUp(oldLevel: number): boolean {

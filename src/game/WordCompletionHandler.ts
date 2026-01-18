@@ -5,6 +5,7 @@
 
 import { GameLogic } from './GameLogic';
 import { updateWordSRS, addXP, getLevel, checkAchievements } from '../data';
+import { addYuanbao } from '../data/manager';
 import { SoundFX } from '../audio';
 import { spawnParticles } from '../particles';
 import { getRandomPraise } from '../ui/UIManager';
@@ -15,6 +16,7 @@ import type { GameState, PracticeWord, InputHandler } from '../types';
 export interface WordCompletionResult {
     quality: number;
     xpEarned: number;
+    yuanbaoEarned: number;
     isSuccess: boolean;
     mistakeCount: number;
     hintUsed: boolean;
@@ -41,11 +43,15 @@ export class WordCompletionHandler {
         // Calculate XP using GameLogic
         const xpEarned = GameLogic.calculateXP(quality, state.sessionStreak);
 
+        // Calculate yuanbao using GameLogic
+        const yuanbaoEarned = GameLogic.calculateYuanbao(quality);
+
         const isSuccess = quality >= 3;
 
         return {
             quality,
             xpEarned,
+            yuanbaoEarned,
             isSuccess,
             mistakeCount,
             hintUsed
@@ -69,6 +75,11 @@ export class WordCompletionHandler {
         // Add XP
         state.score += completion.xpEarned;
         addXP(completion.xpEarned);
+
+        // Add yuanbao
+        if (completion.yuanbaoEarned > 0) {
+            addYuanbao(completion.yuanbaoEarned, `词语完成 (质量: ${completion.quality})`);
+        }
 
         // Track result
         state.sessionResults.push({
@@ -103,9 +114,13 @@ export class WordCompletionHandler {
         ui.updateStatsDisplay();
         ui.displayGreeting(playerName);
 
-        // Show feedback
+        // Show feedback with XP and yuanbao
         const praise = getRandomPraise(completion.quality, state.sessionStreak);
-        ui.showFeedback(`${praise} +${completion.xpEarned} 经验`, "#4ade80");
+        let feedbackText = `${praise} +${completion.xpEarned} 经验`;
+        if (completion.yuanbaoEarned > 0) {
+            feedbackText += ` · +${completion.yuanbaoEarned} 元宝`;
+        }
+        ui.showFeedback(feedbackText, "#4ade80");
 
         // Show pinyin and next button
         ui.showPinyin(word.pinyin);

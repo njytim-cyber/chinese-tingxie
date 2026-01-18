@@ -4,7 +4,7 @@
  */
 
 import { DOMCache } from '../types';
-import { getStats } from '../data';
+import { getStats, getYuanbaoBalance } from '../data/manager';
 
 export class HUDController {
     private domCache: DOMCache;
@@ -50,15 +50,17 @@ export class HUDController {
     }
 
     /**
-     * Update dashboard stats (Streak & Stars)
+     * Update dashboard stats (Streak, Yuanbao, Words Learned)
      */
     updateDashboardStats(): void {
         const stats = getStats();
+        const yuanbao = getYuanbaoBalance();
         const headerStats = document.getElementById('header-stats');
         if (headerStats) {
             headerStats.innerHTML = `
                 <span class="stat-pill">🔥 ${stats.dailyStreak}</span>
-                <span class="stat-pill"><svg viewBox="0 0 24 24" width="22" height="22" style="vertical-align: middle; margin-right: 2px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));"><defs><linearGradient id="y-body-3" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#B45309"/><stop offset="50%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#B45309"/></linearGradient><linearGradient id="y-top-3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FEF3C7"/><stop offset="100%" stop-color="#F59E0B"/></linearGradient></defs><path d="M7,11.5 A5,4 0 0,1 17,11.5" fill="url(#y-top-3)"/><path d="M2,11.5 Q12,14.5 22,11.5 Q21,19.5 12,19.5 Q3,19.5 2,11.5 Z" fill="url(#y-body-3)"/></svg> ${stats.wordsLearned}</span>
+                <span class="stat-pill"><svg viewBox="0 0 24 24" width="22" height="22" style="vertical-align: middle; margin-right: 2px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));"><defs><linearGradient id="y-body-3" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#B45309"/><stop offset="50%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#B45309"/></linearGradient><linearGradient id="y-top-3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FEF3C7"/><stop offset="100%" stop-color="#F59E0B"/></linearGradient></defs><path d="M7,11.5 A5,4 0 0,1 17,11.5" fill="url(#y-top-3)"/><path d="M2,11.5 Q12,14.5 22,11.5 Q21,19.5 12,19.5 Q3,19.5 2,11.5 Z" fill="url(#y-body-3)"/></svg> ${yuanbao}</span>
+                <span class="stat-pill">📚 ${stats.wordsLearned}</span>
             `;
         }
     }

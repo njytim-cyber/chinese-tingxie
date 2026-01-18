@@ -4,6 +4,8 @@
  */
 
 import { logAttempt, getCurrentLesson, getStats, getLevel, type AttemptLog } from '../data';
+import { addYuanbao } from '../data/manager';
+import { GameLogic } from './GameLogic';
 import type { GameState } from '../types';
 import type { UIManager } from '../ui/UIManager';
 
@@ -108,6 +110,10 @@ export class SessionManager {
 
         // Calculate stats for display
         const stats = this.calculateStats(state);
+
+        // Award session completion bonus
+        const sessionBonus = GameLogic.calculateSessionBonus(stats.wordsCompleted);
+        addYuanbao(sessionBonus, '完成练习');
 
         // Show completion UI
         ui.showSessionComplete(

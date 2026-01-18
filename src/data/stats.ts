@@ -95,6 +95,11 @@ export function getDefaultPlayerStats(): PlayerStats {
         totalSessions: 0,
         achievements: [],
         currentLessonId: 1,
-        charsMastery: {}
+        charsMastery: {},
+        // Shop system defaults
+        yuanbao: 0,
+        lastLoginDate: null,
+        purchasedItems: [],
+        activeEffects: {}
     };
 }

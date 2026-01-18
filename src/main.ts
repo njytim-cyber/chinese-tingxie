@@ -88,6 +88,21 @@ function init(): void {
             });
         }
 
+        // Shop button (商店 - Shop)
+        const shopBtn = document.getElementById('shop-btn');
+        if (shopBtn) {
+            shopBtn.addEventListener('click', () => {
+                const overlay = document.getElementById('start-overlay');
+                if (overlay) {
+                    unlockAudio();
+                    overlay.remove();
+                    Game.init(false);
+                }
+                // Use navigation guard to check for active sessions
+                Game.navigateToShop();
+            });
+        }
+
         // Set up game control buttons
         const headerBackBtn = document.getElementById('header-back-btn');
         if (headerBackBtn) headerBackBtn.addEventListener('click', () => Game.handleBackNavigation());

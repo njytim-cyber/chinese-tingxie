@@ -6,7 +6,7 @@
 import { LESSONS } from './lessons';
 import {
     Lesson, Phrase, Word, PracticeWord, WordState, PlayerStats,
-    Achievement, AttemptLog, CharacterState
+    Achievement, AttemptLog, CharacterState, ShopItem
 } from '../types';
 import {
     loadWordState, loadPlayerStats, saveData as persistSaveData,
@@ -34,6 +34,9 @@ import {
     getWordsForPractice as progressGetWordsForPractice,
     getUnmasteredWords as progressGetUnmasteredWords
 } from './progress';
+import {
+    getItemById, ownsItem as shopOwnsItem, getItemCount as shopGetItemCount
+} from './shopItems';
 
 // State management
 let wordState: Record<string, WordState> = {};
@@ -73,6 +76,22 @@ export function loadData(): void {
 
     // Initialize achievements with current state
     achievements = createAchievements(playerStats, LESSONS, getWordScore);
+
+    // Shop system initialization
+    cleanupExpiredPowerUps();
+
+    // Grant retroactive bonus for existing players (one-time)
+    const retroBonus = grantRetroactiveBonus();
+    if (retroBonus > 0) {
+        console.log(`[Shop] Granted retroactive bonus: ${retroBonus} 元宝`);
+    }
+
+    // Check daily login reward
+    const dailyReward = checkDailyLoginReward();
+    if (dailyReward > 0) {
+        // Will show toast notification in UI layer
+        console.log(`[Shop] Daily login reward: ${dailyReward} 元宝`);
+    }
 }
 
 /**
@@ -304,6 +323,204 @@ export function getAttemptLogs(): AttemptLog[] {
 export function clearAttemptLogs(): void {
     persistClearAttemptLogs();
 }
+
+// ===== SHOP SYSTEM =====
+
+/**
+ * Calculate and grant retroactive yuanbao bonus for existing players
+ * Called once when shop system is first loaded
+ */
+export function grantRetroactiveBonus(): number {
+    // Check if bonus already granted (use a special flag)
+    if (playerStats.purchasedItems.includes('__retroactive_bonus_granted__')) {
+        return 0;
+    }
+
+    let bonus = 0;
+
+    // 10 yuanbao per level
+    const level = statsGetLevel(playerStats.totalXP);
+    bonus += level * 10;
+
+    // 50 yuanbao per achievement
+    bonus += playerStats.achievements.length * 50;
+
+    // 20 yuanbao per 7-day streak milestone
+    const streakMilestones = Math.floor(playerStats.dailyStreak / 7);
+    bonus += streakMilestones * 20;
+
+    // Grant the bonus
+    playerStats.yuanbao += bonus;
+
+    // Mark bonus as granted (prevent double-granting)
+    playerStats.purchasedItems.push('__retroactive_bonus_granted__');
+
+    saveData();
+    return bonus;
+}
+
+/**
+ * Check and grant daily login reward (5 yuanbao)
+ * Returns yuanbao amount if granted, 0 if already claimed today
+ */
+export function checkDailyLoginReward(): number {
+    const today = getToday();
+
+    if (playerStats.lastLoginDate === today) {
+        return 0; // Already claimed today
+    }
+
+    playerStats.lastLoginDate = today;
+    playerStats.yuanbao += 5;
+    saveData();
+
+    return 5;
+}
+
+/**
+ * Add yuanbao to player balance
+ */
+export function addYuanbao(amount: number, reason?: string): void {
+    playerStats.yuanbao += amount;
+    saveData();
+
+    // Optional: Log the transaction for debugging
+    if (reason) {
+        console.log(`[Shop] +${amount} 元宝: ${reason}`);
+    }
+}
+
+/**
+ * Purchase an item from the shop
+ * Returns true if purchase successful, false if insufficient funds or already owned
+ */
+export function purchaseItem(itemId: string): { success: boolean; message: string } {
+    const item = getItemById(itemId);
+
+    if (!item) {
+        return { success: false, message: '商品不存在' };
+    }
+
+    // Check if already owned (for non-stackable items)
+    if (!item.stackable && shopOwnsItem(playerStats.purchasedItems, itemId)) {
+        return { success: false, message: '已拥有此商品' };
+    }
+
+    // Check sufficient funds
+    if (playerStats.yuanbao < item.price) {
+        return { success: false, message: '元宝不足' };
+    }
+
+    // Deduct cost and add to inventory
+    playerStats.yuanbao -= item.price;
+    playerStats.purchasedItems.push(itemId);
+
+    saveData();
+
+    return { success: true, message: `成功购买：${item.name}` };
+}
+
+/**
+ * Check if player owns an item
+ */
+export function ownsItem(itemId: string): boolean {
+    return shopOwnsItem(playerStats.purchasedItems, itemId);
+}
+
+/**
+ * Get count of stackable items (for consumables)
+ */
+export function getItemCount(itemId: string): number {
+    return shopGetItemCount(playerStats.purchasedItems, itemId);
+}
+
+/**
+ * Use a consumable item (decrement count)
+ * Returns true if item was consumed, false if not owned
+ */
+export function useConsumableItem(itemId: string): boolean {
+    const item = getItemById(itemId);
+
+    if (!item || !item.stackable) {
+        return false;
+    }
+
+    const index = playerStats.purchasedItems.indexOf(itemId);
+    if (index === -1) {
+        return false;
+    }
+
+    // Remove one instance
+    playerStats.purchasedItems.splice(index, 1);
+    saveData();
+
+    return true;
+}
+
+/**
+ * Activate a power-up effect
+ * @param effectId - Effect identifier (e.g., 'xp-boost')
+ * @param expiryTimestamp - When the effect should expire (0 for session-based)
+ */
+export function activatePowerUp(effectId: string, expiryTimestamp: number = 0): void {
+    playerStats.activeEffects[effectId] = expiryTimestamp;
+    saveData();
+}
+
+/**
+ * Check if a power-up is currently active
+ */
+export function isPowerUpActive(effectId: string): boolean {
+    const expiry = playerStats.activeEffects[effectId];
+
+    if (!expiry) {
+        return false;
+    }
+
+    // Session-based effects (expiry = 0) remain active until cleared
+    if (expiry === 0) {
+        return true;
+    }
+
+    // Time-based effects check timestamp
+    return Date.now() < expiry;
+}
+
+/**
+ * Deactivate a power-up effect
+ */
+export function deactivatePowerUp(effectId: string): void {
+    delete playerStats.activeEffects[effectId];
+    saveData();
+}
+
+/**
+ * Clean up expired power-up effects
+ */
+export function cleanupExpiredPowerUps(): void {
+    const now = Date.now();
+    let changed = false;
+
+    for (const [effectId, expiry] of Object.entries(playerStats.activeEffects)) {
+        if (expiry > 0 && now >= expiry) {
+            delete playerStats.activeEffects[effectId];
+            changed = true;
+        }
+    }
+
+    if (changed) {
+        saveData();
+    }
+}
+
+/**
+ * Get yuanbao balance
+ */
+export function getYuanbaoBalance(): number {
+    return playerStats.yuanbao;
+}
+
+// ===== END SHOP SYSTEM =====
 
 /**
  * Legacy compatibility
