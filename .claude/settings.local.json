@@ -10,7 +10,12 @@
       "Bash(git fetch:*)",
       "Bash(git push:*)",
       "Bash(gh pr create:*)",
-      "Bash(node scripts/sync-version.js:*)"
+      "Bash(node scripts/sync-version.js:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(git show:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

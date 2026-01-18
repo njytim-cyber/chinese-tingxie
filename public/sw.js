@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tingxie-v1.21.22';
+const CACHE_NAME = 'tingxie-v2.0.1';
 const STATIC_ASSETS = [
     '/manifest.json'
 ];
