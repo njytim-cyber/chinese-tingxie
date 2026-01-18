@@ -259,7 +259,7 @@ export const Game = {
         ui.hideAllTabs();
 
         if (mode === 'xizi') {
-            Game.startXizi(lessonId);
+            Game.startXizi(lessonId, wordLimit);
             return;
         }
 
@@ -625,7 +625,7 @@ export const Game = {
     /**
      * Start Xizi (Character Practice) Mode
      */
-    async startXizi(lessonId: number): Promise<void> {
+    async startXizi(lessonId: number, wordLimit = 0): Promise<void> {
         state.currentView = 'xizi';
 
         // Hide standard game UI elements that might conflict
@@ -643,7 +643,7 @@ export const Game = {
         }
 
         state.sessionStartTime = Date.now();
-        await xiziController.start(lessonId, state.sessionStartTime);
+        await xiziController.start(lessonId, state.sessionStartTime, wordLimit);
     }
 };
 

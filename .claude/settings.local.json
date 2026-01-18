@@ -3,7 +3,14 @@
     "allow": [
       "Bash(git branch:*)",
       "Bash(npm run:*)",
-      "Bash(\"public/css/features/game.css.tmp\")"
+      "Bash(\"public/css/features/game.css.tmp\")",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(gh pr close:*)",
+      "Bash(git fetch:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(node scripts/sync-version.js:*)"
     ],
     "deny": [],
     "ask": []
