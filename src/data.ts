@@ -318,6 +318,8 @@ export function getCharacterContext(char: string, lessonId: number): { pinyin: s
     // Extract pinyin for this character
     // If the phrase is "看电视" with pinyin "kàn diàn shì", and char is "看",
     // we find its position and extract the corresponding pinyin syllable
+    // NOTE: Pinyin arrays include punctuation (e.g., "le , guān" → ["le", ",", "guān"])
+    // so character index maps directly to pinyin index
     const charIndex = phraseWithChar.term.indexOf(char);
     const pinyinParts = phraseWithChar.pinyin.split(' ');
     const charPinyin = pinyinParts[charIndex] || phraseWithChar.pinyin;

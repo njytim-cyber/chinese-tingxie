@@ -5,6 +5,7 @@
     flex-direction: column !important;
     align-items: center !important;
     justify-content: flex-start !important;
+    /* Align to top on mobile, centered on desktop (see _responsive.css @1025px+) */
     padding: 0 10px calc(20px + env(safe-area-inset-bottom, 0px)) !important;
     /* Zero top padding - let child elements control spacing */
     min-height: auto;

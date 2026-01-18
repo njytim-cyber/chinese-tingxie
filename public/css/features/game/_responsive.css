@@ -240,6 +240,19 @@
     }
 }
 
+/* Desktop - 1025px and above - Center content like 习字 mode */
+@media (min-width: 1025px) {
+    .game-stage {
+        justify-content: center;
+        /* Center vertically on desktop for visual balance */
+    }
+
+    .dictation-container {
+        justify-content: center !important;
+        /* Center vertically on desktop matching 习字 centered appearance */
+    }
+}
+
 /* Landscape Mode Optimization */
 @media (max-width: 900px) and (orientation: landscape) {
     .dictation-container {
