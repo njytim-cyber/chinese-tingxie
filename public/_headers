@@ -1,0 +1,41 @@
+# Cache control headers for Cloudflare Pages
+
+# HTML - no cache
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+# JavaScript - long cache
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+# CSS - long cache
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+# Assets - long cache
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# JSON - no cache
+/*.json
+  Cache-Control: no-cache, must-revalidate
+
+# Service worker - no cache
+/sw.js
+  Cache-Control: no-cache, must-revalidate
+
+# Web fonts - long cache
+/*.woff
+  Cache-Control: public, max-age=31536000, immutable
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+
+# Images - long cache
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
