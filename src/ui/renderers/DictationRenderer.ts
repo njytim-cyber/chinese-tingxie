@@ -433,27 +433,30 @@ export class DictationRenderer {
 
         carousel.appendChild(toolbar);
 
-        // 5. Next Chunk Button (Initially Hidden)
+        // Append carousel to card
+        card.appendChild(carousel);
+
+        // 5. Next Chunk Button Container (Separate vertical div below carousel)
+        const nextBtnContainer = document.createElement('div');
+        nextBtnContainer.className = 'next-chunk-container';
+        nextBtnContainer.style.width = '100%';
+        nextBtnContainer.style.padding = '10px';
+        nextBtnContainer.style.display = 'flex';
+        nextBtnContainer.style.flexDirection = 'column';
+        nextBtnContainer.style.alignItems = 'center';
+
         const nextBtn = document.createElement('button');
         nextBtn.className = 'action-btn-primary';
         nextBtn.id = 'btn-next-chunk';
         nextBtn.innerHTML = '继续 &rarr;';
         nextBtn.style.display = 'none'; // Hidden by default
-        nextBtn.style.marginTop = '10px';
-        nextBtn.style.marginBottom = '10px';
         nextBtn.style.width = '100%';
         nextBtn.onclick = callbacks.onNextChunk;
 
-        // Append Next button below toolbar
-        const nextBtnContainer = document.createElement('div');
-        nextBtnContainer.style.width = '100%';
-        nextBtnContainer.style.padding = '0 10px';
         nextBtnContainer.appendChild(nextBtn);
+        card.appendChild(nextBtnContainer);
 
-        carousel.appendChild(nextBtnContainer);
-
-        // Append carousel to card, then card to container
-        card.appendChild(carousel);
+        // Append card to container
         container.appendChild(card);
 
         // Enhanced swipe support for easier navigation
