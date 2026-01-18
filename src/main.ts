@@ -21,7 +21,9 @@ import { checkVersion } from './utils/versionChecker';
  * Initialize application
  */
 function init(): void {
-    console.log('Initializing app (v1.21.22)...');
+    console.log('%c🎨 心织笔耕 - Chinese Dictation App', 'color: #dc2626; font-size: 16px; font-weight: bold');
+    console.log('%c📦 Version: 2.1.0', 'color: #059669; font-weight: bold');
+    console.log('%c🚀 Initializing...', 'color: #0891b2');
     try {
         // Check for app version updates
         checkVersion();
@@ -131,7 +133,7 @@ function init(): void {
         const wordlistBtn = document.getElementById('btn-wordlist');
         if (wordlistBtn) wordlistBtn.addEventListener('click', () => Game.showWordList());
 
-        console.log('App initialized');
+        console.log('%c✓ App initialized successfully', 'color: #059669; font-weight: bold');
 
         // Splash Screen Logic & Auto-Start
         const splash = document.getElementById('splash-screen');

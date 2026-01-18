@@ -52,7 +52,6 @@ export class ShopRenderer {
      * Show shop screen
      */
     show(): void {
-        console.log('ShopRenderer.show started');
         try {
             this.manager.updateHeaderTitle('商店');
             this.manager.toggleMainHeader(true);
