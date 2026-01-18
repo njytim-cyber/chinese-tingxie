@@ -317,8 +317,6 @@ export class DictationRenderer {
             onToggleGrid: () => void;
             onShowHint: () => void;
             onReveal: () => void;
-            onShowHint: () => void;
-            onReveal: () => void;
             onNextChunk: () => void;
             onJumpTo: (index: number) => void;
         }
