@@ -3,24 +3,31 @@
 /* Mobile - 600px and below */
 @media (max-width: 600px) {
     .dictation-container {
-        /* Balanced padding for optical vertical centering */
-        /* Top: 60px to clear header area */
-        /* Bottom: 140px to clear footer + give lift */
-        padding: 60px 8px calc(140px + env(safe-area-inset-bottom, 0px)) !important;
+        /* Balanced padding for safe centering */
+        /* Top: 40px to clear header */
+        /* Bottom: 120px to clear footer area */
+        padding: 40px 8px calc(120px + env(safe-area-inset-bottom, 0px)) !important;
 
         touch-action: pan-y pinch-zoom;
         min-height: 100dvh;
 
         display: flex !important;
         flex-direction: column !important;
-        justify-content: center !important;
+        justify-content: flex-start !important;
+        /* Allow scrolling if overflow */
     }
 
     .dictation-container .writing-card {
         width: 98%;
         padding: 10px;
-        margin: 2px 0 30px;
-        /* Minimal top margin */
+        margin: auto 0;
+        /* Center vertically if space allows */
+    }
+
+    /* Standardize char-slot size for generic mobile to prevent overflow */
+    .char-slot {
+        width: min(220px, 60vw);
+        height: min(220px, 60vw);
     }
 
     .dictation-completed-phrases {
