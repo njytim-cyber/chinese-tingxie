@@ -1,5 +1,164 @@
 # Claude Code Session Notes
 
+## Session: 2026-01-18 (Expansion) - Shop Modularization & 150 Items 🛍️
+
+### Major Refactoring
+
+#### Shop System Expansion: 31 → 150 Items
+
+**Problem**: Shop had only 31 items in a monolithic 359-line file. Expanding to more items would create an unmaintainable codebase.
+
+**Solution**: Created modular structure with 4 category files, expanded to 150 total items.
+
+**Files Created**:
+- [src/data/shop/appearance.ts](src/data/shop/appearance.ts) - 60 items (stroke effects, ink colors, themes, styles, textures, borders, animations)
+- [src/data/shop/powerups.ts](src/data/shop/powerups.ts) - 30 items (hints, XP boosts, shields, time extensions, bundles)
+- [src/data/shop/tools.ts](src/data/shop/tools.ts) - 30 items (stats, modes, customization, learning paths, social features)
+- [src/data/shop/content.ts](src/data/shop/content.ts) - 30 items (bonus sets, specialized packs, thematic collections, exam prep)
+
+**Files Modified**:
+- [src/data/shopItems.ts](src/data/shopItems.ts) - Reduced from 359 to 60 lines
+  - Now imports and aggregates from category modules
+  - Maintained all helper functions
+  - Clean ESM structure
+
+---
+
+### Expansion Details
+
+#### Appearance Items (60 total)
+**Stroke Effects** (14 items):
+- Original 4: sparkle, rainbow, brush, neon
+- Added 10: glow, watercolor, calligraphy, shadow, fire, ice, laser, smoke, lightning, galaxy
+
+**Ink Colors** (14 items):
+- Original 4: gold, jade, crimson, purple
+- Added 10: silver, bronze, sapphire, emerald, coral, amber, rose, indigo, turquoise, peach
+
+**Themes** (13 items):
+- Original 3: silk, bamboo, lotus
+- Added 10: mountain, ocean, cloud, moon, plum, orchid, chrysanthemum, peony, imperial, scholarly
+
+**Writing Styles** (5 items):
+- kaishu (楷书), xingshu (行书), caoshu (草书), lishu (隶书), zhuanshu (篆书)
+
+**Paper Textures** (4 items):
+- rice paper, parchment, silk, aged
+
+**Border Decorations** (5 items):
+- classic, floral, geometric, dragon, phoenix
+
+**Animation Effects** (4 items):
+- fade, bounce, slide, rotate
+
+#### Power-ups (30 total)
+**Hint Tokens** (3 items):
+- Single (10元宝), 5-pack (40元宝), 10-pack (70元宝)
+
+**XP Boosts** (4 items):
+- 2x single/3-pack/5-pack, 3x single
+
+**Shields** (5 items):
+- Quality shield (single/3-pack), perfect insurance (single/3-pack), streak saver
+
+**Time & Convenience** (4 items):
+- Time extension (30s/60s), skip token, undo token
+
+**Advanced Boosts** (4 items):
+- Combo booster, auto-complete, reveal pinyin, slow motion
+
+**Mega Packs** (4 items):
+- Starter pack, power pack, ultimate pack, lucky box
+
+**Special Boosters** (6 items):
+- Mastery boost, yuanbao boost, double reward, fortune charm, practice marathon, perfectionist
+
+#### Tools (30 total)
+**Core Tools** (5 items):
+- Custom wordlist, advanced stats, night mode, shuffle mode, simplified toggle
+
+**Advanced Features** (4 items):
+- Export data, import data, cloud sync, offline mode
+
+**Learning Customization** (5 items):
+- Speed control, difficulty adjust, font selector, audio control, voice input
+
+**Practice Modes** (5 items):
+- Timed challenge, zen mode, competition mode, review mode, adaptive learning
+
+**Analytics & Insights** (4 items):
+- Progress reports, heatmap view, comparison tools, mastery tracker
+
+**Social & Sharing** (3 items):
+- Achievement share, study groups, friend challenge
+
+**Premium Features** (4 items):
+- Annotation tool, bookmark system, learning path, AI tutor
+
+#### Content (30 total)
+**Bonus Sets** (5 items):
+- Sets D, E, F, G, H (丁、戊、己、庚、辛)
+
+**Specialized Packs** (5 items):
+- Idiom pack/advanced, poetry pack/modern, classical texts
+
+**Thematic Collections** (5 items):
+- Nature, culture, food, travel, business
+
+**Grade-Level Content** (4 items):
+- Primary 1-3, primary 4-6, middle school, high school
+
+**Exam Preparation** (4 items):
+- HSK 1-3, HSK 4-6, gaokao prep, AP Chinese
+
+**Special Collections** (7 items):
+- Rare characters, similar chars, homophones, proverbs, seasonal, zodiac, master collection
+
+---
+
+### Technical Improvements
+
+**Modular Structure**:
+- Separation by item category for better organization
+- Each category file is independently maintainable
+- Easy to expand individual categories without touching others
+
+**ESM Compliance**:
+- Clean ES module imports/exports
+- TypeScript types properly exported
+- No circular dependencies
+
+**Code Reduction**:
+- Main shopItems.ts: 359 → 60 lines (83% reduction)
+- Total codebase: More items, better organized, easier to maintain
+
+**Build Performance**:
+- TypeScript compilation: ✅ Passes
+- Production build: ✅ Succeeds (1.04s)
+- No performance regression
+
+---
+
+### Current Status
+
+**Branch**: master
+**Latest Commit**: 20799ee - refactor: modularize shop items and expand to 150 total
+**Shop Items**: 150 total (60 appearance, 30 powerups, 30 tools, 30 content)
+**Deployment**: Pushed to production
+**CI Status**: ✅ Passing
+
+---
+
+### Notes for Future Development
+
+1. **Adding New Items**: Add to appropriate category file in `src/data/shop/`
+2. **Category Distribution**: Maintain balance across categories
+3. **Icon Definitions**: Add corresponding SVG icons to [shopIcons.ts](src/data/shopIcons.ts)
+4. **Pricing Strategy**: Keep ranges consistent within categories
+5. **Item Types**: Use `cosmetic`, `consumable`, `permanent`, or `content`
+
+---
+
 ## Session: 2026-01-18 (Final) - v2.1.0 Release - Shop System 🏪
 
 ### Major Features
