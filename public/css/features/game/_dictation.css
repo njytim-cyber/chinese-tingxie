@@ -31,7 +31,8 @@
 
 /* Spelling (听写) Mode - Match dictation layout */
 .game-stage {
-    padding: 15px 10px 20px;
+    padding: 0 10px 20px;
+    /* Zero top padding to eliminate excess whitespace */
 }
 
 .game-stage #completed-text {

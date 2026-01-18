@@ -64,6 +64,11 @@
         font-size: 0.7rem;
         top: 8px;
     }
+
+    .game-stage {
+        padding: 0 8px calc(120px + env(safe-area-inset-bottom, 0px));
+        /* Zero top padding for mobile */
+    }
 }
 
 /* Small Screens - 380px and below */
@@ -162,7 +167,8 @@
     }
 
     .game-stage {
-        padding: 8px 4px calc(130px + env(safe-area-inset-bottom, 0px));
+        padding: 0 4px calc(130px + env(safe-area-inset-bottom, 0px));
+        /* Zero top padding for very small screens */
     }
 }
 
