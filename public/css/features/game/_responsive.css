@@ -65,6 +65,18 @@
         top: 8px;
     }
 
+    /* Prevent huge pinyin on mobile */
+    .pinyin-display-large {
+        font-size: clamp(1.4rem, 5vw, 1.8rem);
+        margin-bottom: 4px;
+    }
+
+    /* Allow card to grow slightly if needed for wrapped text */
+    .writing-card {
+        height: auto;
+        min-height: 320px;
+    }
+
     .game-stage {
         padding: 0 8px calc(120px + env(safe-area-inset-bottom, 0px));
         /* Zero top padding for mobile */
@@ -194,13 +206,17 @@
 /* Tablet - 601px to 1024px */
 @media (min-width: 601px) and (max-width: 1024px) {
     .char-slot {
-        width: 220px;
-        height: 220px;
+        /* Use viewport relative sizing for tablets to prevent overflow on landscape */
+        width: min(220px, 35vh);
+        height: min(220px, 35vh);
     }
 
     .writing-card {
         max-width: 700px;
         padding: 30px;
+        /* Ensure height adapts to content */
+        height: auto;
+        min-height: 400px;
     }
 
     .tool-btn {

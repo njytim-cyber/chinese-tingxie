@@ -7,6 +7,18 @@
     font-weight: 500;
     text-align: center;
     font-family: var(--pinyin-font);
+
+    /* Responsive text handling */
+    white-space: pre-wrap;
+    /* Allow wrapping but preserve deliberate spacing */
+    word-wrap: break-word;
+    /* Break long words if necessary */
+    overflow-wrap: break-word;
+    /* Standard property for breaking */
+    max-width: 100%;
+    /* Ensure it doesn't overflow container */
+    line-height: 1.4;
+    /* Better readability for multi-line */
 }
 
 .definition-display {

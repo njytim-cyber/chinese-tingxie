@@ -229,6 +229,7 @@
 }
 
 @media (max-width: 600px) {
+
     .lesson-select,
     .dictation-lesson-select {
         padding: 10px 12px calc(120px + env(safe-area-inset-bottom, 0px));
@@ -255,5 +256,12 @@
     .lesson-grid {
         padding-bottom: 20px;
         /* Extra padding for scroll clearance */
+        gap: 12px;
+        /* Increase gap for better touch separation */
+    }
+
+    .lesson-grid .lesson-card {
+        min-height: 72px;
+        /* Taller cards for easier tapping */
     }
 }
