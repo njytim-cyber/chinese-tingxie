@@ -1,5 +1,125 @@
 # Claude Code Session Notes
 
+## Session: 2026-01-19 - Purchase Celebration Effects ✨
+
+### Delightful UX Enhancement
+
+**Context**: After completing shop expansion to 150 items, user asked "ok anything else that brings delight" - exploring ways to make the shopping experience more satisfying and joyful.
+
+**Problem**: Purchase feedback was minimal - just green text saying "购买成功" with no visual celebration. The moment of spending yuanbao and acquiring items felt flat.
+
+**Solution**: Implemented a multi-layered celebration animation system that triggers on successful purchases.
+
+---
+
+#### Celebration Components
+
+**1. Confetti Burst** - 30 multi-colored particles exploding radially from card center
+- Random colors: gold, orange, green, blue, red, purple
+- Random timing offsets and duration variations
+- Smooth physics with rotation and scaling
+- Auto-cleanup after 1.5s
+
+**2. Sparkle Explosion** - 12 golden sparkle particles in radial burst pattern
+- Consistent 30° spacing in circular pattern
+- Variable distance (80-120px)
+- Gold glow with shadow effects
+- Auto-cleanup after 1s
+
+**3. Card Animations**:
+- **Just Purchased**: Bounce and wiggle with scale and rotation
+- **Icon Celebration**: Icon scales to 1.4x with rotation
+- **Gold Shimmer**: Horizontal sweep of golden gradient
+- **Success Pulse**: Expanding green ring (unused but available)
+
+**4. Floating Yuanbao** - Shows amount spent floating upward
+- Displays yuanbao icon + "-[amount]" text
+- Floats up 150px while rotating 720°
+- Fades out smoothly over 1.5s
+
+---
+
+#### Technical Implementation
+
+**Files Created**:
+- [public/css/features/shop-animations.css](public/css/features/shop-animations.css) - 10 animation sequences with keyframes
+
+**Files Modified**:
+- [public/css/index.css](public/css/index.css#L17) - Added shop-animations import
+- [src/ui/renderers/ShopRenderer.ts](src/ui/renderers/ShopRenderer.ts#L343-L498) - Added celebration methods:
+  - `createConfetti(x, y)` - Generate confetti particles at position
+  - `createSparkles(x, y)` - Generate sparkle burst at position
+  - `celebrateCard(itemId)` - Orchestrate all card animations
+  - `createFloatingYuanbao(x, y, amount)` - Show yuanbao cost floating up
+  - `executePurchase()` - Enhanced to trigger celebrations before card update
+
+**Animation Timing**:
+```
+Purchase confirmed
+├─ 0ms: Success feedback message
+├─ 0ms: Floating yuanbao starts (-[price])
+├─ 0ms: Confetti burst (30 particles)
+├─ 0ms: Sparkle explosion (12 particles)
+├─ 0ms: Card bounce animation (600ms)
+├─ 0ms: Icon celebration (800ms)
+├─ 0ms: Gold shimmer sweep (800ms)
+└─ 200ms: Card updated with "已拥有" badge
+```
+
+**Performance**:
+- All particles use CSS transforms (GPU-accelerated)
+- Automatic DOM cleanup via setTimeout
+- No ongoing animations after completion
+- Bundle impact: +3.17 kB (152.60 → 155.77 kB)
+
+---
+
+#### Visual Experience
+
+When a user purchases an item:
+1. **Modal confirmation** with item details
+2. **Click "确定"** to confirm purchase
+3. **Explosion of joy**:
+   - Confetti bursts in all directions
+   - Golden sparkles radiate outward
+   - Card bounces and wiggles excitedly
+   - Icon spins and scales up
+   - Gold shimmer sweeps across card
+   - Yuanbao cost floats away
+4. **Card updates** to show "已拥有" badge (owned)
+5. **Balance updates** in header
+
+The celebration lasts ~1.5 seconds total, providing satisfying visual feedback without being excessive.
+
+---
+
+#### Design Philosophy
+
+**Emotional Impact**: Transform a transactional moment into a micro-celebration that:
+- Validates the user's decision
+- Makes spending feel rewarding
+- Adds personality to the app
+- Creates memorable interactions
+
+**Implementation Principles**:
+- Layered effects create depth
+- Staggered timing prevents visual chaos
+- Auto-cleanup ensures no memory leaks
+- GPU-accelerated transforms for smooth 60fps
+- Degrades gracefully (still functional without animations)
+
+---
+
+### Current Status
+
+**Branch**: master
+**Latest Commit**: 4c78250 - feat: add delightful purchase celebration animations
+**Deployment**: https://chinese-tingxie.pages.dev/
+**Build**: ✅ Passing
+**Bundle Size**: UI 155.77 kB (+3.17 kB from v2.1.0)
+
+---
+
 ## Session: 2026-01-18 (Expansion) - Shop Modularization & 150 Items 🛍️
 
 ### Major Refactoring
