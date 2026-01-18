@@ -131,10 +131,13 @@ export class ShopRenderer {
             emptyState.textContent = '暂无商品';
             itemsGrid.appendChild(emptyState);
         } else {
+            // Use DocumentFragment for efficient batch insertion
+            const fragment = document.createDocumentFragment();
             items.forEach(item => {
                 const itemCard = this.createItemCard(item);
-                itemsGrid.appendChild(itemCard);
+                fragment.appendChild(itemCard);
             });
+            itemsGrid.appendChild(fragment);
         }
 
         shopContainer.appendChild(itemsGrid);
@@ -220,6 +223,7 @@ export class ShopRenderer {
     private createItemCard(item: ShopItem): HTMLElement {
         const card = document.createElement('div');
         card.className = 'shop-item-card';
+        card.dataset.itemId = item.id; // For targeted updates
 
         const owned = ownsItem(item.id);
         const count = item.stackable ? getItemCount(item.id) : 0;
@@ -350,6 +354,23 @@ export class ShopRenderer {
     }
 
     /**
+     * Update a single item card (faster than full re-render)
+     */
+    private updateSingleCard(itemId: string): void {
+        const card = document.querySelector(`[data-item-id="${itemId}"]`) as HTMLElement;
+        if (!card) return;
+
+        // Find the item data
+        const items = getItemsByCategory(this.currentCategory);
+        const item = items.find(i => i.id === itemId);
+        if (!item) return;
+
+        // Create new card and replace
+        const newCard = this.createItemCard(item);
+        card.replaceWith(newCard);
+    }
+
+    /**
      * Execute the purchase
      */
     private executePurchase(item: ShopItem): void {
@@ -357,8 +378,8 @@ export class ShopRenderer {
 
         if (result.success) {
             this.manager.showFeedback(result.message, '#4ade80');
-            // Refresh the current category to update UI
-            this.renderItemsForCategory(this.currentCategory);
+            // Only update the single changed card (faster)
+            this.updateSingleCard(item.id);
             // Update shop header to show new balance
             this.updateShopHeaderStats();
         } else {
