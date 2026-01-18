@@ -615,4 +615,14 @@ export const appearanceItems: ShopItem[] = [
         icon: '🔄',
         data: { animation: 'rotate' }
     },
+    {
+        id: 'anim-scale',
+        name: '缩放动画',
+        description: '字符放大出现效果',
+        price: 60,
+        type: 'cosmetic',
+        category: 'appearance',
+        icon: '🔍',
+        data: { animation: 'scale' }
+    },
 ];
