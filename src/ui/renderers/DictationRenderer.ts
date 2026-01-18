@@ -436,7 +436,10 @@ export class DictationRenderer {
         // Append carousel to card
         card.appendChild(carousel);
 
-        // 5. Next Chunk Button Container (Separate vertical div below carousel)
+        // Append card to container
+        container.appendChild(card);
+
+        // 5. Next Chunk Button Container (Outside card, like completed-phrases and progress bar)
         const nextBtnContainer = document.createElement('div');
         nextBtnContainer.className = 'next-chunk-container';
         nextBtnContainer.style.width = '100%';
@@ -458,10 +461,7 @@ export class DictationRenderer {
         nextBtn.onclick = callbacks.onNextChunk;
 
         nextBtnContainer.appendChild(nextBtn);
-        card.appendChild(nextBtnContainer);
-
-        // Append card to container
-        container.appendChild(card);
+        container.appendChild(nextBtnContainer);
 
         // Enhanced swipe support for easier navigation
         let touchStartX = 0;

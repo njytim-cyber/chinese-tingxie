@@ -239,15 +239,19 @@ export class GameRenderer {
                     </svg>
                 </button>
             </div>
-            
-            <!-- Next Button Container (Inside Card) -->
-            <div class="next-chunk-container">
-                <button class="action-btn-large" id="next-btn" style="display:none; width: 100%;">继续 →</button>
-            </div>
         `;
         fragment.appendChild(card);
 
-        // Removed bottom-action-area as it's now inside the card
+        // Next Button Container (Outside card, like completed-text and progress bar)
+        const nextBtnContainer = document.createElement('div');
+        nextBtnContainer.className = 'next-chunk-container';
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'action-btn-large';
+        nextBtn.id = 'next-btn';
+        nextBtn.innerHTML = '继续 →';
+        nextBtn.style.cssText = 'display:none; width: 100%;';
+        nextBtnContainer.appendChild(nextBtn);
+        fragment.appendChild(nextBtnContainer);
 
         app.appendChild(fragment);
 

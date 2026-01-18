@@ -41,6 +41,16 @@ versionChecker = versionChecker.replace(
 writeFileSync(versionCheckerPath, versionChecker);
 console.log('✓ Updated versionChecker.ts');
 
+// 3. Update service worker cache name
+const swPath = join(rootDir, 'public', 'sw.js');
+let sw = readFileSync(swPath, 'utf8');
+sw = sw.replace(
+    /const CACHE_NAME = 'tingxie-v[^']*';/,
+    `const CACHE_NAME = 'tingxie-v${version}';`
+);
+writeFileSync(swPath, sw);
+console.log('✓ Updated sw.js');
+
 console.log(`\n✅ Version ${version} synced successfully!`);
 console.log('\nNext steps:');
 console.log('1. Update CHANGELOG.md with release notes');

@@ -5,18 +5,20 @@ const STATIC_ASSETS = [
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
+    console.log('[SW] Installing new version:', CACHE_NAME);
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             console.log('[SW] Caching static assets');
             return cache.addAll(STATIC_ASSETS);
         })
     );
-    // Activate immediately
+    // Activate immediately to replace old service worker
     self.skipWaiting();
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
+    console.log('[SW] Activating new version:', CACHE_NAME);
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
@@ -27,13 +29,24 @@ self.addEventListener('activate', (event) => {
                         return caches.delete(name);
                     })
             );
+        }).then(() => {
+            console.log('[SW] Activated successfully');
+            // Notify all clients about the update
+            return self.clients.matchAll().then((clients) => {
+                clients.forEach((client) => {
+                    client.postMessage({
+                        type: 'SW_UPDATED',
+                        version: CACHE_NAME
+                    });
+                });
+            });
         })
     );
     // Take control of all pages immediately
-    self.clients.claim();
+    return self.clients.claim();
 });
 
-// Fetch event - network-first for HTML/JSON, cache-first for assets
+// Fetch event - network-first for critical files, cache-first for static assets
 self.addEventListener('fetch', (event) => {
     // Skip non-GET requests
     if (event.request.method !== 'GET') return;
@@ -42,10 +55,17 @@ self.addEventListener('fetch', (event) => {
     if (!event.request.url.startsWith(self.location.origin)) return;
 
     const url = new URL(event.request.url);
-    const isHTMLorJSON = url.pathname.endsWith('.html') || url.pathname.endsWith('.json') || url.pathname === '/';
 
-    if (isHTMLorJSON) {
-        // Network-first strategy for HTML and JSON files
+    // Network-first for HTML, JSON, JS, and CSS to ensure fresh content
+    const isNetworkFirst =
+        url.pathname.endsWith('.html') ||
+        url.pathname.endsWith('.json') ||
+        url.pathname.endsWith('.js') ||
+        url.pathname.endsWith('.css') ||
+        url.pathname === '/';
+
+    if (isNetworkFirst) {
+        // Network-first strategy - try network, fallback to cache
         event.respondWith(
             fetch(event.request)
                 .then((networkResponse) => {
@@ -64,7 +84,7 @@ self.addEventListener('fetch', (event) => {
                 })
         );
     } else {
-        // Cache-first strategy for static assets (CSS, JS, images)
+        // Cache-first strategy for images and other static assets
         event.respondWith(
             caches.match(event.request).then((cachedResponse) => {
                 if (cachedResponse) {
