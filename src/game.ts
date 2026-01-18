@@ -14,6 +14,10 @@ import {
     type AttemptLog,
     type PracticeWord
 } from './data';
+import {
+    saveSession, clearSession, loadSession, formatSessionInfo, hasActiveSession,
+    type TingxieSessionData, type XiziSessionData, type DictationSessionData, type SessionData
+} from './data/sessionPersistence';
 import { SoundFX, speakWord } from './audio';
 import { spawnParticles } from './particles';
 import { UIManager, getRandomPraise } from './ui/UIManager';
@@ -22,7 +26,12 @@ import { initDOMCache, type GameState, type DOMCache, type InputHandler, type Di
 import { GameLogic } from './game/GameLogic';
 import { DictationController } from './game/DictationController';
 import { XiziController } from './game/XiziController';
+import { WordCompletionHandler } from './game/WordCompletionHandler';
+import { SessionManager } from './game/SessionManager';
 import { DictationRenderer } from './ui/renderers/DictationRenderer';
+import {
+    checkAndOfferResume, resumeTingxieSession, resumeXiziSession, resumeDictationSession
+} from './game/sessionResume';
 
 const PLAYER_NAME_KEY = 'tingxie_player_name';
 
@@ -87,6 +96,9 @@ export const Game = {
             inputHandler.onMistake = handleMistake;
             inputHandler.onComplete = handleInputComplete;
             inputHandler.onChunkChange = handleChunkChange;
+
+            // Set up auto-save on page unload
+            setupAutoSave();
         }
 
         // Always reset session stats
@@ -109,6 +121,24 @@ export const Game = {
 
         // Check for new achievements on start
         ui.showNewAchievements(checkAchievements());
+
+        // Check for saved session and offer to resume
+        checkAndOfferResume(
+            ui,
+            (session) => resumeTingxieSession(session, state, ui, domCache, loadLevel),
+            async (session) => {
+                xiziController = await resumeXiziSession(session, state, ui, xiziController, () => Game.showLessonSelect());
+            },
+            async (session) => {
+                await resumeDictationSession(
+                    session,
+                    state,
+                    (passage) => Game.startDictation(passage),
+                    () => dictationController?.getManager(),
+                    ui
+                );
+            }
+        );
     },
 
     /**
@@ -496,6 +526,7 @@ export const Game = {
      */
     nextLevel(): void {
         state.currentWordIndex++;
+        saveTingxieSession(); // Save progress after each word
         loadLevel();
     },
 
@@ -646,6 +677,42 @@ export const Game = {
         await xiziController.start(lessonId, state.sessionStartTime, wordLimit);
     }
 };
+
+/**
+ * Save current tingxie session state
+ */
+function saveTingxieSession(): void {
+    if (state.currentView !== 'game' || !state.practiceWords.length) return;
+
+    const lesson = getCurrentLesson();
+    const sessionData: TingxieSessionData = {
+        mode: 'tingxie',
+        timestamp: Date.now(),
+        sessionStartTime: state.sessionStartTime || Date.now(),
+        lessonId: lesson.id,
+        lessonTitle: lesson.title,
+        practiceWords: state.practiceWords,
+        currentWordIndex: state.currentWordIndex,
+        wordLimit: state.practiceWords.length,
+        sessionResults: state.sessionResults
+    };
+
+    saveSession(sessionData);
+}
+
+/**
+ * Set up auto-save on page unload
+ */
+function setupAutoSave(): void {
+    // Save session when user navigates away or refreshes
+    window.addEventListener('beforeunload', () => {
+        // Save tingxie session if active
+        if (state.currentView === 'game' && state.practiceWords.length) {
+            saveTingxieSession();
+        }
+        // Xizi and Dictation modes handle their own saving in their respective managers
+    });
+}
 
 /**
  * Load the current level/word
@@ -814,133 +881,30 @@ function handleWordFailure(): void {
 function handleWordSuccess(result?: { mistakeCount: number; hintUsed: boolean }): void {
     if (!state.currentWord) return;
 
-    SoundFX.success();
-    state.sessionStreak++;
-    state.wordsCompletedThisSession++;
-
-    // Get hint/mistake state from input handler or result
-    const hintUsed = result?.hintUsed || inputHandler.wasHintUsed() || state.hintUsed;
-    const mistakeCount = result?.mistakeCount ?? inputHandler.getMistakeCount();
-
-    // Calculate quality using GameLogic
-    const isRevealed = (state as any).isRevealed || false;
-    const quality = GameLogic.calculateQuality(mistakeCount, hintUsed, isRevealed);
-
-    // Reset revealed flag
-    if (isRevealed) (state as any).isRevealed = false;
-
-    // Update SRS
-    updateWordSRS(state.currentWord.term, quality);
-
-    // Update Progress Dot
-    const isSuccess = quality >= 3;
-    ui.updateProgressDot(state.currentWordIndex, isSuccess ? 'correct' : 'wrong');
-
-    // Calculate XP using GameLogic
-    const xpEarned = GameLogic.calculateXP(quality, state.sessionStreak);
-
-    const oldLevel = getLevel();
-    state.score += xpEarned;
-    addXP(xpEarned);
-
-    // Check for level up
-    if (GameLogic.checkLevelUp(oldLevel)) {
-        ui.showLevelUp(getLevel());
-    }
-
-    ui.updateHud(state.score, state.sessionStreak);
-    ui.updateStatsDisplay();
-    ui.displayGreeting(Game.getPlayerName());
-
-    // Show feedback
-    const praise = getRandomPraise(quality, state.sessionStreak);
-    ui.showFeedback(`${praise} +${xpEarned} 经验`, "#4ade80");
-
-    // Check achievements
-    const newAchievements = checkAchievements();
-    if (newAchievements.length > 0) {
-        setTimeout(() => ui.showNewAchievements(newAchievements), 1500);
-    }
-
-    // Show pinyin and next button
-    if (state.currentWord) {
-        ui.showPinyin(state.currentWord.pinyin);
-    }
-    ui.showNextButton();
-
-    // Track result
-    state.sessionResults.push({
-        term: state.currentWord.term,
-        correct: isSuccess,
-        mistakeCount: mistakeCount,
-        hintUsed: hintUsed,
-    });
-
-    // Celebration particles
-    const particleCount = quality === 5 ? 5 : (state.sessionStreak >= 3 ? 3 : 1);
-    for (let i = 0; i < particleCount; i++) {
-        setTimeout(() => {
-            spawnParticles(
-                window.innerWidth / 2 + (Math.random() - 0.5) * 200,
-                window.innerHeight / 2 + (Math.random() - 0.5) * 100
-            );
-        }, i * 150);
-    }
+    WordCompletionHandler.handleWordSuccess(
+        state.currentWord,
+        inputHandler,
+        state,
+        ui,
+        Game.getPlayerName(),
+        state.currentWordIndex,
+        result
+    );
 }
 
 /**
  * Show session complete screen
  */
 function showSessionComplete(): void {
-    // Log the attempt
-    const lesson = getCurrentLesson();
-    const duration = state.sessionStartTime ? Math.round((Date.now() - state.sessionStartTime) / 1000) : 0;
-    const correctCount = state.sessionResults.filter(r => r.correct).length;
+    // Clear saved session when completing
+    clearSession();
 
-    const attempt: AttemptLog = {
-        timestamp: new Date().toISOString(),
-        lessonId: lesson.id,
-        lessonTitle: lesson.title,
-        mode: 'spelling',
-        phrases: state.sessionResults,
-        totalScore: correctCount,
-        totalPhrases: state.sessionResults.length,
-        duration: duration,
-    };
-    logAttempt(attempt);
-
-    // Calculate percentage for display
-    const percentage = state.sessionResults.length > 0
-        ? Math.round((correctCount / state.sessionResults.length) * 100)
-        : 0;
-
-    ui.showSessionComplete(
-        state.wordsCompletedThisSession,
-        percentage,
-        state.sessionStartTime || Date.now(),
+    SessionManager.showSessionComplete(
+        state,
+        ui,
         () => {
             state.currentWordIndex = 0;
             Game.startPractice();
-        },
-        () => {
-            const stats = getStats();
-            const text = `✨ 星空听写\n我刚刚练习了 ${state.wordsCompletedThisSession} 个词语！\n得分: ${state.score} | 连胜: ${stats.dailyStreak}🔥\n等级: Lv.${getLevel()}\n\n快来挑战吧！`;
-
-            // Web Share API
-            if (navigator.share) {
-                navigator.share({
-                    title: '星空听写 - 中文学习',
-                    text: text,
-                    url: window.location.href
-                }).catch(console.error);
-            } else {
-                // Clipboard fallback
-                navigator.clipboard.writeText(text).then(() => {
-                    alert('成绩已复制到剪贴板！');
-                }).catch(() => {
-                    alert('分享功能暂不可用');
-                });
-            }
         }
     );
 }

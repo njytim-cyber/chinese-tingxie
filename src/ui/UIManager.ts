@@ -243,6 +243,14 @@ export class UIManager implements IUIManager {
         this.gameRenderer.showConfirm(title, message, onConfirm);
     }
 
+    showResumeDialog(
+        sessionInfo: { title: string; progress: string; age: string },
+        onResume: () => void,
+        onStartNew: () => void
+    ): void {
+        this.gameRenderer.showResumeDialog(sessionInfo, onResume, onStartNew);
+    }
+
     // --- Game Renderer (Shared) Methods that might need moving to GameRenderer later ---
     // For now, keep simple interactive UI methods here if they don't fit perfectly elsewhere,
     // or delegate if appropriate.

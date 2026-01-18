@@ -300,4 +300,58 @@ export class GameRenderer {
             }
         });
     }
+
+    /**
+     * Show resume session dialog
+     */
+    showResumeDialog(
+        sessionInfo: { title: string; progress: string; age: string },
+        onResume: () => void,
+        onStartNew: () => void
+    ): void {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay show';
+        overlay.innerHTML = `
+            <div class="modal-content" style="max-width: 450px; text-align: center;">
+                <h2 class="modal-title" style="color: var(--tang-gold); margin-bottom: 15px;">继续上次的练习？</h2>
+                <div style="background: var(--tang-paper); border-radius: var(--scholar-radius); padding: 20px; margin-bottom: 20px; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: var(--tang-ink-light); font-weight: 500;">练习模式:</span>
+                        <span style="color: var(--tang-ink); font-weight: 600;">${sessionInfo.title}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: var(--tang-ink-light); font-weight: 500;">进度:</span>
+                        <span style="color: var(--tang-red); font-weight: 600;">${sessionInfo.progress}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--tang-ink-light); font-weight: 500;">上次练习:</span>
+                        <span style="color: var(--tang-ink);">${sessionInfo.age}</span>
+                    </div>
+                </div>
+                <div class="modal-actions" style="display: flex; flex-direction: column; gap: 12px;">
+                    <button class="action-btn-primary" id="resume-session" style="font-size: 1.1rem; padding: 14px;">继续练习 →</button>
+                    <button class="action-btn-secondary" id="start-new">重新开始</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        document.getElementById('resume-session')?.addEventListener('click', () => {
+            overlay.remove();
+            try {
+                onResume();
+            } catch (e) {
+                console.error('Error resuming session:', e);
+            }
+        });
+
+        document.getElementById('start-new')?.addEventListener('click', () => {
+            overlay.remove();
+            try {
+                onStartNew();
+            } catch (e) {
+                console.error('Error starting new session:', e);
+            }
+        });
+    }
 }

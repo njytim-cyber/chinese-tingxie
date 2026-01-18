@@ -7,9 +7,12 @@
 import HanziWriter from 'hanzi-writer';
 import { SoundFX } from './audio';
 import { UIManager } from './ui/UIManager';
-import { splitTextByPunctuation } from './utils/text';
-import { hapticLight, hapticSuccess, hapticChunkComplete, hapticError } from './utils/haptics';
-import { revealCharacterSafely } from './utils/hanziWriterHelpers';
+import { splitTextByPunctuation, hapticLight, hapticSuccess, hapticChunkComplete, hapticError, revealCharacterSafely, DOMBuilder } from './utils';
+import { ElementIds } from './constants';
+import {
+    saveSession, clearSession,
+    type DictationSessionData
+} from './data/sessionPersistence';
 
 import type { DictationPassage, DictationData, CharBox, DictationChunk } from './types';
 
@@ -23,9 +26,42 @@ export class DictationManager {
     private passage: DictationPassage | null = null;
     private charBoxes: CharBox[] = [];
     private ui: UIManager;
+    private sessionStartTime: number = 0;
 
     constructor(ui: UIManager) {
         this.ui = ui;
+    }
+
+    /**
+     * Set session start time (called from controller)
+     */
+    setSessionStartTime(time: number): void {
+        this.sessionStartTime = time;
+    }
+
+    /**
+     * Save current session state
+     */
+    private saveSessionState(): void {
+        if (!this.passage || !this.chunks.length) return;
+
+        const sessionData: DictationSessionData = {
+            mode: 'dictation',
+            timestamp: Date.now(),
+            sessionStartTime: this.sessionStartTime,
+            passageId: this.passage.id,
+            passageTitle: this.passage.title,
+            passageText: this.passage.text,
+            chunks: this.chunks.map(c => c.text),
+            chunkPinyins: this.passage.chunkPinyins,
+            isFullDictation: !!this.passage.isFullDictation,
+            blanks: this.passage.blanks,
+            currentChunkIndex: this.currentChunkIndex,
+            currentCharIndex: this.currentCharIndex,
+            charBoxes: this.charBoxes // Save user input progress
+        };
+
+        saveSession(sessionData);
     }
 
     // Chunking state
@@ -249,8 +285,7 @@ export class DictationManager {
                     onNextChunk: () => {
                         this.nextChunk();
                         // Hide button immediately after clicking
-                        const btn = document.getElementById('btn-next-chunk');
-                        if (btn) btn.style.display = 'none';
+                        DOMBuilder.toggleElement(ElementIds.BTN_NEXT_CHUNK, false);
                     },
                     onJumpTo: (index: number) => this.goToChar(index)
                 }
@@ -262,8 +297,7 @@ export class DictationManager {
                 // updateCarouselView is called by renderer initially
 
                 // Initialize next button as hidden
-                const btn = document.getElementById('btn-next-chunk');
-                if (btn) btn.style.display = 'none';
+                DOMBuilder.toggleElement(ElementIds.BTN_NEXT_CHUNK, false);
             }, 50);
         }
     }
@@ -398,8 +432,7 @@ export class DictationManager {
                             }, 800);
 
                             // Enable the button so user can manually advance if impatient
-                            const btn = document.getElementById('btn-next-chunk');
-                            if (btn) btn.style.display = 'block';
+                            DOMBuilder.toggleElement(ElementIds.BTN_NEXT_CHUNK, true);
                         }
 
                         // Auto-advance to next char in carousel
@@ -476,6 +509,10 @@ export class DictationManager {
 
             this.currentChunkIndex++;
             this.currentCharIndex = 0; // Reset char index for new chunk
+
+            // Save progress after completing a chunk
+            this.saveSessionState();
+
             this.render();
             this.renderFooter(); // Update footer
 
@@ -495,6 +532,9 @@ export class DictationManager {
     }
 
     private showResults(): void {
+        // Clear saved session when completing
+        clearSession();
+
         // Calculate total weighted score
         let totalScore = 0;
         let maxScore = this.chunks.length * 2;

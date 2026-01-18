@@ -100,6 +100,9 @@ export class DictationController {
                 this.handleComplete(dictation, passage, score, total, sessionStartTime);
             };
 
+            // Set session start time for progress saving
+            dictation.setSessionStartTime(sessionStartTime);
+
             dictation.init(passage, container);
         } catch (error) {
             console.error('Failed to load DictationManager:', error);
