@@ -91,7 +91,9 @@
     display: flex;
     /* Horizontal layout */
     flex-direction: row;
-    width: 100%;
+    /* Remove width: 100% to allow natural expansion for carousel */
+    align-items: flex-start;
+    /* Prevent vertical shifting during slide - all boxes start at same height */
     transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     /* Smooth slide */
     will-change: transform;
