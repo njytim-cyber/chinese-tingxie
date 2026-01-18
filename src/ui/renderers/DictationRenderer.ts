@@ -477,9 +477,9 @@ export class DictationRenderer {
         let touchStartedOnCharBox = false;
 
         const handleTouchStart = (e: TouchEvent) => {
-            // Check if touch started on character box - ignore if so (let HanziWriter handle it)
+            // Check if touch started on character area (char-box includes slot + pinyin label)
             const target = e.target as HTMLElement;
-            if (target.closest('.char-slot')) {
+            if (target.closest('.char-box') || target.closest('.spelling-chars-container')) {
                 touchStartedOnCharBox = true;
                 return;
             }
