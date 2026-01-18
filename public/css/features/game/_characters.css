@@ -1,0 +1,136 @@
+/* Character Slots, Grids, and SVG Canvas */
+
+.character-container {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 20px 0;
+    padding: 10px;
+    touch-action: auto;
+    /* Allow scrolling in this container */
+}
+
+.char-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.char-slot {
+    width: min(240px, 60vw);
+    height: min(240px, 60vw);
+    max-width: 280px;
+    max-height: 280px;
+    background: var(--bg-canvas);
+    background-image: var(--texture-paper);
+    border: 2px solid var(--tang-gold);
+    border-radius: var(--scholar-radius);
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    touch-action: none;
+    /* Prevent touch interference with character drawing - users can scroll via surrounding areas */
+}
+
+.char-slot.loading {
+    background: linear-gradient(
+        90deg,
+        var(--bg-canvas) 25%,
+        #f0f0f0 50%,
+        var(--bg-canvas) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Grids - Beautiful Xizi Style */
+.char-slot.grid-tian::before,
+.char-slot.grid-mi::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* Grid background */
+    background-image:
+        linear-gradient(rgba(180, 83, 9, 0.2) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(180, 83, 9, 0.2) 1px, transparent 1px);
+    background-size: 50% 50%;
+    background-position: center;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.char-slot.grid-tian::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* No diagonals for Tian grid */
+    pointer-events: none;
+    z-index: 5;
+}
+
+.char-slot.grid-mi::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* Diagonal lines for Mi grid */
+    background:
+        linear-gradient(45deg, transparent 49.5%, rgba(180, 83, 9, 0.1) 49.5%, rgba(180, 83, 9, 0.1) 50.5%, transparent 50.5%),
+        linear-gradient(-45deg, transparent 49.5%, rgba(180, 83, 9, 0.1) 49.5%, rgba(180, 83, 9, 0.1) 50.5%, transparent 50.5%);
+    pointer-events: none;
+    z-index: 5;
+}
+
+.char-slot.grid-blank::before,
+.char-slot.grid-blank::after {
+    display: none;
+}
+
+/* Force SVG to be transparent & below grid */
+.char-slot svg {
+    background: transparent !important;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+/* Visibility Classes for Dictation/Spelling Carousel */
+.spelling-hidden {
+    display: none !important;
+}
+
+.spelling-active {
+    display: flex !important;
+}
+
+.char-slot.active {
+    border-color: var(--tang-gold);
+    box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.15);
+    animation: gentle-pulse 2s infinite;
+}
+
+.char-slot.success {
+    border-color: var(--success);
+    box-shadow: 0 0 0 3px rgba(6, 95, 70, 0.15);
+    animation: none;
+}
+
+.char-slot.shake {
+    border-color: var(--danger);
+    animation: shake 0.4s both;
+}

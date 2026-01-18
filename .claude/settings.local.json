@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(npm run:*)",
+      "Bash(\"public/css/features/game.css.tmp\")"
     ],
     "deny": [],
     "ask": []
