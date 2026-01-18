@@ -450,6 +450,7 @@ export class DictationRenderer {
         nextBtn.className = 'action-btn-primary';
         nextBtn.id = 'btn-next-chunk';
         nextBtn.innerHTML = '继续 &rarr;';
+        nextBtn.style.display = 'none'; // Default to hidden
         nextBtn.style.width = '100%';
         nextBtn.style.minHeight = '44px';
         nextBtn.style.padding = '12px 24px';
@@ -616,8 +617,12 @@ export class DictationRenderer {
         const progress = chunks.length > 0 ? (currentChunkIndex / chunks.length) * 100 : 0;
 
         // Update progress bar
+        // Update progress bar
         progressContainer.innerHTML = `
-            <div class="dictation-progress-fill" style="width: ${progress}%"></div>
+            <div class="progress-bar-wrapper">
+                <div class="dictation-progress-fill" style="width: ${progress}%"></div>
+                <div class="progress-count">${currentChunkIndex + 1} / ${chunks.length}</div>
+            </div>
         `;
     }
 

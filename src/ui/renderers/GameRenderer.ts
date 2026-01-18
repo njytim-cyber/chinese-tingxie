@@ -239,16 +239,15 @@ export class GameRenderer {
                     </svg>
                 </button>
             </div>
+            
+            <!-- Next Button Container (Inside Card) -->
+            <div class="next-chunk-container">
+                <button class="action-btn-large" id="next-btn" style="display:none; width: 100%;">继续 →</button>
+            </div>
         `;
         fragment.appendChild(card);
 
-        // 3. Bottom Action Area
-        const bottomArea = document.createElement('div');
-        bottomArea.className = 'bottom-action-area';
-        bottomArea.innerHTML = `
-            <button class="action-btn-large" id="next-btn" style="display:none;">继续 →</button>
-        `;
-        fragment.appendChild(bottomArea);
+        // Removed bottom-action-area as it's now inside the card
 
         app.appendChild(fragment);
 
