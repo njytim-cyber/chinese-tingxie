@@ -8,6 +8,8 @@
     height: 100%;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    /* Allow vertical scrolling on touch devices */
     font-family: var(--app-font);
     box-sizing: border-box;
     min-height: 100dvh;

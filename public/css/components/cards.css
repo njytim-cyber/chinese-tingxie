@@ -85,6 +85,8 @@
     width: 100%;
     max-width: 500px;
     margin: 0 auto 12px;
+    touch-action: pan-y;
+    /* Allow vertical scrolling on touch devices */
 }
 
 .lesson-group-header {
@@ -163,6 +165,8 @@
     border-bottom-left-radius: var(--scholar-radius);
     border-bottom-right-radius: var(--scholar-radius);
     padding: 0 8px;
+    touch-action: pan-y;
+    /* Allow vertical scrolling on touch devices */
 }
 
 .lesson-group-content.expanded {
