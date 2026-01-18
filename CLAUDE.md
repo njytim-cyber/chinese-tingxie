@@ -1,5 +1,125 @@
 # Claude Code Session Notes
 
+## Session: 2026-01-19 (Continued) - Version Display & Repository Cleanup 🧹
+
+### Repository Organization & Code Quality
+
+**Context**: After implementing purchase celebrations, user requested version display on loading screen, version in console logs, cleanup of unnecessary console messages, and repository organization.
+
+**Tasks Completed**:
+
+#### 1. Version Display on Splash Screen
+- Added version string "v2.1.0" to splash screen content
+- Styled with `.splash-version` class: subtle, positioned below subtitle
+- Removed old `version-tag-bottom` from start overlay
+- Version now prominently displayed during app initialization
+
+**Files Changed**:
+- [index.html](index.html#L42) - Added `<p class="splash-version">v2.1.0</p>`
+- [public/css/index.css](public/css/index.css#L61-L68) - Added `.splash-version` styling
+
+---
+
+#### 2. Enhanced Console Logging
+- Replaced generic "Initializing app (v1.21.22)..." with styled branded output
+- Added styled console logs using `%c` CSS formatting:
+  ```javascript
+  console.log('%c🎨 心织笔耕 - Chinese Dictation App', 'color: #dc2626; font-size: 16px; font-weight: bold');
+  console.log('%c📦 Version: 2.1.0', 'color: #059669; font-weight: bold');
+  console.log('%c🚀 Initializing...', 'color: #0891b2');
+  console.log('%c✓ App initialized successfully', 'color: #059669; font-weight: bold');
+  ```
+- Updated success message from plain "App initialized" to styled version
+
+**Files Changed**:
+- [src/main.ts](src/main.ts#L24-L26) - Enhanced initialization logs
+- [src/main.ts](src/main.ts#L136) - Styled success message
+
+---
+
+#### 3. Console Message Cleanup
+- Removed debug log: `console.log('ShopRenderer.show started')`
+- Cleaned up service worker registration logs:
+  - Removed: `console.log('SW registered:', registration.scope)`
+  - Removed: `console.log('New service worker activated')`
+  - Removed: `console.log('Service worker updated to:', event.data.version)`
+  - Kept: `console.error('Service worker registration failed:', error)` for debugging
+- Reduced console noise while maintaining error visibility
+
+**Files Changed**:
+- [src/ui/renderers/ShopRenderer.ts](src/ui/renderers/ShopRenderer.ts#L54) - Removed debug log
+- [index.html](index.html#L182-L217) - Cleaned service worker logs
+
+---
+
+#### 4. Repository Organization
+Created clean root directory structure by archiving obsolete files:
+
+**Archive Structure**:
+```
+archive/
+├── README.md
+├── python-scripts/     (11 scripts)
+│   ├── convert-set-b.py
+│   ├── escape-inner-quotes.py
+│   ├── fix-*.py (7 files)
+│   └── rebuild-json.py
+└── old-docs/           (7 files)
+    ├── .eslintrc.hanziwriter.md
+    ├── .refactoring-plan.md
+    ├── features.html
+    ├── master_specifications.md
+    ├── NAVIGATION_MAP.md
+    ├── TABBED_NAVIGATION_IMPLEMENTATION.md
+    ├── spec.md
+    └── task.md
+```
+
+**Removed Files**:
+- `nul` - Empty temporary file
+- `试卷宝-其它四年级上学期试卷 (2).pdf` - Unrelated PDF
+
+**Clean Root Directory**:
+```
+root/
+├── .claude/                  (Claude Code config)
+├── .github/                  (CI workflows)
+├── archive/                  (archived files)
+├── dist/                     (build output)
+├── node_modules/             (dependencies)
+├── public/                   (static assets)
+├── scripts/                  (build scripts)
+├── src/                      (source code)
+├── CHANGELOG.md              (version history)
+├── CLAUDE.md                 (session notes)
+├── index.html                (entry point)
+├── netlify.toml              (deployment config)
+├── package.json              (dependencies)
+├── package-lock.json         (lockfile)
+├── README.md                 (project overview)
+├── tsconfig.json             (TypeScript config)
+├── tsconfig.tsbuildinfo      (TypeScript cache)
+└── vite.config.ts            (build config)
+```
+
+**Rationale**:
+- Python scripts were one-off utilities for data migration (no longer needed)
+- Old docs superseded by current documentation
+- Cleaner root makes navigation easier
+- Archive preserves history without cluttering active workspace
+
+---
+
+### Current Status
+
+**Branch**: master
+**Latest Commit**: 4bc3c04 - chore: add version display and clean up repo organization
+**Deployment**: https://chinese-tingxie.pages.dev/
+**Build**: ✅ Passing
+**Bundle Size**: UI 155.73 kB (stable)
+
+---
+
 ## Session: 2026-01-19 - Purchase Celebration Effects ✨
 
 ### Delightful UX Enhancement
