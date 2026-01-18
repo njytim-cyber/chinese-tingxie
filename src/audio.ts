@@ -11,10 +11,27 @@ declare global {
 
 // Lazy initialization of audio context for better performance
 let audioCtx: AudioContext | null = null;
+let audioUnlocked = false;
 
 function getAudioContext(): AudioContext {
     if (!audioCtx) {
+        // Create context - will be in suspended state until user gesture
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Auto-resume on first user interaction if not already unlocked
+        if (!audioUnlocked && audioCtx.state === 'suspended') {
+            const autoResume = () => {
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(() => {});
+                }
+                audioUnlocked = true;
+            };
+
+            // Listen for first user interaction
+            ['click', 'touchstart', 'keydown'].forEach(event => {
+                document.addEventListener(event, autoResume, { once: true, passive: true });
+            });
+        }
     }
     return audioCtx;
 }
@@ -27,6 +44,7 @@ export function resumeAudioContext(): void {
     if (ctx.state === 'suspended') {
         ctx.resume().catch(() => {});
     }
+    audioUnlocked = true;
 }
 
 export let selectedVoice: SpeechSynthesisVoice | null = null;
@@ -310,6 +328,7 @@ export function speakCharacters(text: string): void {
  */
 export function unlockAudio(): void {
     const ctx = getAudioContext();
+    audioUnlocked = true;
 
     // Immediate resume attempt
     if (ctx.state === 'suspended') {
