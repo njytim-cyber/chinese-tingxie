@@ -340,8 +340,14 @@ export class XiziController {
             ? `(${this.currentCharIndexInPhrase + 1}/${this.chineseCharsInPhrase.length})`
             : '';
 
+        // Phrase progress indicator
+        const phraseProgress = `词组 ${this.currentQueueIndex + 1}/${this.practiceQueue.length}`;
+
         // Simple, clean instructions - show phrase term with current character highlighted
         this.instructionsEl.innerHTML = `
+            <div style="font-size: 0.85rem; color: var(--tang-ink-light); margin-bottom: 4px; font-weight: 500;">
+                ${phraseProgress}
+            </div>
             <div style="font-size: 0.95rem; color: var(--tang-ink); margin-bottom: 8px;">
                 ${stageNames[this.currentStage]} ${charProgress}
             </div>
