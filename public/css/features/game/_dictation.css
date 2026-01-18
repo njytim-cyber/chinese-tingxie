@@ -5,8 +5,8 @@
     flex-direction: column !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    padding: 15px 10px calc(20px + env(safe-area-inset-bottom, 0px)) !important;
-    /* More compact padding */
+    padding: 8px 10px calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+    /* Optimized top padding for better header-to-content spacing */
     min-height: auto;
     /* Let content determine height */
     width: 100%;
@@ -24,9 +24,9 @@
 .dictation-container .writing-card {
     width: 95%;
     max-width: min(400px, 90vw);
-    margin-top: 5px;
+    margin-top: 8px;
     padding: 15px;
-    /* Add internal padding */
+    /* Standardized spacing from progress bar */
 }
 
 /* Spelling (听写) Mode - Match dictation layout */
@@ -123,9 +123,9 @@
 .dictation-header-progress {
     width: 95%;
     max-width: min(400px, 90vw);
-    margin: 8px auto 15px;
+    margin: 6px auto 8px;
     touch-action: pan-y;
-    /* Allow vertical scrolling through progress bar */
+    /* Optimized spacing: tight margins for better vertical rhythm */
 }
 
 .progress-bar-wrapper {

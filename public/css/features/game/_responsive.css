@@ -3,8 +3,8 @@
 /* Mobile - 600px and below */
 @media (max-width: 600px) {
     .dictation-container {
-        padding: 10px 8px calc(180px + env(safe-area-inset-bottom, 0px)) !important;
-        /* Increased bottom padding for mobile buttons and tab bar - ensures card is fully visible */
+        padding: 6px 8px calc(180px + env(safe-area-inset-bottom, 0px)) !important;
+        /* Tighter top padding for mobile - maximizes visible content */
         touch-action: pan-y pinch-zoom;
         /* Allow vertical scrolling */
         min-height: 100dvh;
@@ -14,8 +14,8 @@
     .dictation-container .writing-card {
         width: 98%;
         padding: 10px;
-        margin: 20px 0 30px;
-        /* Add extra bottom margin for scroll area */
+        margin: 6px 0 30px;
+        /* Reduced top margin for tighter spacing */
     }
 
     .dictation-completed-phrases {
@@ -52,7 +52,8 @@
 
     .dictation-header-progress {
         width: 98%;
-        margin: 6px auto 12px;
+        margin: 4px auto 6px;
+        /* Tighter spacing on mobile */
     }
 
     .progress-bar-wrapper {
@@ -73,14 +74,20 @@
     }
 
     .dictation-container {
-        padding: 8px 5px calc(150px + env(safe-area-inset-bottom, 0px)) !important;
-        /* Increased bottom padding for very small screens to clear tab bar */
+        padding: 4px 5px calc(150px + env(safe-area-inset-bottom, 0px)) !important;
+        /* Very tight top padding for small screens */
     }
 
     .dictation-container .writing-card {
         padding: 8px;
+        margin-top: 4px;
         margin-bottom: 30px;
-        /* Extra bottom margin for scroll clearance */
+        /* Ultra-tight top spacing for small screens */
+    }
+
+    .dictation-header-progress {
+        margin: 3px auto 4px;
+        /* Minimal spacing for small screens */
     }
 
     .spelling-carousel {
@@ -202,7 +209,18 @@
 
     .dictation-container {
         max-width: 800px;
-        padding: 20px 16px calc(100px + env(safe-area-inset-bottom, 0px));
+        padding: 10px 16px calc(100px + env(safe-area-inset-bottom, 0px));
+        /* Moderate top padding for tablets */
+    }
+
+    .dictation-container .writing-card {
+        margin-top: 10px;
+        /* Balanced spacing for tablet screens */
+    }
+
+    .dictation-header-progress {
+        margin: 6px auto 10px;
+        /* Medium spacing for tablets */
     }
 
     .spelling-carousel {
