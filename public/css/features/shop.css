@@ -8,70 +8,71 @@
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 16px;
 }
 
-/* Balance Header */
+/* Balance Header - More Compact */
 .shop-balance-header {
     background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
     border: 2px solid #d97706;
-    border-radius: 16px;
-    padding: 20px;
+    border-radius: 12px;
+    padding: 12px 16px;
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .balance-display {
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 1.25rem;
+    gap: 8px;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--tang-ink);
 }
 
 .balance-amount {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: #92400e;
 }
 
 .balance-label {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     font-weight: 500;
     color: #78350f;
     opacity: 0.8;
 }
 
-/* Items Grid */
+/* Items Grid - More Compact */
 .shop-items-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
     padding-bottom: 100px; /* Space for tab bar */
 }
 
 /* Tablet and larger */
 @media (min-width: 768px) {
     .shop-items-grid {
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
     }
 }
 
-/* Item Card */
+/* Item Card - More Compact */
 .shop-item-card {
     background: var(--tang-white);
     border: 2px solid var(--tang-border);
-    border-radius: 16px;
-    padding: 20px;
+    border-radius: 12px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     position: relative;
     transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -88,43 +89,59 @@
     border-color: #10b981;
 }
 
-/* Item Icon */
+/* Item Icon - Compact with SVG support */
 .item-icon {
-    font-size: 3rem;
-    text-align: center;
-    height: 80px;
+    width: 52px;
+    height: 52px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, var(--tang-white) 0%, var(--tang-bg) 100%);
-    border-radius: 12px;
-    margin-bottom: 8px;
+    border-radius: 10px;
+    border: 1.5px solid var(--tang-border);
+    flex-shrink: 0;
 }
 
-/* Badges */
+.item-icon svg {
+    width: 32px;
+    height: 32px;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.item-icon.emoji-icon {
+    font-size: 2rem;
+}
+
+/* Badges - More Compact */
 .owned-badge,
 .count-badge {
     position: absolute;
-    top: 12px;
-    right: 12px;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 0.75rem;
+    top: 8px;
+    right: 8px;
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 0.6875rem;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
 }
 
 .owned-badge {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 1px 4px rgba(16, 185, 129, 0.3);
 }
 
 .count-badge {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: white;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 1px 4px rgba(59, 130, 246, 0.3);
+}
+
+/* Item Content - Horizontal Layout */
+.item-content {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
 }
 
 /* Item Info */
@@ -132,53 +149,61 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
+    min-width: 0; /* Allow text truncation */
 }
 
 .item-name {
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--tang-ink);
     font-family: 'KaiTi', 'STKaiti', 'SimKai', serif;
+    line-height: 1.3;
 }
 
 .item-description {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     color: var(--tang-text);
-    line-height: 1.5;
-    opacity: 0.8;
+    line-height: 1.4;
+    opacity: 0.75;
 }
 
-/* Item Footer */
+/* Item Footer - More Compact */
 .item-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    padding-top: 12px;
-    border-top: 1px solid var(--tang-border);
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .item-price {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 1.125rem;
+    gap: 4px;
+    font-size: 1rem;
     font-weight: 700;
     color: #92400e;
 }
 
+.item-price svg {
+    width: 18px;
+    height: 18px;
+}
+
 .item-buy-btn {
-    padding: 8px 20px;
+    padding: 6px 16px;
     background: linear-gradient(135deg, var(--tang-jade) 0%, #059669 100%);
     color: white;
     border: none;
     border-radius: 8px;
     font-weight: 600;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+    white-space: nowrap;
 }
 
 .item-buy-btn:hover:not(:disabled) {
@@ -258,21 +283,47 @@
 /* Responsive adjustments */
 @media (max-width: 640px) {
     .shop-container {
-        padding: 16px;
+        padding: 12px;
+        gap: 12px;
     }
 
     .shop-items-grid {
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: 10px;
+    }
+
+    .shop-item-card {
+        padding: 12px;
     }
 
     .item-icon {
-        font-size: 2.5rem;
-        height: 70px;
+        width: 48px;
+        height: 48px;
+    }
+
+    .item-icon svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    .item-icon.emoji-icon {
+        font-size: 1.75rem;
+    }
+
+    .item-name {
+        font-size: 0.9375rem;
+    }
+
+    .item-description {
+        font-size: 0.75rem;
     }
 
     .balance-amount {
-        font-size: 1.75rem;
+        font-size: 1.375rem;
+    }
+
+    .balance-display {
+        font-size: 0.9375rem;
     }
 
     .purchase-item-icon {
