@@ -26,7 +26,8 @@ export function getLessonsBySet(setId: string): Lesson[] {
 export function getAvailableSets(): { id: string; name: string }[] {
     return [
         { id: 'A', name: '甲' },
-        { id: 'B', name: '乙' }
+        { id: 'B', name: '乙' },
+        { id: 'C', name: '丙' }
     ];
 }
 
@@ -35,7 +36,17 @@ export function getAvailableSets(): { id: string; name: string }[] {
  */
 export async function getDictationPassagesBySet(setId: string): Promise<DictationPassage[]> {
     try {
-        const filename = setId === 'A' ? '/dictation.json' : '/dictation-set-b.json';
+        let filename: string;
+        if (setId === 'A') {
+            filename = '/dictation.json';
+        } else if (setId === 'B') {
+            filename = '/dictation-set-b.json';
+        } else if (setId === 'C') {
+            filename = '/dictation-set-c.json';
+        } else {
+            throw new Error(`Unknown set ID: ${setId}`);
+        }
+
         // Add cache-busting timestamp to force fresh load
         const url = `${filename}?v=${Date.now()}`;
         const response = await fetch(url);
@@ -49,12 +60,13 @@ export async function getDictationPassagesBySet(setId: string): Promise<Dictatio
 }
 
 /**
- * Get all dictation passages from both sets
+ * Get all dictation passages from all sets
  */
 export async function getAllDictationPassages(): Promise<DictationPassage[]> {
-    const [setA, setB] = await Promise.all([
+    const [setA, setB, setC] = await Promise.all([
         getDictationPassagesBySet('A'),
-        getDictationPassagesBySet('B')
+        getDictationPassagesBySet('B'),
+        getDictationPassagesBySet('C')
     ]);
-    return [...setA, ...setB];
+    return [...setA, ...setB, ...setC];
 }

@@ -31,8 +31,8 @@ export class LessonRenderer {
             this.manager.toggleBackBtn(false); // No back button on root screen
             this.manager.toggleHeaderStats(false); // Hide stats counter
 
-            // Create tabbed navigation
-            const sets = getAvailableSets();
+            // Create tabbed navigation (only A and B have lesson data)
+            const sets = getAvailableSets().filter(set => set.id === 'A' || set.id === 'B');
             this.tabbedNav = new TabbedNav({
                 tabs: sets.map(set => ({ id: set.id, label: set.name })),
                 initialTab: 'A',

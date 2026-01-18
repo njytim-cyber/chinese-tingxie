@@ -1,0 +1,410 @@
+{
+    "passages": [
+        {
+            "id": "c-1.1",
+            "title": "第一课 (必考)",
+            "setId": "C",
+            "text": "正当他们玩得兴高采烈时，弟弟不小心把飞机掉在地上。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "When they were playing happily...",
+            "chunks": [
+                "正当他们玩得兴高采烈时，",
+                "弟弟不小心",
+                "把飞机掉在地上。"
+            ],
+            "chunkPinyins": [
+                "zhèng dāng tā men wán de xìng gāo cǎi liè shí,",
+                "dì di bù xiǎo xīn",
+                "bǎ fēi jī diào zài dì shang."
+            ]
+        },
+        {
+            "id": "c-1.2",
+            "title": "第一课 (加分)",
+            "setId": "C",
+            "text": "飞机一会儿高，一会儿低，兄弟俩玩得满头大汗，不亦乐乎，房间里都是他们的笑声。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "The plane went high and low...",
+            "chunks": [
+                "飞机一会儿高，一会儿低，",
+                "兄弟俩玩得满头大汗，",
+                "不亦乐乎，",
+                "房间里都是他们的笑声。"
+            ],
+            "chunkPinyins": [
+                "fēi jī yí huìr gāo, yí huìr dī,",
+                "xiōng dì liǎ wán de mǎn tóu dà hàn,",
+                "bù yì lè hū,",
+                "fáng jiān lǐ dōu shì tā men de xiào shēng."
+            ]
+        },
+        {
+            "id": "c-2.1",
+            "title": "第二课 (必考)",
+            "setId": "C",
+            "text": "爸爸妈妈一出门，我就马上打开电视，津津有味地看了起来。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "As soon as parents left...",
+            "chunks": [
+                "爸爸妈妈一出门，",
+                "我就马上打开电视，",
+                "津津有味地看了起来。"
+            ],
+            "chunkPinyins": [
+                "bà ba mā ma yì chū mén,",
+                "wǒ jiù mǎ shàng dǎ kāi diàn shì,",
+                "jīn jīn yǒu wèi de kàn le qǐ lái."
+            ]
+        },
+        {
+            "id": "c-2.2",
+            "title": "第二课 (加分)",
+            "setId": "C",
+            "text": "我迅速关掉电视，飞快地跑回房间，拿起笔，结果却是一场虚惊。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "I quickly turned off the TV...",
+            "chunks": [
+                "我迅速关掉电视，",
+                "飞快地跑回房间，",
+                "拿起笔，",
+                "结果却是一场虚惊。"
+            ],
+            "chunkPinyins": [
+                "wǒ xùn sù guān diào diàn shì,",
+                "fēi kuài de pǎo huí fáng jiān,",
+                "ná qǐ bǐ,",
+                "jié guǒ què shì yì chǎng xū jīng."
+            ]
+        },
+        {
+            "id": "c-3.1",
+            "title": "第三课 (必考)",
+            "setId": "C",
+            "text": "我对妈妈发脾气，还顶撞了她，我实在太不应该了。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "I lost my temper at mom...",
+            "chunks": [
+                "我对妈妈发脾气，",
+                "还顶撞了她，",
+                "我实在太不应该了。"
+            ],
+            "chunkPinyins": [
+                "wǒ duì mā ma fā pí qi,",
+                "hái dǐng zhuàng le tā,",
+                "wǒ shí zài tài bù yīng gāi le."
+            ]
+        },
+        {
+            "id": "c-3.2",
+            "title": "第三课 (加分)",
+            "setId": "C",
+            "text": "妈妈板起面孔，眉毛竖成了倒"八"字，眼睛瞪得又圆又大，就像一座"活火山"，随时会"爆发"。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "Mom's face hardened...",
+            "chunks": [
+                "妈妈板起面孔，",
+                "眉毛竖成了倒"八"字，",
+                "眼睛瞪得又圆又大，",
+                "就像一座"活火山"，",
+                "随时会"爆发"。"
+            ],
+            "chunkPinyins": [
+                "mā ma bǎn qǐ miàn kǒng,",
+                "méi mao shù chéng le dào bā zì,",
+                "yǎn jing dèng de yòu yuán yòu dà,",
+                "jiù xiàng yí zuò huó huǒ shān,",
+                "suí shí huì bào fā."
+            ]
+        },
+        {
+            "id": "c-4.1",
+            "title": "第四课 (必考)",
+            "setId": "C",
+            "text": "小华向小安询问事情的来龙去脉，小安便把事情的经过一五一十地告诉了他。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "Xiaohua asked Xiaoan about the sequence of events...",
+            "chunks": [
+                "小华向小安询问事情的来龙去脉，",
+                "小安便把事情的经过",
+                "一五一十地告诉了他。"
+            ],
+            "chunkPinyins": [
+                "xiǎo huá xiàng xiǎo ān xún wèn shì qíng de lái lóng qù mài,",
+                "xiǎo ān biàn bǎ shì qíng de jīng guò",
+                "yī wǔ yī shí de gào su le tā."
+            ]
+        },
+        {
+            "id": "c-4.2",
+            "title": "第四课 (加分)",
+            "setId": "C",
+            "text": "小文看到老师这么生气，吓得目瞪口呆，一时不知所措，呆坐在那里一动也不动。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "Xiaowen was stunned to see the teacher so angry...",
+            "chunks": [
+                "小文看到老师这么生气，",
+                "吓得目瞪口呆，",
+                "一时不知所措，",
+                "呆坐在那里一动也不动。"
+            ],
+            "chunkPinyins": [
+                "xiǎo wén kàn dào lǎo shī zhè me shēng qì,",
+                "xià de mù dèng kǒu dāi,",
+                "yì shí bù zhī suǒ cuò,",
+                "dāi zuò zài nà li yí dòng yě bú dòng."
+            ]
+        },
+        {
+            "id": "c-5.1",
+            "title": "第五课 (必考)",
+            "setId": "C",
+            "text": "志明得满脸通红，他难为情地低下头，恨不得地上有个洞让他钻进去。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "Zhiming was flushed with embarrassment...",
+            "chunks": [
+                "志明得满脸通红，",
+                "他难为情地低下头，",
+                "恨不得地上有个洞",
+                "让他钻进去。"
+            ],
+            "chunkPinyins": [
+                "zhì míng de mǎn liǎn tōng hóng,",
+                "tā nán wéi qíng de dī xià tóu,",
+                "hèn bu dé dì shang yǒu gè dòng",
+                "ràng tā zuān jìn qù."
+            ]
+        },
+        {
+            "id": "c-5.2",
+            "title": "第五课 (加分)",
+            "setId": "C",
+            "text": "天空乌云密布，紧接着下起了倾盆大雨。风呼呼地吹着，冷得我直发抖。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "Dark clouds covered the sky...",
+            "chunks": [
+                "天空乌云密布，",
+                "紧接着下起了倾盆大雨。",
+                "风呼呼地吹着，",
+                "冷得我直发抖。"
+            ],
+            "chunkPinyins": [
+                "tiān kōng wū yún mì bù,",
+                "jǐn jiē zhe xià qǐ le qīng pén dà yǔ.",
+                "fēng hū hū de chuī zhe,",
+                "lěng de wǒ zhí fā dǒu."
+            ]
+        },
+        {
+            "id": "c-6.1",
+            "title": "第六课 (必考)",
+            "setId": "C",
+            "text": "小恩劝小美不要走路时看书，以免发生意外，但是小美把她的话当成耳边风。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "Xiaoen advised Xiaomei...",
+            "chunks": [
+                "小恩劝小美不要走路时看书，",
+                "以免发生意外，",
+                "但是小美把她的话当成耳边风。"
+            ],
+            "chunkPinyins": [
+                "xiǎo ēn quàn xiǎo měi bú yào zǒu lù shí kàn shū,",
+                "yǐ miǎn fā shēng yì wài,",
+                "dàn shì xiǎo měi bǎ tā de huà dàng chéng ěr biān fēng."
+            ]
+        },
+        {
+            "id": "c-6.2",
+            "title": "第六课 (加分)",
+            "setId": "C",
+            "text": "老爷爷听了，大吃一惊，他万万没想到眼前的这个小女孩竟然这么没礼貌，完全不懂得尊敬长辈。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "Grandpa was shocked...",
+            "chunks": [
+                "老爷爷听了，大吃一惊，",
+                "他万万没想到",
+                "眼前的这个小女孩竟然这么没礼貌，",
+                "完全不懂得尊敬长辈。"
+            ],
+            "chunkPinyins": [
+                "lǎo yé ye tīng le, dà chī yì jīng,",
+                "tā wàn wàn méi xiǎng dào",
+                "yǎn qián de zhè ge xiǎo nǚ hái jìng rán zhè me méi lǐ mào,",
+                "wán quán bù dǒng de zūn jìng zhǎng bèi."
+            ]
+        },
+        {
+            "id": "c-7.1",
+            "title": "第七课 (必考)",
+            "setId": "C",
+            "text": "小灵知道自己错了，她不好意思地向妹妹道歉，并保证以后不会再这样做了。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "Xiaoling knew she was wrong...",
+            "chunks": [
+                "小灵知道自己错了，",
+                "她不好意思地向妹妹道歉，",
+                "并保证以后不会再这样做了。"
+            ],
+            "chunkPinyins": [
+                "xiǎo líng zhī dào zì jǐ cuò le,",
+                "tā bù hǎo yì si de xiàng mèi mei dào qiàn,",
+                "bìng bǎo zhèng yǐ hòu bú huì zài zhè yàng zuò le."
+            ]
+        },
+        {
+            "id": "c-7.2",
+            "title": "第七课 (加分)",
+            "setId": "C",
+            "text": "老爷爷摇摇摆摆地走进车厢，他动作缓慢，双脚无力，手里提着一大袋东西，好像很重的样子。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "Grandpa walked unsteadily into the carriage...",
+            "chunks": [
+                "老爷爷摇摇摆摆地走进车厢，",
+                "他动作缓慢，双脚无力，",
+                "手里提着一大袋东西，",
+                "好像很重的样子。"
+            ],
+            "chunkPinyins": [
+                "lǎo yé ye yáo yáo bǎi bǎi de zǒu jìn chē xiāng,",
+                "tā dòng zuò huǎn màn, shuāng jiǎo wú lì,",
+                "shǒu lǐ tí zhe yí dà dài dōng xi,",
+                "hǎo xiàng hěn zhòng de yàng zi."
+            ]
+        },
+        {
+            "id": "c-8.1",
+            "title": "第八课 (必考)",
+            "setId": "C",
+            "text": ""马路如虎口"，我们过马路时一定要遵守交通规则，千万不能在那里玩耍。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "The road is like a tiger's mouth...",
+            "chunks": [
+                ""马路如虎口"，",
+                "我们过马路时一定要遵守交通规则，",
+                "千万不能在那里玩耍。"
+            ],
+            "chunkPinyins": [
+                "mǎ lù rú hǔ kǒu,",
+                "wǒ men guò mǎ lù shí yí dìng yào zūn shǒu jiāo tōng guī zé,",
+                "qiān wàn bù néng zài nà li wán shuǎ."
+            ]
+        },
+        {
+            "id": "c-8.2",
+            "title": "第八课 (加分)",
+            "setId": "C",
+            "text": "爸爸立刻冲上前，发现司机被困在车里。他连忙打电话叫救护车，最终司机被顺利救了出来。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "Dad rushed forward...",
+            "chunks": [
+                "爸爸立刻冲上前，",
+                "发现司机被困在车里。",
+                "他连忙打电话叫救护车，",
+                "最终司机被顺利救了出来。"
+            ],
+            "chunkPinyins": [
+                "bà ba lì kè chōng shàng qián,",
+                "fā xiàn sī jī bèi kùn zài chē lǐ.",
+                "tā lián máng dǎ diàn huà jiào jiù hù chē,",
+                "zuì zhōng sī jī bèi shùn lì jiù le chū lái."
+            ]
+        },
+        {
+            "id": "c-9.1",
+            "title": "第九课 (必考)",
+            "setId": "C",
+            "text": "在爷爷的提议下，我们沿着马路来到附近的熟食中心，买了饮料和炸鸡。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "At grandpa's suggestion...",
+            "chunks": [
+                "在爷爷的提议下，",
+                "我们沿着马路来到附近的熟食中心，",
+                "买了饮料和炸鸡。"
+            ],
+            "chunkPinyins": [
+                "zài yé ye de tí yì xià,",
+                "wǒ men yán zhe mǎ lù lái dào fù jìn de shú shí zhōng xīn,",
+                "mǎi le yǐn liào hé zhá jī."
+            ]
+        },
+        {
+            "id": "c-9.2",
+            "title": "第九课 (加分)",
+            "setId": "C",
+            "text": "当小男孩发现自己和别的孩子不一样时，心里很难过。但是他坚持努力，终于战胜了一切困难。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "When the boy found he was different...",
+            "chunks": [
+                "当小男孩发现自己和别的孩子不一样时，",
+                "心里很难过。",
+                "但是他坚持努力，",
+                "终于战胜了一切困难。"
+            ],
+            "chunkPinyins": [
+                "dāng xiǎo nán hái fā xiàn zì jǐ hé bié de hái zi bù yí yàng shí,",
+                "xīn lǐ hěn nán guò.",
+                "dàn shì tā jiān chí nǔ lì,",
+                "zhōng yú zhàn shèng le yí qiè kùn nan."
+            ]
+        },
+        {
+            "id": "c-10.1",
+            "title": "第十课 (必考)",
+            "setId": "C",
+            "text": "丽文知道自己错了，害羞地低下头，脸红得像番茄，显得很难为情。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "Liwen knew she was wrong...",
+            "chunks": [
+                "丽文知道自己错了，",
+                "害羞地低下头，",
+                "脸红得像番茄，",
+                "显得很难为情。"
+            ],
+            "chunkPinyins": [
+                "lì wén zhī dào zì jǐ cuò le,",
+                "hài xiū de dī xià tóu,",
+                "liǎn hóng de xiàng fān qié,",
+                "xiǎn de hěn nán wéi qíng."
+            ]
+        },
+        {
+            "id": "c-10.2",
+            "title": "第十课 (加分)",
+            "setId": "C",
+            "text": ""砰！"一听到枪声，我和其他选手像离弦的箭一样冲出了起跑线。",
+            "blanks": [],
+            "isFullDictation": true,
+            "hint": "Bang! Hearing the gunshot...",
+            "chunks": [
+                ""砰！"一听到枪声，",
+                "我和其他选手",
+                "像离弦的箭一样",
+                "冲出了起跑线。"
+            ],
+            "chunkPinyins": [
+                "pēng! yì tīng dào qiāng shēng,",
+                "wǒ hé qí tā xuǎn shǒu",
+                "xiàng lí xián de jiàn yí yàng",
+                "chōng chū le qǐ pǎo xiàn."
+            ]
+        }
+    ]
+}
