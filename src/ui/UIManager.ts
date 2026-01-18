@@ -143,6 +143,7 @@ export class UIManager implements IUIManager {
         if (visible) {
             this.gameRenderer.showGameView();
             this.updateCache(); // Refresh cache with new elements
+            this.restoreGameEventListeners(); // Re-attach button listeners
         }
         this.hudController.toggleActiveGameUI(visible);
     }
@@ -150,6 +151,7 @@ export class UIManager implements IUIManager {
     showControls(): void {
         this.gameRenderer.showGameView();
         this.updateCache();
+        this.restoreGameEventListeners(); // Re-attach button listeners
         this.hudController.showControls();
     }
 
