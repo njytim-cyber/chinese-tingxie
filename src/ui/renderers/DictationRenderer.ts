@@ -3,6 +3,8 @@ import { DictationPassage, DictationChunk, CharBox } from '../../types';
 import { CardFactory } from '../components/CardFactory';
 import { TabbedNav } from '../components/TabbedNav';
 import { getDictationPassagesBySet, getAvailableSets } from '../../data/sets';
+import { DOMBuilder } from '../../utils/DOMBuilder';
+import { ElementIds } from '../../constants/ui';
 
 /**
  * Convert Chinese numerals to Arabic numbers
@@ -143,9 +145,9 @@ export class DictationRenderer {
             const lessonGrid = document.createElement('div');
             lessonGrid.className = 'lesson-grid';
 
-            // For Set B, use grouped/accordion view
-            if (setId === 'B') {
-                console.log('Rendering Set B with', passages.length, 'passages');
+            // For Set B and C, use grouped/accordion view
+            if (setId === 'B' || setId === 'C') {
+                console.log(`Rendering Set ${setId} with`, passages.length, 'passages');
                 const grouped = this.groupPassagesByLesson(passages);
                 console.log('Grouped into', grouped.length, 'lesson groups:', grouped);
 
@@ -201,18 +203,36 @@ export class DictationRenderer {
         const groups = new Map<number, { title: string; passages: DictationPassage[] }>();
 
         passages.forEach((passage) => {
-            // Extract lesson number from title like "第一课 - 高兴/笑" or "第1课 - 高兴/笑"
-            const match = passage.title.match(/第([一二三四五六七八九十]+|\d+)课\s*-\s*(.+?)(?:\s*\(\d+\))?$/);
-            if (match) {
-                const lessonNum = chineseToNumber(match[1]);
-                const theme = match[2];
-                const lessonTitle = match[1]; // Keep original format (Chinese or Arabic)
+            // Extract lesson number from title
+            // Format 1: "第一课 - 高兴/笑" or "第1课 - 高兴/笑" (Set B)
+            // Format 2: "第一课 (必考)" or "第十课 (加分)" (Set C)
+            let match = passage.title.match(/第([一二三四五六七八九十]+|\d+)课\s*-\s*(.+?)(?:\s*\(\d+\))?$/);
+            let lessonNum: number;
+            let theme: string;
+            let lessonTitle: string;
 
-                if (!groups.has(lessonNum)) {
-                    groups.set(lessonNum, { title: `第${lessonTitle}课 - ${theme}`, passages: [] });
+            if (match) {
+                // Set B format with dash
+                lessonNum = chineseToNumber(match[1]);
+                theme = match[2];
+                lessonTitle = match[1];
+            } else {
+                // Try Set C format without dash
+                match = passage.title.match(/第([一二三四五六七八九十]+|\d+)课/);
+                if (match) {
+                    lessonNum = chineseToNumber(match[1]);
+                    lessonTitle = match[1];
+                    theme = ''; // No theme for Set C
+                } else {
+                    return; // Skip passages that don't match either format
                 }
-                groups.get(lessonNum)!.passages.push(passage);
             }
+
+            if (!groups.has(lessonNum)) {
+                const groupTitle = theme ? `第${lessonTitle}课 - ${theme}` : `第${lessonTitle}课`;
+                groups.set(lessonNum, { title: groupTitle, passages: [] });
+            }
+            groups.get(lessonNum)!.passages.push(passage);
         });
 
         // Convert to array and sort by lesson number
@@ -356,11 +376,10 @@ export class DictationRenderer {
         carousel.className = 'spelling-carousel';
 
 
-        // Single char container
+        // Single char container (carousel)
         const charContainer = document.createElement('div');
         charContainer.className = 'spelling-chars-container';
-        charContainer.style.display = 'flex';
-        charContainer.style.justifyContent = 'center';
+        // CSS handles display: flex and layout
 
         // Create char boxes
         validCharIndices.forEach((globalIdx) => {
@@ -439,29 +458,18 @@ export class DictationRenderer {
         // Append card to container
         container.appendChild(card);
 
-        // 5. Next Chunk Button Container (Outside card, like completed-phrases and progress bar)
-        const nextBtnContainer = document.createElement('div');
-        nextBtnContainer.className = 'next-chunk-container';
-        nextBtnContainer.style.width = '100%';
-        nextBtnContainer.style.padding = '16px 10px';
-        nextBtnContainer.style.display = 'flex';
-        nextBtnContainer.style.flexDirection = 'column';
-        nextBtnContainer.style.alignItems = 'center';
-        nextBtnContainer.style.minHeight = '60px';
+        // 5. Next Chunk Button Container (Outside the dictation-container, as a sibling) - using DOMBuilder
+        if (container.parentElement) {
+            DOMBuilder.removeElementById(ElementIds.NEXT_CHUNK_CONTAINER);
 
-        const nextBtn = document.createElement('button');
-        nextBtn.className = 'action-btn-primary';
-        nextBtn.id = 'btn-next-chunk';
-        nextBtn.innerHTML = '继续 &rarr;';
-        nextBtn.style.display = 'none'; // Default to hidden
-        nextBtn.style.width = '100%';
-        nextBtn.style.minHeight = '44px';
-        nextBtn.style.padding = '12px 24px';
-        nextBtn.style.fontSize = '1rem';
-        nextBtn.onclick = callbacks.onNextChunk;
+            const { container: nextBtnContainer } = DOMBuilder.createContinueButtonContainer(
+                ElementIds.NEXT_CHUNK_CONTAINER,
+                ElementIds.BTN_NEXT_CHUNK,
+                callbacks.onNextChunk
+            );
 
-        nextBtnContainer.appendChild(nextBtn);
-        container.appendChild(nextBtnContainer);
+            container.parentElement.appendChild(nextBtnContainer);
+        }
 
         // Enhanced swipe support for easier navigation
         let touchStartX = 0;
