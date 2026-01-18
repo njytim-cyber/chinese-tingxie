@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2026-01-18
+
+### Added
+- 🎯 Manual "继续 →" button in 习字 mode after phrase completion
+- 📊 Consistent progress controls across all three practice modes
+- 📍 Next chunk button container with proper spacing in 默写 mode
+
+### Changed
+- 🔄 习字 mode: Replaced auto-advance with manual button control
+- 🎨 Improved button layout and vertical spacing across all modes
+- 📱 Enhanced mobile layout with better centering and overflow handling
+
+### Fixed
+- ⚡ Updated GitHub Actions workflows to use Node.js 20 (Vite 7 requirement)
+- 🎨 Added missing CSS for next-chunk-container visibility
+
 ## [2.0.0] - 2026-01-18
 
 ### Added

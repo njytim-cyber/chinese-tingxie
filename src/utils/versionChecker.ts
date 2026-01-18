@@ -3,11 +3,20 @@
  * This preserves localStorage while ensuring users see the latest version
  */
 
-const APP_VERSION = '2.0.0'; // Synced by scripts/sync-version.js
+const APP_VERSION = '2.0.1'; // Synced by scripts/sync-version.js
 const VERSION_KEY = 'app_version';
 
 // Release notes for current version
 const RELEASE_NOTES = {
+    '2.0.1': {
+        title: 'UX改进: 统一操作体验',
+        features: [
+            '习字模式新增手动"继续"按钮',
+            '三种模式统一使用手动进度控制',
+            '默写模式新增"继续"按钮和进度条',
+            '改善移动端布局和按钮间距'
+        ]
+    },
     '2.0.0': {
         title: '重大更新: 习字模式增强',
         features: [
