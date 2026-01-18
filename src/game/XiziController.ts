@@ -3,6 +3,12 @@ import { UIManager } from '../ui/UIManager';
 import { getPhrasesForLesson, updateCharacterProgress, getLessons, type Phrase } from '../data';
 import { SoundFX } from '../audio';
 import { spawnParticles } from '../particles';
+import { DOMBuilder } from '../utils/DOMBuilder';
+import { ElementIds } from '../constants/ui';
+import {
+    saveSession, clearSession,
+    type XiziSessionData
+} from '../data/sessionPersistence';
 
 /**
  * Xizi (Character Practice) Controller
@@ -29,6 +35,7 @@ export class XiziController {
     private mistakesInCurrentStage: number = 0;
     private totalPhrasesInLesson: number = 0; // Track full lesson size for progress
     private allLessonPhrases: Phrase[] = []; // Full phrase list for chunking
+    private lessonTitle: string = ''; // Store lesson title for session saving
 
     // DOM Elements
     private phraseContainer: HTMLElement | null = null;
@@ -38,6 +45,37 @@ export class XiziController {
     constructor(ui: UIManager, onExit: () => void) {
         this.ui = ui;
         this.onExit = onExit;
+    }
+
+    /**
+     * Save current session state
+     */
+    private saveSessionState(): void {
+        if (!this.practiceQueue.length) return;
+
+        const sessionData: XiziSessionData = {
+            mode: 'xizi',
+            timestamp: Date.now(),
+            sessionStartTime: this.sessionStartTime,
+            lessonId: this.currentLessonId,
+            lessonTitle: this.lessonTitle,
+            allPhrases: this.allLessonPhrases.map(p => ({
+                term: p.term,
+                pinyin: p.pinyin,
+                definition: p.definition
+            })),
+            practiceQueue: this.practiceQueue.map(p => ({
+                term: p.term,
+                pinyin: p.pinyin,
+                definition: p.definition
+            })),
+            currentQueueIndex: this.currentQueueIndex,
+            currentStage: this.currentStage,
+            currentCharIndexInPhrase: this.currentCharIndexInPhrase,
+            wordLimit: this.practiceQueue.length
+        };
+
+        saveSession(sessionData);
     }
 
     /**
@@ -72,6 +110,7 @@ export class XiziController {
         const lessons = getLessons();
         const lesson = lessons.find(l => l.id === lessonId);
         if (lesson) {
+            this.lessonTitle = lesson.title;
             this.ui.updateHeaderTitle(lesson.title);
         }
 
@@ -169,39 +208,23 @@ export class XiziController {
         `;
         container.appendChild(this.pinyinEl);
 
-        // Next phrase button (initially hidden)
-        const nextBtnContainer = document.createElement('div');
-        nextBtnContainer.className = 'next-phrase-container';
-        nextBtnContainer.style.cssText = `
-            width: 100%;
-            padding: 16px 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 60px;
-        `;
-
-        const nextBtn = document.createElement('button');
-        nextBtn.className = 'action-btn-primary';
-        nextBtn.id = 'btn-next-phrase';
-        nextBtn.innerHTML = '继续 &rarr;';
-        nextBtn.style.cssText = `
-            width: 100%;
-            min-height: 44px;
-            padding: 12px 24px;
-            font-size: 1rem;
-            display: none;
-        `;
-        nextBtn.onclick = () => {
-            nextBtn.style.display = 'none';
-            this.currentQueueIndex++;
-            this.loadCurrentPhrase();
-        };
-
-        nextBtnContainer.appendChild(nextBtn);
-        container.appendChild(nextBtnContainer);
-
         app.appendChild(container);
+
+        // Next phrase button (outside container, below the card) - using DOMBuilder
+        DOMBuilder.removeElementById(ElementIds.NEXT_PHRASE_CONTAINER);
+
+        const { container: nextBtnContainer } = DOMBuilder.createContinueButtonContainer(
+            ElementIds.NEXT_PHRASE_CONTAINER,
+            ElementIds.BTN_NEXT_PHRASE,
+            () => {
+                DOMBuilder.toggleElement(ElementIds.BTN_NEXT_PHRASE, false);
+                this.currentQueueIndex++;
+                this.loadCurrentPhrase();
+            }
+        );
+
+        app.appendChild(nextBtnContainer);
+
         this.phraseContainer = writerTarget;
     }
 
@@ -250,12 +273,9 @@ export class XiziController {
             }
 
             // Show next button instead of auto-advancing
-            const nextBtn = document.getElementById('btn-next-phrase') as HTMLButtonElement;
-            if (nextBtn) {
-                setTimeout(() => {
-                    nextBtn.style.display = 'block';
-                }, 500); // Short delay after feedback
-            }
+            setTimeout(() => {
+                DOMBuilder.toggleElement(ElementIds.BTN_NEXT_PHRASE, true);
+            }, 500); // Short delay after feedback
             return;
         }
 
@@ -317,7 +337,6 @@ export class XiziController {
                 onMistake: () => {
                     this.mistakesInCurrentStage++;
                     // No sound effect for wrong strokes - silent feedback only
-                    spawnParticles(0, 0);
 
                     // On final stage (blank), show hint briefly on mistake
                     if (this.currentStage === 2 && this.writer) {
@@ -329,8 +348,19 @@ export class XiziController {
                     SoundFX.pop();
                 },
                 onComplete: () => {
-                    // Character complete, move to next character in phrase
+                    // Character complete! Celebrate with confetti
                     SoundFX.correctStroke();
+
+                    // Spawn confetti at the writer position
+                    const writerEl = document.getElementById('xizi-target');
+                    if (writerEl) {
+                        const rect = writerEl.getBoundingClientRect();
+                        spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+                    }
+
+                    // Save progress after each character
+                    this.saveSessionState();
+
                     setTimeout(() => {
                         this.currentCharIndexInPhrase++;
                         this.startCharacterQuiz();
@@ -343,16 +373,20 @@ export class XiziController {
     private updateInstructions(): void {
         if (!this.instructionsEl || !this.pinyinEl || !this.currentPhrase) return;
 
-        const stageNames = [
-            '第一步: 描红',
-            '第二步: 辅助',
-            '第三步: 默写'
-        ];
+        const stageNames = ['描红', '辅助', '默写'];
 
-        // Stage dots
+        // Stage dots (for 3 stages)
         const stageDots = Array(3).fill(0).map((_, i) =>
             i === this.currentStage ? '●' : '○'
         ).join(' ');
+
+        // Character progress dots (for characters in current phrase)
+        const charProgressDots = this.chineseCharsInPhrase.length > 0
+            ? Array(this.chineseCharsInPhrase.length).fill(0).map((_, i) =>
+                i < this.currentCharIndexInPhrase ? '●' :
+                i === this.currentCharIndexInPhrase ? '◉' : '○'
+            ).join(' ')
+            : '';
 
         // Update pinyin to show full phrase pinyin
         this.pinyinEl.textContent = this.currentPhrase.pinyin;
@@ -370,11 +404,6 @@ export class XiziController {
             return char;
         }).join('');
 
-        // Character progress indicator
-        const charProgress = this.chineseCharsInPhrase.length > 0
-            ? `(${this.currentCharIndexInPhrase + 1}/${this.chineseCharsInPhrase.length})`
-            : '';
-
         // Phrase progress indicator
         const phraseProgress = `词组 ${this.currentQueueIndex + 1}/${this.practiceQueue.length}`;
 
@@ -383,13 +412,13 @@ export class XiziController {
             <div style="font-size: 0.85rem; color: var(--tang-ink-light); margin-bottom: 4px; font-weight: 500;">
                 ${phraseProgress}
             </div>
-            <div style="font-size: 0.95rem; color: var(--tang-ink); margin-bottom: 8px;">
-                ${stageNames[this.currentStage]} ${charProgress}
+            <div style="font-size: 0.95rem; color: var(--tang-ink); margin-bottom: 6px;">
+                ${stageNames[this.currentStage]}  <span style="font-size: 0.75rem; color: var(--tang-ink-light); letter-spacing: 2px;">${charProgressDots}</span>
             </div>
             <div style="font-size: 1.4rem; color: var(--tang-gold); margin-bottom: 8px; font-weight: 600;">
                 ${highlightedPhrase}
             </div>
-            <div style="font-size: 1.2rem; color: var(--tang-gold); letter-spacing: 4px;">
+            <div style="font-size: 1.1rem; color: var(--tang-gold); opacity: 0.6; letter-spacing: 3px;">
                 ${stageDots}
             </div>
         `;
@@ -464,6 +493,9 @@ export class XiziController {
     }
 
     private finishSession(): void {
+        // Clear saved session when finishing
+        clearSession();
+
         this.ui.showFeedback('练习完成!', '#4ade80');
         this.onExit();
     }
