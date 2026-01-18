@@ -50,9 +50,10 @@ export class GameLogic {
 
     /**
      * Calculate session completion bonus yuanbao
+     * Scales with effort: 5 base + 1 per word, capped at 20
      */
     static calculateSessionBonus(wordsCompleted: number): number {
-        return 5; // Flat 5 yuanbao per completed session
+        return Math.min(5 + wordsCompleted, 20);
     }
 
     /**

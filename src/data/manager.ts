@@ -331,8 +331,8 @@ export function clearAttemptLogs(): void {
  * Called once when shop system is first loaded
  */
 export function grantRetroactiveBonus(): number {
-    // Check if bonus already granted (use a special flag)
-    if (playerStats.purchasedItems.includes('__retroactive_bonus_granted__')) {
+    // Check if bonus already granted
+    if (playerStats.shopInitialized) {
         return 0;
     }
 
@@ -353,7 +353,7 @@ export function grantRetroactiveBonus(): number {
     playerStats.yuanbao += bonus;
 
     // Mark bonus as granted (prevent double-granting)
-    playerStats.purchasedItems.push('__retroactive_bonus_granted__');
+    playerStats.shopInitialized = true;
 
     saveData();
     return bonus;
@@ -395,6 +395,9 @@ export function addYuanbao(amount: number, reason?: string): void {
  * Returns true if purchase successful, false if insufficient funds or already owned
  */
 export function purchaseItem(itemId: string): { success: boolean; message: string } {
+    // Cleanup expired power-ups before purchase
+    cleanupExpiredPowerUps();
+
     const item = getItemById(itemId);
 
     if (!item) {
@@ -439,6 +442,9 @@ export function getItemCount(itemId: string): number {
  * Returns true if item was consumed, false if not owned
  */
 export function useConsumableItem(itemId: string): boolean {
+    // Cleanup expired power-ups before use
+    cleanupExpiredPowerUps();
+
     const item = getItemById(itemId);
 
     if (!item || !item.stackable) {
@@ -515,8 +521,10 @@ export function cleanupExpiredPowerUps(): void {
 
 /**
  * Get yuanbao balance
+ * Cleans up expired power-ups before returning balance
  */
 export function getYuanbaoBalance(): number {
+    cleanupExpiredPowerUps();
     return playerStats.yuanbao;
 }
 

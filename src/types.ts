@@ -60,6 +60,7 @@ export interface PlayerStats {
     lastLoginDate: string | null; // For daily login rewards
     purchasedItems: string[]; // IDs of owned items
     activeEffects: Record<string, number>; // Active power-up effects with expiry timestamps
+    shopInitialized?: boolean; // Tracks if retroactive bonus was granted
 }
 
 export interface Achievement {
