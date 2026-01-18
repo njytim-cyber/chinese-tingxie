@@ -72,14 +72,22 @@
     }
 
     /* Allow card to grow slightly if needed for wrapped text */
+    .game-stage .writing-card,
     .writing-card {
-        height: auto;
-        min-height: 320px;
+        height: auto !important;
+        min-height: fit-content !important;
+        flex-shrink: 0;
+        padding-bottom: 25px;
+        /* Ensure space for toolbar */
+        overflow: visible;
+        /* Ensure nothing is clipped */
     }
 
-    .game-stage {
-        padding: 0 8px calc(120px + env(safe-area-inset-bottom, 0px));
-        /* Zero top padding for mobile */
+    /* Fix Pinyin Display spacing */
+    .pinyin-display-large {
+        margin-top: 10px;
+        margin-bottom: 15px;
+        padding: 0 5px;
     }
 }
 
