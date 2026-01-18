@@ -249,15 +249,23 @@
         gap: 20px;
     }
 
+    /* Fix: Center content vertically like desktop to prevent buttons being too low */
+    .game-stage {
+        justify-content: center !important;
+        padding: 20px 20px calc(100px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
     .dictation-container {
         max-width: 800px;
-        padding: 4px 16px calc(100px + env(safe-area-inset-bottom, 0px));
-        /* Tight top padding for tablets */
+        padding: 20px 16px 20px !important;
+        /* Balanced padding for tablet screens */
+        justify-content: center !important;
+        /* Center content vertically */
     }
 
     .dictation-container .writing-card {
-        margin-top: 6px;
-        /* Tight spacing for tablet screens */
+        margin: auto 0;
+        /* Center vertically within available space */
     }
 
     .dictation-header-progress {
