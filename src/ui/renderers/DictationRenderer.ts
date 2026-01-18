@@ -375,6 +375,8 @@ export class DictationRenderer {
 
             const pinyinLabel = document.createElement('div');
             pinyinLabel.className = 'char-pinyin-label';
+            // Pinyin array includes punctuation at the same index as characters
+            // globalIdx - currentChunk.start gives us the local position within the chunk
             pinyinLabel.textContent = currentChunk.pinyin[globalIdx - currentChunk.start] || '';
 
             charBox.appendChild(slot);
