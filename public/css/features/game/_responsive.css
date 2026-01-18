@@ -4,9 +4,9 @@
 @media (max-width: 600px) {
     .dictation-container {
         /* Balanced padding for safe centering */
-        /* Top: 40px to clear header */
-        /* Bottom: 120px to clear footer area */
-        padding: 40px 8px calc(120px + env(safe-area-inset-bottom, 0px)) !important;
+        /* Top: reduced to 20px to allow card to go higher */
+        /* Bottom: increased to 180px to push content up above persistent footer */
+        padding: 20px 8px calc(180px + env(safe-area-inset-bottom, 0px)) !important;
 
         touch-action: pan-y pinch-zoom;
         min-height: 100dvh;
