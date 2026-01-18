@@ -248,9 +248,9 @@ export class DictationManager {
                     onReveal: () => this.revealCurrentChunk(),
                     onNextChunk: () => {
                         this.nextChunk();
-                        // Hide button immediately after clicking
-                        const btn = document.getElementById('btn-next-chunk');
-                        if (btn) btn.style.display = 'none';
+                        // Disable button after clicking to prevent double-clicks
+                        const btn = document.getElementById('btn-next-chunk') as HTMLButtonElement;
+                        if (btn) btn.disabled = true;
                     },
                     onJumpTo: (index: number) => this.goToChar(index)
                 }
@@ -260,6 +260,10 @@ export class DictationManager {
             setTimeout(() => {
                 this.initWritersForChunk();
                 // updateCarouselView is called by renderer initially
+
+                // Initialize next button as disabled
+                const btn = document.getElementById('btn-next-chunk') as HTMLButtonElement;
+                if (btn) btn.disabled = true;
             }, 50);
         }
     }
@@ -393,9 +397,9 @@ export class DictationManager {
                                 this.nextChunk();
                             }, 800);
 
-                            // Also show the button immediately in case auto-advance fails or user is impatient
-                            const btn = document.getElementById('btn-next-chunk');
-                            if (btn) btn.style.display = 'block';
+                            // Enable the button so user can manually advance if impatient
+                            const btn = document.getElementById('btn-next-chunk') as HTMLButtonElement;
+                            if (btn) btn.disabled = false;
                         }
 
                         // Auto-advance to next char in carousel

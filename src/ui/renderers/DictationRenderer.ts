@@ -440,17 +440,20 @@ export class DictationRenderer {
         const nextBtnContainer = document.createElement('div');
         nextBtnContainer.className = 'next-chunk-container';
         nextBtnContainer.style.width = '100%';
-        nextBtnContainer.style.padding = '10px';
+        nextBtnContainer.style.padding = '16px 10px';
         nextBtnContainer.style.display = 'flex';
         nextBtnContainer.style.flexDirection = 'column';
         nextBtnContainer.style.alignItems = 'center';
+        nextBtnContainer.style.minHeight = '60px';
 
         const nextBtn = document.createElement('button');
         nextBtn.className = 'action-btn-primary';
         nextBtn.id = 'btn-next-chunk';
         nextBtn.innerHTML = '继续 &rarr;';
-        nextBtn.style.display = 'none'; // Hidden by default
         nextBtn.style.width = '100%';
+        nextBtn.style.minHeight = '44px';
+        nextBtn.style.padding = '12px 24px';
+        nextBtn.style.fontSize = '1rem';
         nextBtn.onclick = callbacks.onNextChunk;
 
         nextBtnContainer.appendChild(nextBtn);
