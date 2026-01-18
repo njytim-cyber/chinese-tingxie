@@ -1,0 +1,180 @@
+/* Feedback, Effects, and Session Complete */
+
+#feedback-overlay {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3rem;
+    font-weight: bold;
+    text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 100;
+    text-align: center;
+    width: 100%;
+}
+
+.success-stamp {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    transform: scale(5);
+    width: 80px;
+    height: 80px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.success-stamp.show {
+    opacity: 1;
+    transform: scale(1);
+    animation: stamp-slam 0.4s forwards;
+}
+
+.stamp-rect {
+    fill: none;
+    stroke: var(--tang-red);
+    stroke-width: 2;
+}
+
+.stamp-text {
+    fill: var(--tang-red);
+    font-size: 40px;
+    font-weight: bold;
+    text-anchor: middle;
+    dominant-baseline: middle;
+}
+
+/* Session Complete */
+.session-complete {
+    text-align: center;
+    padding: 20px;
+    max-width: 400px;
+    margin: 0 auto;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+}
+
+.session-complete h2 {
+    font-size: 2rem;
+    color: var(--gold);
+}
+
+.session-stats {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    color: var(--primary);
+}
+
+/* Bottom Action Area */
+.bottom-action-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 16px 20px;
+    box-sizing: border-box;
+}
+
+#next-btn {
+    min-height: 48px;
+    padding: 12px 32px;
+    font-size: 1.1rem;
+}
+
+/* Level Up */
+.level-up-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+}
+
+.level-up-level {
+    font-size: 3rem;
+    color: white;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+}
+
+/* Responsive - Feedback & Session Complete */
+@media (max-width: 600px) {
+    .session-complete {
+        padding: 16px;
+        max-width: 95%;
+        min-height: 100%;
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .session-complete h2 {
+        font-size: 1.75rem;
+    }
+
+    .session-stats {
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .stat-value {
+        font-size: 1.6rem;
+    }
+
+    .bottom-action-area {
+        padding: 12px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+        position: sticky;
+        bottom: 0;
+        background: linear-gradient(to bottom, transparent 0%, var(--bg-canvas) 20%);
+        padding-top: 32px;
+    }
+
+    #next-btn {
+        width: 100%;
+        max-width: 400px;
+        min-height: 52px;
+        font-size: 1.15rem;
+    }
+}
+
+/* Ensure all modal overlays allow scrolling on small screens */
+@media (max-height: 700px) {
+    .modal-content {
+        max-height: 85vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (max-height: 600px) {
+    .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .complete-card {
+        max-height: 88vh;
+        overflow-y: auto;
+    }
+}

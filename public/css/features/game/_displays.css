@@ -1,0 +1,84 @@
+/* Text Displays and Progress */
+
+.pinyin-display-large {
+    font-size: 2rem;
+    color: var(--tang-red);
+    margin-bottom: 8px;
+    font-weight: 500;
+    text-align: center;
+    font-family: var(--pinyin-font);
+
+    /* Responsive text handling */
+    white-space: pre-wrap;
+    /* Allow wrapping but preserve deliberate spacing */
+    word-wrap: break-word;
+    /* Break long words if necessary */
+    overflow-wrap: break-word;
+    /* Standard property for breaking */
+    max-width: 100%;
+    /* Ensure it doesn't overflow container */
+    line-height: 1.4;
+    /* Better readability for multi-line */
+}
+
+.definition-display {
+    color: var(--ink-wash);
+    font-size: 1.1rem;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.char-pinyin-label {
+    font-size: clamp(1.2rem, 3vw, 1.6rem);
+    color: var(--link-light);
+    margin-top: 8px;
+    font-family: var(--pinyin-font);
+}
+
+.reveal-pinyin {
+    font-family: var(--pinyin-font);
+}
+
+/* Footer Progress */
+.footer-progress {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    z-index: 100;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0 20px;
+    overflow-x: auto;
+}
+
+.progress-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #334155;
+    border: 2px solid rgba(255, 255, 255, 0.05);
+    flex-shrink: 0;
+    transition: all 0.3s;
+}
+
+.progress-dot.active {
+    background: #f1f5f9;
+    transform: scale(1.2);
+}
+
+.progress-dot.correct {
+    background: #22c55e;
+    border-color: #22c55e;
+}
+
+.progress-dot.wrong {
+    background: #ef4444;
+    border-color: #ef4444;
+}

@@ -355,10 +355,10 @@ export class HanziWriterInput implements InputHandler {
         const pinyinDisplay = document.getElementById('pinyin-display');
         if (pinyinDisplay && this.currentWord) {
             const pinyinSegments = this.currentWord.pinyin.split(' ');
-            const charIndex = this.validCharIndices[this.currentCharIndex];
-            // Add bounds checking for array access
-            if (charIndex !== undefined && charIndex >= 0 && charIndex < pinyinSegments.length) {
-                pinyinDisplay.textContent = pinyinSegments[charIndex] || '';
+            // Use currentCharIndex (local position) to index into pinyinSegments
+            // NOT charIndex (global position), which breaks with punctuation
+            if (this.currentCharIndex >= 0 && this.currentCharIndex < pinyinSegments.length) {
+                pinyinDisplay.textContent = pinyinSegments[this.currentCharIndex] || '';
             } else {
                 pinyinDisplay.textContent = '';
             }
