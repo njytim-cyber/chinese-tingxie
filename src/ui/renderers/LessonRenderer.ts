@@ -213,7 +213,8 @@ export class LessonRenderer {
 
         document.getElementById('mode-xizi')?.addEventListener('click', () => {
             close();
-            onSelect(lessonId, 0, 'xizi');
+            // Show word count selection modal for xizi mode (like tingxie)
+            this.showWordCountModal(lessonId, lessonTitle, phraseCount, onSelect, 'xizi');
         });
 
         modal.onclick = (e) => {
@@ -222,13 +223,14 @@ export class LessonRenderer {
     }
 
     /**
-     * Show word count selection modal for tingxie mode
+     * Show word count selection modal for tingxie or xizi mode
      */
     private showWordCountModal(
         lessonId: number,
         lessonTitle: string,
         totalWords: number,
-        onSelect: (lessonId: number, limit: number, mode: 'tingxie' | 'xizi') => void
+        onSelect: (lessonId: number, limit: number, mode: 'tingxie' | 'xizi') => void,
+        mode: 'tingxie' | 'xizi' = 'tingxie'
     ): void {
         const modalId = 'word-count-modal';
         let modal = document.getElementById(modalId);
@@ -298,7 +300,7 @@ export class LessonRenderer {
             btn.addEventListener('click', () => {
                 const limit = parseInt((btn as HTMLElement).dataset.limit || '0');
                 close();
-                onSelect(lessonId, limit, 'tingxie');
+                onSelect(lessonId, limit, mode);
             });
         });
 

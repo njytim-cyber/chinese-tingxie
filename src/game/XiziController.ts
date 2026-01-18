@@ -43,7 +43,7 @@ export class XiziController {
     /**
      * Start a Xizi practice session for a lesson
      */
-    async start(lessonId: number, startTime: number): Promise<void> {
+    async start(lessonId: number, startTime: number, wordLimit = 0): Promise<void> {
         this.sessionStartTime = startTime;
         this.currentLessonId = lessonId;
 
@@ -56,10 +56,13 @@ export class XiziController {
             return;
         }
 
-        // Store all phrases and auto-chunk to 5 phrases max for 5-minute sessions
+        // Store all phrases and apply word limit
         this.allLessonPhrases = phrases;
         this.totalPhrasesInLesson = phrases.length;
-        this.practiceQueue = phrases.slice(0, Math.min(5, phrases.length));
+
+        // Determine practice queue size based on wordLimit
+        const queueSize = wordLimit > 0 ? Math.min(wordLimit, phrases.length) : phrases.length;
+        this.practiceQueue = phrases.slice(0, queueSize);
         this.currentQueueIndex = 0;
 
         // 2. Setup UI
@@ -204,8 +207,8 @@ export class XiziController {
             const percentComplete = Math.round((phrasesCompleted / totalInChunk) * 100);
 
             if (phrasesCompleted === totalInChunk) {
-                // Chunk complete!
-                this.showChunkComplete();
+                // All selected phrases complete - finish session
+                this.finishSession();
                 return;
             } else if (phrasesCompleted % 3 === 0 || percentComplete >= 50 && phrasesCompleted === Math.ceil(totalInChunk / 2)) {
                 // Milestone celebration
@@ -278,7 +281,7 @@ export class XiziController {
             await this.writer.quiz({
                 onMistake: () => {
                     this.mistakesInCurrentStage++;
-                    SoundFX.click();
+                    // No sound effect for wrong strokes - silent feedback only
                     spawnParticles(0, 0);
 
                     // On final stage (blank), show hint briefly on mistake
