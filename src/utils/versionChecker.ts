@@ -3,11 +3,26 @@
  * This preserves localStorage while ensuring users see the latest version
  */
 
-const APP_VERSION = '2.0.2'; // Synced by scripts/sync-version.js
+const APP_VERSION = '2.1.0'; // Synced by scripts/sync-version.js
 const VERSION_KEY = 'app_version';
 
 // Release notes for current version
 const RELEASE_NOTES = {
+    '2.1.0': {
+        title: '重磅更新: 元宝商店系统',
+        features: [
+            '全新商店系统 - 30种商品可购买',
+            '元宝货币 - 练习获得奖励（完美2元宝/良好1元宝）',
+            '每日登录奖励 - 每天获得5元宝',
+            '成就解锁奖励 - 10-150元宝不等',
+            '四大商品分类：外观/道具/工具/内容',
+            '外观定制 - 笔迹特效、墨水颜色、主题背景',
+            '实用道具 - 提示符、经验加速、品质护盾',
+            '强大工具 - 自定义词单、高级统计、夜间模式',
+            '奖励内容 - 丁戊集、成语专辑、诗词专辑',
+            '老用户回馈 - 根据当前进度获赠元宝'
+        ]
+    },
     '2.0.2': {
         title: '体验优化: 多项改进',
         features: [
